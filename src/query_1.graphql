@@ -1,0 +1,67 @@
+query RepoView($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    homepageUrl
+    stargazers {
+      totalCount
+    }
+    # issues(first: 20, states: OPEN) {
+    #   nodes {
+    #     title
+    #     comments {
+    #       totalCount
+    #     }
+    #   }
+    # }
+    pullRequests(first: 10, states: OPEN) {
+      nodes {
+        title
+        additions
+        deletions
+        commits(last: 1) {
+          nodes {
+            commit {
+              commitUrl
+              pushedDate
+              status {
+                state
+              }
+            }
+          }
+        }
+        reviewThreads(last: 10) {
+          totalCount
+          nodes {
+            isResolved
+            comments(last: 100) {
+              totalCount
+              nodes {
+                body
+                outdated
+                publishedAt
+              }
+            }
+          }
+        }
+        reviews(first: 100) {
+          totalCount
+          nodes {
+            author {
+              __typename
+              login
+            }
+            state
+            comments(last: 1) {
+              totalCount
+              nodes {
+                body
+                replyTo {
+                  body
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
