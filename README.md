@@ -1,10 +1,10 @@
-# ATeam
+# A Team
 
 The tool that helps optimize the code review process.
 
 ATeam gives you two sub-commands: `pr` and `todo`
 
-## pr
+## ateam pr
 
 This command helps the developers determine which pull request should be reviewed next.
 
@@ -45,7 +45,7 @@ pull request rank =
                                   # is usually a quicker job.
 ```
 
-## todo
+## ateam todo
 
 This second command give you a list of pull requests you are reviewing or you have already reviewed 
 that needs your attenction or a list of your pull requests that need your intervention.
