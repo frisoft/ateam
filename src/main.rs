@@ -1,3 +1,4 @@
+use crate::repo_view::StatusState::Other;
 use chrono::prelude::*;
 use core::option::Iter;
 use failure::*;
@@ -115,6 +116,59 @@ struct Pr {
     deletions: i64,
     last_commit_pushed_date: Option<String>,
     last_commit_state: i64,
+    approvals: i64,
+    reviewers: i64,
+}
+
+fn status_state_to_i(state: Option<&repo_view::StatusState>) -> i64 {
+    match state {
+        Some(state) => match state {
+            repo_view::StatusState::SUCCESS => 0,
+            repo_view::StatusState::PENDING => 1,
+            repo_view::StatusState::FAILURE => 2,
+            repo_view::StatusState::ERROR => 3,
+            repo_view::StatusState::EXPECTED => 3,
+            repo_view::StatusState::Other(_) => 3,
+        },
+        None => 3,
+    }
+}
+
+fn pr_approvals(
+    reviews: &std::option::Option<repo_view::RepoViewRepositoryPullRequestsNodesReviews>,
+) -> i64 {
+    reviews
+        .as_ref()
+        .and_then(|reviews| reviews.nodes.as_ref())
+        .map(|nodes| {
+            nodes
+                .iter()
+                .map(|review| review.as_ref().map(|review| &review.state))
+                .filter(|state| state == &Some(&repo_view::PullRequestReviewState::APPROVED))
+                .count()
+        })
+        .unwrap_or(0) as i64
+}
+
+fn pr_reviewers(
+    reviews: &std::option::Option<repo_view::RepoViewRepositoryPullRequestsNodesReviews>,
+) -> i64 {
+    reviews
+        .as_ref()
+        .and_then(|reviews| reviews.nodes.as_ref())
+        .map(|nodes| {
+            nodes
+                .iter()
+                .filter_map(|review| {
+                    review
+                        .as_ref()
+                        .and_then(|review| review.author.as_ref())
+                        .map(|author| &author.login)
+                })
+                .collect::<std::collections::HashMap>()
+                .count()
+        })
+        .unwrap_or(0) as i64
 }
 
 fn pr_stats(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Pr {
@@ -124,14 +178,9 @@ fn pr_stats(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Pr {
         additions: pr.additions,
         deletions: pr.deletions,
         last_commit_pushed_date: last_commit_pushed_date.cloned(),
-        last_commit_state: match last_commit_state {
-            Some(repo_view::StatusState::SUCCESS) => 0,
-            Some(repo_view::StatusState::ERROR) => 3,
-            Some(repo_view::StatusState::EXPECTED) => 3,
-            Some(repo_view::StatusState::FAILURE) => 2,
-            Some(repo_view::StatusState::PENDING) => 1,
-            None => 3,
-        },
+        last_commit_state: status_state_to_i(last_commit_state),
+        approvals: pr_approvals(&pr.reviews),
+        reviewers: pr_reviewers(&pr.reviews),
     }
 }
 
@@ -190,6 +239,9 @@ fn main() -> Result<(), failure::Error> {
         println!("PR additions: {:?}", pr.additions);
         println!("PR deletions: {:?}", pr.deletions);
         println!("Last commit pushed date {:?}", pr.last_commit_pushed_date);
+        println!("Last commit state {}", pr.last_commit_state);
+        println!("Approvals {}", pr.approvals);
+        println!("Reviewers {}", pr.reviewers);
     }
 
     // table.printstd();

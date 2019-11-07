@@ -50,15 +50,15 @@ query RepoView($owner: String!, $name: String!) {
               login
             }
             state
-            comments(last: 1) {
-              totalCount
-              nodes {
-                body
-                replyTo {
-                  body
-                }
-              }
-            }
+            # comments(last: 1) {
+            #   totalCount
+            #   nodes {
+            #     body
+            #     replyTo {
+            #       body
+            #     }
+            #   }
+            # }
           }
         }
       }
