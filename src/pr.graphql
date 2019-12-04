@@ -1,9 +1,9 @@
 query RepoView($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
-    homepageUrl
-    stargazers {
-      totalCount
-    }
+    # homepageUrl
+    # stargazers {
+    #   totalCount
+    # }
     # issues(first: 20, states: OPEN) {
     #   nodes {
     #     title
@@ -12,9 +12,10 @@ query RepoView($owner: String!, $name: String!) {
     #     }
     #   }
     # }
-    pullRequests(first: 10, states: OPEN) {
+    pullRequests(last: 100, states: OPEN) {
       nodes {
         title
+        url
         additions
         deletions
         commits(last: 1) {
@@ -28,21 +29,21 @@ query RepoView($owner: String!, $name: String!) {
             }
           }
         }
-        reviewThreads(last: 10) {
+        reviewThreads(last: 50) {
           totalCount
           nodes {
             isResolved
-            comments(last: 100) {
+            comments(last: 20) {
               totalCount
               nodes {
-                body
+                # body
                 outdated
-                publishedAt
+                # publishedAt
               }
             }
           }
         }
-        reviews(first: 100) {
+        reviews(first: 20) {
           totalCount
           nodes {
             author {

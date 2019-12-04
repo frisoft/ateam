@@ -1,34 +1,10 @@
-use crate::repo_view::StatusState::Other;
-use chrono::prelude::*;
-use core::option::Iter;
 use failure::*;
-use graphql_client::*;
-use log::*;
-use prettytable::*;
-use serde::*;
-use structopt::StructOpt;
+// use log::*;
 
-type URI = String;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/schema.graphql",
-    query_path = "src/query_1.graphql",
-    response_derives = "Debug"
-)]
-struct RepoView;
-
-#[derive(StructOpt)]
-#[structopt(author, about)]
-struct Command {
-    #[structopt(name = "repository")]
-    repo: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Env {
-    github_api_token: String,
-}
+mod client;
+use client::*;
+mod cli;
+mod config;
 
 fn parse_repo_name(repo_name: &str) -> Result<(&str, &str), failure::Error> {
     let mut parts = repo_name.split('/');
@@ -38,170 +14,40 @@ fn parse_repo_name(repo_name: &str) -> Result<(&str, &str), failure::Error> {
     }
 }
 
-fn query(
-    github_api_token: &str,
-    owner: &str,
-    name: &str,
-) -> Result<repo_view::ResponseData, failure::Error> {
-    let q = RepoView::build_query(repo_view::Variables {
-        owner: owner.to_string(),
-        name: name.to_string(),
-    });
-
-    let client = reqwest::Client::new();
-
-    let mut res = client
-        .post("https://api.github.com/graphql")
-        .bearer_auth(github_api_token)
-        .json(&q)
-        .send()?;
-
-    let response_body: Response<repo_view::ResponseData> = res.json()?;
-    info!("{:?}", response_body);
-
-    if let Some(errors) = response_body.errors {
-        println!("there are errors:");
-
-        for error in &errors {
-            println!("{:?}", error);
-        }
-    }
-
-    // println!("{:?}", response_body.data);
-    Ok(response_body.data.expect("missing response data"))
-}
-
-// fn last_commit_age(pushed_date: String) {
-//     let t = pushed_date.parse::<DateTime<Utc>>;
-// }
-
-fn last_commit(
-    pr: &repo_view::RepoViewRepositoryPullRequestsNodes,
-) -> (Option<&String>, Option<&repo_view::StatusState>) {
-    if let Some((pushed_date, state)) = pr
-        .commits
-        .nodes
-        .as_ref()
-        .and_then(|nodes| nodes[0].as_ref())
-        .map(|node| {
-            (
-                &node.commit.pushed_date,
-                node.commit.status.as_ref().map(|status| &status.state),
-            )
-        })
-    {
-        (Some(pushed_date), state)
-    } else {
-        (None, None)
-    }
-}
-
-fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_ {
-    response_data
-        .repository
-        .as_ref()
-        .expect("missing repository")
-        .pull_requests
-        .nodes
-        .as_ref()
-        .expect("pull request nodes is null")
-        .iter()
-        .filter(|i| i.is_some()) // <-- Refactor
-        .map(|i| pr_stats(i.as_ref().unwrap())) // <-- Refactor
-}
-
-struct Pr {
-    title: String,
-    additions: i64,
-    deletions: i64,
-    last_commit_pushed_date: Option<String>,
-    last_commit_state: i64,
-    approvals: i64,
-    reviewers: i64,
-}
-
-fn status_state_to_i(state: Option<&repo_view::StatusState>) -> i64 {
-    match state {
-        Some(state) => match state {
-            repo_view::StatusState::SUCCESS => 0,
-            repo_view::StatusState::PENDING => 1,
-            repo_view::StatusState::FAILURE => 2,
-            repo_view::StatusState::ERROR => 3,
-            repo_view::StatusState::EXPECTED => 3,
-            repo_view::StatusState::Other(_) => 3,
-        },
-        None => 3,
-    }
-}
-
-fn pr_approvals(
-    reviews: &std::option::Option<repo_view::RepoViewRepositoryPullRequestsNodesReviews>,
-) -> i64 {
-    reviews
-        .as_ref()
-        .and_then(|reviews| reviews.nodes.as_ref())
-        .map(|nodes| {
-            nodes
-                .iter()
-                .map(|review| review.as_ref().map(|review| &review.state))
-                .filter(|state| state == &Some(&repo_view::PullRequestReviewState::APPROVED))
-                .count()
-        })
-        .unwrap_or(0) as i64
-}
-
-fn pr_reviewers(
-    reviews: &std::option::Option<repo_view::RepoViewRepositoryPullRequestsNodesReviews>,
-) -> i64 {
-    reviews
-        .as_ref()
-        .and_then(|reviews| reviews.nodes.as_ref())
-        .map(|nodes| {
-            nodes
-                .iter()
-                .filter_map(|review| {
-                    review
-                        .as_ref()
-                        .and_then(|review| review.author.as_ref())
-                        .map(|author| &author.login)
-                })
-                .collect::<std::collections::HashMap>()
-                .count()
-        })
-        .unwrap_or(0) as i64
-}
-
-fn pr_stats(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Pr {
-    let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
-    Pr {
-        title: pr.title.clone(),
-        additions: pr.additions,
-        deletions: pr.deletions,
-        last_commit_pushed_date: last_commit_pushed_date.cloned(),
-        last_commit_state: status_state_to_i(last_commit_state),
-        approvals: pr_approvals(&pr.reviews),
-        reviewers: pr_reviewers(&pr.reviews),
-    }
+fn print_pr(spr: &ScoredPr) {
+    let pr = &spr.pr;
+    println!("===============================================================");
+    println!("PR title: {:?}", pr.title);
+    println!("PR URL: {:?}", pr.url);
+    println!("Last commit pushed date {:?}", pr.last_commit_pushed_date);
+    println!("Tests result {}", pr.tests_result);
+    println!("Open conversations {}", pr.open_conversations);
+    println!("Approvals {}", pr.num_approvals);
+    println!("Reviewers {}", pr.num_reviewers);
+    println!("PR additions: {:?}", pr.additions);
+    println!("PR deletions: {:?}", pr.deletions);
+    println!("Score {:?}", spr.score);
 }
 
 fn main() -> Result<(), failure::Error> {
     dotenv::dotenv().ok();
     env_logger::init();
 
-    let config: Env = envy::from_env().context("while reading from environment")?;
+    let config: config::Config = config::get_config().context("while reading from environment")?;
 
-    let args = Command::from_args();
+    let args = cli::command();
 
     let repo = args.repo;
     let (owner, name) = parse_repo_name(&repo).unwrap_or(("tomhoule", "graphql-client"));
 
-    let response_data: repo_view::ResponseData = query(&config.github_api_token, owner, name)?;
+    let response_data: repo_view::ResponseData =
+        client::query(&config.github_api_token, owner, name)?;
 
     // println!("{}/{} - 🌟 {}", owner, name, stars.unwrap_or(0),);
     // let mut table = prettytable::Table::new();
     // table.add_row(row!(b => "issue", "comments"));
 
-    for pr in prs(&response_data) {
+    for spr in client::ranked_prs(&response_data).iter() {
         // table.add_row(row!(
         //     pr.title,
         //     // pr.commits.total_count // ,
@@ -234,30 +80,9 @@ fn main() -> Result<(), failure::Error> {
         // let last_commit = last_commit(&pr);
         // println!("Last commit (pushed date, state): {:?}", last_commit(pr));
         // println!("Review threads count: {:?}", pr.review_threads.total_count);
-        println!("===============================================================");
-        println!("PR title: {:?}", pr.title);
-        println!("PR additions: {:?}", pr.additions);
-        println!("PR deletions: {:?}", pr.deletions);
-        println!("Last commit pushed date {:?}", pr.last_commit_pushed_date);
-        println!("Last commit state {}", pr.last_commit_state);
-        println!("Approvals {}", pr.approvals);
-        println!("Reviewers {}", pr.reviewers);
+        print_pr(spr);
     }
 
     // table.printstd();
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_repo_name_works() {
-        assert_eq!(
-            parse_repo_name("graphql-rust/graphql-client").unwrap(),
-            ("graphql-rust", "graphql-client")
-        );
-        assert!(parse_repo_name("abcd").is_err());
-    }
 }
