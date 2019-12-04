@@ -4,8 +4,8 @@ use std::collections::HashSet;
 
 #[derive(GraphQLQuery)]
 #[graphql(
-    schema_path = "src/schema.graphql",
-    query_path = "src/pr.graphql",
+    schema_path = "src/client/schema.graphql",
+    query_path = "src/client/pr.graphql",
     response_derives = "Debug"
 )]
 pub struct RepoView;
