@@ -5,6 +5,8 @@ mod client;
 use client::*;
 mod cli;
 mod config;
+mod print;
+mod types;
 
 fn parse_repo_name(repo_name: &str) -> Result<(&str, &str), failure::Error> {
     let mut parts = repo_name.split('/');
@@ -12,21 +14,6 @@ fn parse_repo_name(repo_name: &str) -> Result<(&str, &str), failure::Error> {
         (Some(owner), Some(name)) => Ok((owner, name)),
         _ => Err(format_err!("wrong format for the repository name param (we expect something like facebook/graphql)"))
     }
-}
-
-fn print_pr(spr: &ScoredPr) {
-    let pr = &spr.pr;
-    println!("===============================================================");
-    println!("PR title: {:?}", pr.title);
-    println!("PR URL: {:?}", pr.url);
-    println!("Last commit pushed date {:?}", pr.last_commit_pushed_date);
-    println!("Tests result {}", pr.tests_result);
-    println!("Open conversations {}", pr.open_conversations);
-    println!("Approvals {}", pr.num_approvals);
-    println!("Reviewers {}", pr.num_reviewers);
-    println!("PR additions: {:?}", pr.additions);
-    println!("PR deletions: {:?}", pr.deletions);
-    println!("Score {:?}", spr.score);
 }
 
 fn main() -> Result<(), failure::Error> {
@@ -80,7 +67,7 @@ fn main() -> Result<(), failure::Error> {
         // let last_commit = last_commit(&pr);
         // println!("Last commit (pushed date, state): {:?}", last_commit(pr));
         // println!("Review threads count: {:?}", pr.review_threads.total_count);
-        print_pr(spr);
+        print::pr(spr);
     }
 
     // table.printstd();
