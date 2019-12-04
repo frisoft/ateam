@@ -86,3 +86,17 @@ fn main() -> Result<(), failure::Error> {
     // table.printstd();
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_repo_name_works() {
+        assert_eq!(
+            parse_repo_name("graphql-rust/graphql-client").unwrap(),
+            ("graphql-rust", "graphql-client")
+        );
+        assert!(parse_repo_name("abcd").is_err());
+    }
+}

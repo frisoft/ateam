@@ -236,17 +236,3 @@ fn review_thread_resolved_or_outdated(
             })
             .unwrap_or(false)
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn parse_repo_name_works() {
-//         assert_eq!(
-//             parse_repo_name("graphql-rust/graphql-client").unwrap(),
-//             ("graphql-rust", "graphql-client")
-//         );
-//         assert!(parse_repo_name("abcd").is_err());
-//     }
-// }
