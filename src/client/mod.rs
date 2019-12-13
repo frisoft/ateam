@@ -44,31 +44,14 @@ pub fn query(
 
 pub fn ranked_prs(response_data: &repo_view::ResponseData) -> Vec<ScoredPr> {
     let mut sprs: Vec<ScoredPr> = prs(&response_data).map(scored_pr).collect();
-    sprs.sort_by_key(|scored_pr| (scored_pr.score * 1000.0) as i64);
+    sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
     sprs
 }
 
-fn score(pr: &Pr) -> f64 {
-    (age(pr.last_commit_pushed_date) as f64 * 10.0)
-        + ((pr.tests_result - 1) as f64 * -200.0)
-        + (pr.open_conversations as f64 * -20.0)
-        + ((pr.num_approvals ^ 2) as f64 * -50.0)
-        + ((pr.num_reviewers ^ 2) as f64 * -20.0)
-        + (pr.additions as f64 * -0.5)
-        + (pr.deletions as f64 * -0.1)
-}
-
 fn scored_pr(pr: Pr) -> ScoredPr {
-    let s = score(&pr);
+    let s = Score::from_pr(&pr);
     ScoredPr { pr, score: s }
-}
-
-fn age(date_time: Option<DateTime<Utc>>) -> i64 {
-    match date_time {
-        Some(date_time) => (Utc::now() - date_time).num_hours(),
-        None => 0,
-    }
 }
 
 fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_ {
