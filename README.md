@@ -19,7 +19,7 @@ pull request rank =
   (last_commit_age * 10.0) +      # last_commit_age: hours from the last pushed commit
                                   # Older plull requests are showed first.
 
-  ((tests_result-1) * -200.0) +   # tests_result: 0=success, 1=in progress, 2=failing
+  ((tests_result-1) * -2000.0) +  # tests_result: 0=success, 1=in progress, 2=failing
                                   # - success gives 0
                                   # -  in progress subtracts 200 from the final rank
                                   # - failing subtracts 400 from the inal rank

@@ -64,8 +64,26 @@ fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_
         .as_ref()
         .expect("pull request nodes is null")
         .iter()
-        .filter(|i| i.is_some()) // <-- Refactor
-        .map(|i| pr_stats(i.as_ref().unwrap())) // <-- Refactor
+        .flatten() // Extract value from Some(value) and remove the Nones
+        .filter(|i| !has_wip_label(i))
+        .map(|i| pr_stats(i)) // <-- Refactor
+}
+
+fn has_wip_label(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> bool {
+    pr_labels(pr).iter().any(|l| l == &"WIP")
+}
+
+fn pr_labels(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Vec<&str> {
+    match &pr.labels {
+        Some(labels) => labels
+            .nodes
+            .iter()
+            .flatten()
+            .flatten()
+            .map(|l| l.name.as_ref())
+            .collect(),
+        None => vec![],
+    }
 }
 
 fn pr_stats(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Pr {

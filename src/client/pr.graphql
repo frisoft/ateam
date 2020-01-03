@@ -18,6 +18,11 @@ query RepoView($owner: String!, $name: String!) {
         url
         additions
         deletions
+        labels(first: 10) { 
+          nodes { 
+            name
+          } 
+        }
         commits(last: 1) {
           nodes {
             commit {

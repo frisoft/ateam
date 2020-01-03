@@ -39,10 +39,10 @@ impl Score {
     pub fn from_pr(pr: &Pr) -> Score {
         Score {
             age: age(pr.last_commit_pushed_date) as f64 * 10.0,
-            tests_result: (pr.tests_result - 1) as f64 * -200.0,
+            tests_result: (pr.tests_result - 1) as f64 * -2000.0,
             open_conversations: pr.open_conversations as f64 * -20.0,
-            num_approvals: (pr.num_approvals ^ 2) as f64 * -50.0,
-            num_reviewers: (pr.num_reviewers ^ 2) as f64 * -20.0,
+            num_approvals: ((pr.num_approvals - 1) ^ 2) as f64 * -500.0,
+            num_reviewers: ((pr.num_reviewers - 1) ^ 2) as f64 * -20.0,
             additions: pr.additions as f64 * -0.5,
             deletions: pr.deletions as f64 * -0.1,
         }
@@ -56,5 +56,58 @@ impl Score {
             + self.num_reviewers
             + self.additions
             + self.deletions
+    }
+}
+
+impl std::fmt::Display for ScoredPr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let pr = &self.pr;
+        writeln!(
+            f,
+            "{} {} {:?} {} OC:{} Appr:{}/{} +{} -{} S:{}",
+            pr.title,
+            pr.url,
+            pr.last_commit_pushed_date,
+            pr.tests_result,
+            pr.open_conversations,
+            pr.num_approvals,
+            pr.num_reviewers,
+            pr.additions,
+            pr.deletions,
+            self.score.total(),
+        )
+    }
+}
+
+impl std::fmt::Debug for ScoredPr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let pr = &self.pr;
+
+        writeln!(
+            f,
+            "===============================================================\n
+                PR title: {:?}\n
+                PR URL: {:?}\n
+                Last commit pushed date {:?}\n
+                Tests result {}\n
+                Open conversations {}\n
+                Approvals {}\n
+                Reviewers {}\n
+                PR additions: {:?}\n
+                PR deletions: {:?}\n
+                Score {:?}\n
+                Score details {:?}",
+            pr.title,
+            pr.url,
+            pr.last_commit_pushed_date,
+            pr.tests_result,
+            pr.open_conversations,
+            pr.num_approvals,
+            pr.num_reviewers,
+            pr.additions,
+            pr.deletions,
+            self.score.total(),
+            self.score
+        )
     }
 }
