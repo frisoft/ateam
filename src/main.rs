@@ -63,17 +63,27 @@ fn main() -> Result<(), failure::Error> {
         client::query(&config.github_api_token, owner, name)?;
 
     let mut table = prettytable::Table::new();
-    let format = format::FormatBuilder::new()
-        .column_separator('|')
-        .borders('|')
-        // .separators(
-        //     &[format::LinePosition::Top, format::LinePosition::Bottom],
-        //     format::LineSeparator::new('-', '+', '+', '+'),
-        // )
-        .padding(1, 1)
-        .build();
-    // table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
-    table.set_format(format);
+    // let format = format::FormatBuilder::new()
+    //     .column_separator('|')
+    //     .borders('|')
+    //     // .separators(
+    //     //     &[format::LinePosition::Top, format::LinePosition::Bottom],
+    //     //     format::LineSeparator::new('-', '+', '+', '+'),
+    //     // )
+    //     .padding(1, 1)
+    //     .build();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+    // table.set_format(format);
+    table.set_titles(row![
+        "Title",
+        "URL",
+        "Last commit",
+        "CI",
+        "O.C.",
+        "Rev.",
+        "Diff",
+        "Score"
+    ]);
 
     let sprs = client::ranked_prs(&response_data);
     for spr in sprs.iter().take(args.num.unwrap_or(10000)) {
