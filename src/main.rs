@@ -18,9 +18,9 @@ fn parse_repo_name(repo_name: &str) -> Result<(&str, &str), failure::Error> {
 }
 
 fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
-    let title = if debug {
-        let debug_info = format!(
-            "SCORES - Age:{} Tests:{} OC:{} Appr:{} Rev:{} Add:{} Del:{} Total:{}",
+    let debug_info = if debug {
+        format!(
+            "\nAge:{:.1} T:{:.1} OC:{:.1} Ap:{:.1} R:{:.1} +:{:.1} -:{:.1} Tot:{:.1}",
             spr.score.age,
             spr.score.tests_result,
             spr.score.open_conversations,
@@ -29,13 +29,12 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
             spr.score.additions,
             spr.score.deletions,
             spr.score.total()
-        );
-        format!("{}\n{}", spr.pr.title, debug_info)
+        )
     } else {
-        spr.pr.title.clone()
+        "".to_string()
     };
     row!(
-        title.to_string(),
+        format!("{}{}", spr.pr.title, debug_info),
         spr.pr.url,
         match spr.pr.last_commit_pushed_date {
             Some(d) => d.format("%d-%m-%Y %H:%M").to_string(),
@@ -65,13 +64,13 @@ fn main() -> Result<(), failure::Error> {
 
     let mut table = prettytable::Table::new();
     let format = format::FormatBuilder::new()
-        // .column_separator('|')
-        // .borders('|')
+        .column_separator('|')
+        .borders('|')
         // .separators(
         //     &[format::LinePosition::Top, format::LinePosition::Bottom],
         //     format::LineSeparator::new('-', '+', '+', '+'),
         // )
-        .padding(1, 0)
+        .padding(1, 1)
         .build();
     // table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
     table.set_format(format);
