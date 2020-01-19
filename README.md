@@ -24,7 +24,8 @@ pull request rank =
                                   # -  in progress subtracts 200 from the final rank
                                   # - failing subtracts 400 from the inal rank
 
-  (open_conversations * -20.0) +  # open_conversations: number of unresolved and non-outdated conversations
+  (open_conversations * -20.0) +  # NO MORE AVAILABLE FROM GITHUB, IGNORED
+                                  # open_conversations: number of unresolved and non-outdated conversations
                                   # A pull request with open conversations is ranked less than
                                   # one without conversations as you probably better off
                                   # waiting for the convresations to be resolved.

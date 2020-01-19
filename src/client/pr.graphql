@@ -34,20 +34,20 @@ query RepoView($owner: String!, $name: String!) {
             }
           }
         }
-        reviewThreads(last: 50) {
-          totalCount
-          nodes {
-            isResolved
-            comments(last: 20) {
-              totalCount
-              nodes {
-                # body
-                outdated
-                # publishedAt
-              }
-            }
-          }
-        }
+        # reviewThreads(last: 50) {
+        #   totalCount
+        #   nodes {
+        #     isResolved
+        #     comments(last: 20) {
+        #       totalCount
+        #       nodes {
+        #         # body
+        #         outdated
+        #         # publishedAt
+        #       }
+        #     }
+        #   }
+        # }
         reviews(first: 20) {
           totalCount
           nodes {
