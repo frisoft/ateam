@@ -6,5 +6,7 @@ pub struct Config {
 }
 
 pub fn get_config() -> Result<Config, envy::Error> {
+    dotenv::dotenv().ok();
+    env_logger::init();
     envy::from_env()
 }

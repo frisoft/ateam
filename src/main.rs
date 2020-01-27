@@ -17,23 +17,26 @@ fn parse_repo_name(repo_name: &str) -> Result<(&str, &str), failure::Error> {
 }
 
 fn main() -> Result<(), failure::Error> {
-    dotenv::dotenv().ok();
-    env_logger::init();
+    let cmd = cli::command();
 
-    let config: config::Config = config::get_config().context("while reading from environment")?;
+    match cmd {
+        cli::Command::Pr { repo, num, debug } => pr_cmd(&repo, num, debug),
+    }
+}
 
-    let args = cli::command();
+fn pr_cmd(repo: &str, num: Option<usize>, debug: bool) -> Result<(), failure::Error> {
+    let config = config::get_config().context("while reading from environment")?;
 
-    let repo = args.repo;
-    let (owner, name) = parse_repo_name(&repo).unwrap_or(("tomhoule", "graphql-client"));
+    let (owner, name) = parse_repo_name(repo).unwrap_or(("tomhoule", "graphql-client"));
 
     let response_data: repo_view::ResponseData =
         client::query(&config.github_api_token, owner, name)?;
 
     let sprs = client::ranked_prs(&response_data);
-    let table = table::from(&sprs, args.num.unwrap_or(10000), args.debug);
+    let table = table::from(&sprs, num.unwrap_or(10000), debug);
 
     table.printstd();
+
     Ok(())
 }
 

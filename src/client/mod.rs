@@ -31,11 +31,15 @@ pub fn query(
         .json(&q)
         .send()?;
 
-    println!("{:?}", res.json()?);
+    // println!(
+    //     ">>-----------------------------------\n{}\n-------------------------------\n",
+    //     res.text()?
+    // );
+    // println!(">> {:?}", res.json()?);
+    // println!("{:?}", res);
 
     let response_body: Response<repo_view::ResponseData> = res.json()?;
-    // info!("{:?}", response_body);
-    println!("{:?}", response_body);
+    // println!("{:?}", response_body);
 
     if let Some(errors) = response_body.errors {
         println!("there are errors:");
@@ -201,10 +205,13 @@ fn pr_num_reviewers(
     s.len() as i64
 }
 
-fn parse_date(date: &str) -> Option<DateTime<Utc>> {
-    match date.parse::<DateTime<Utc>>() {
-        Ok(date_time) => Some(date_time),
-        Err(_) => None,
+fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
+    match date {
+        Some(s) => match s.parse::<DateTime<Utc>>() {
+            Ok(date_time) => Some(date_time),
+            Err(_) => None,
+        },
+        None => None,
     }
 }
 
