@@ -5,6 +5,7 @@ mod client;
 use client::*;
 mod cli;
 mod config;
+mod print;
 mod table;
 mod types;
 
@@ -20,36 +21,70 @@ fn main() -> Result<(), failure::Error> {
     let cmd = cli::command();
 
     match cmd {
-        cli::Command::Pr { repo, num, debug } => pr_cmd(&repo, num, debug),
+        cli::Command::Pr {
+            repos,
+            num,
+            debug,
+            short,
+        } => pr_cmd(&repos, num, debug, short),
     }
 }
 
-fn pr_cmd(repo: &str, num: Option<usize>, debug: bool) -> Result<(), failure::Error> {
+fn pr_cmd(
+    repos: &Vec<String>,
+    num: Option<usize>,
+    debug: bool,
+    short: bool,
+) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let (owner, name) = parse_repo_name(repo).unwrap_or(("tomhoule", "graphql-client"));
+    let mut dataset: Vec<repo_view::ResponseData> = vec![];
+    for repo in repos.iter() {
+        let (owner, name) = parse_repo_name(repo).unwrap_or(("-", "-"));
+        let data_or_error = client::query(&config.github_api_token, owner, name);
+        match data_or_error {
+            Ok(data) => dataset.push(data),
+            _ => {
+                return data_or_error;
+            }
+        }
+    }
 
-    let response_data: repo_view::ResponseData =
-        client::query(&config.github_api_token, owner, name)?;
+    //     let data: Vec<repo_view::ResponseData> = repos
+    //         .iter()
+    //         .map(|repo| {
+    //             let (owner, name) = parse_repo_name(repo).unwrap_or(("-", "-"));
+    //             let res = client::query(&config.github_api_token, owner, name)?;
+    //             res
+    //         })
+    //         .collect();
 
-    let sprs = client::ranked_prs(&response_data);
-    let table = table::from(&sprs, num.unwrap_or(10000), debug);
+    let sprs = client::ranked_prs(&dataset);
+    print::prs(&sprs, num, debug, short);
 
-    table.printstd();
+    // for repo in repos {
+    //     let (owner, name) = parse_repo_name(repo).unwrap_or(("-", "-"));
+
+    //     let response_data: repo_view::ResponseData =
+    //         client::query(&config.github_api_token, owner, name)?;
+
+    //     let sprs = client::ranked_prs(&response_data);
+    //     print::prs(&sprs, num, debug, short);
+    // }
 
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn parse_repo_name_works() {
-        assert_eq!(
-            parse_repo_name("graphql-rust/graphql-client").unwrap(),
-            ("graphql-rust", "graphql-client")
-        );
-        assert!(parse_repo_name("abcd").is_err());
-    }
-}
+//     #[test]
+//     fn parse_repo_name_works() {
+//         assert_eq!(
+//             parse_repo_name("graphql-rust/graphql-client").unwrap(),
+//             ("graphql-rust", "graphql-client")
+//         );
+//         assert!(parse_repo_name("abcd").is_err());
+//     }
+// }

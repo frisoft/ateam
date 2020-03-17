@@ -12,7 +12,7 @@ query RepoView($owner: String!, $name: String!) {
     #     }
     #   }
     # }
-    pullRequests(last: 68, states: OPEN) {
+    pullRequests(last: 100, states: OPEN) {
       nodes {
         title
         url

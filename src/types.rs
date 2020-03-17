@@ -59,6 +59,52 @@ impl Score {
     }
 }
 
+impl std::fmt::Display for Pr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{} ({})",
+            // "{} {} {:?} {} OC:{} Appr:{}/{} +{} -{}",
+            self.title,
+            self.url,
+            // self.last_commit_pushed_date,
+            // self.tests_result,
+            // self.open_conversations,
+            // self.num_approvals,
+            // self.num_reviewers,
+            // self.additions,
+            // self.deletions,
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pr_fmt_method() {
+        let pr = Pr {
+            title: "[LED-567] All bank transfer payment to be updated after it is completed"
+                .to_string(),
+            url: "https://github.com/smartpension/api/pull/9313".to_string(),
+            last_commit_pushed_date: None,
+            tests_result: 0,
+            open_conversations: 0,
+            num_approvals: 1,
+            num_reviewers: 2,
+            additions: 1000,
+            deletions: 999,
+        };
+
+        assert_eq!(
+            format!("{}", pr),
+            "[LED-567] All bank transfer payment to be updated after it is completed (https://github.com/smartpension/api/pull/9313)"
+            // "[LED-567] All bank transfer payment to be updated after it i (https://github.com/smartpension/api/pull/9313)"
+        );
+    }
+}
+
 // impl std::fmt::Display for ScoredPr {
 //     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 //         let pr = &self.pr;
