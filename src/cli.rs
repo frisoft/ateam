@@ -4,8 +4,8 @@ use structopt::StructOpt;
 #[structopt(author, about)]
 pub enum Command {
     Pr {
-        #[structopt(name = "repositories")]
-        repos: Vec<String>,
+        #[structopt(name = "repository")]
+        repo: String,
         #[structopt(long, short, help = "Add debug information")]
         debug: bool,
         #[structopt(long, short, help = "Number of pull requests to display")]

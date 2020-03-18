@@ -51,13 +51,14 @@ pub fn query(
     Ok(response_body.data.expect("missing response data"))
 }
 
-pub fn ranked_prs(response_data: &Vec<repo_view::ResponseData>) -> Vec<ScoredPr> {
-    let mut sprs: Vec<ScoredPr> = response_data
-        .iter()
-        .map(|data| prs(&data).map(scored_pr))
-        .flatten()
-        .collect();
-    // let mut sprs: Vec<ScoredPr> = prs(&response_data).map(scored_pr).collect();
+pub fn ranked_prs(response_data: &repo_view::ResponseData) -> Vec<ScoredPr> {
+
+    // let mut sprs: Vec<ScoredPr> = response_data
+    //     .iter()
+    //     .map(|data| prs(&data).map(scored_pr))
+    //     .flatten()
+    //     .collect();
+    let mut sprs: Vec<ScoredPr> = prs(&response_data).map(scored_pr).collect();
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
     sprs

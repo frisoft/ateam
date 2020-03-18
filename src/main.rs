@@ -22,33 +22,38 @@ fn main() -> Result<(), failure::Error> {
 
     match cmd {
         cli::Command::Pr {
-            repos,
+            repo,
             num,
             debug,
             short,
-        } => pr_cmd(&repos, num, debug, short),
+        } => pr_cmd(&repo, num, debug, short),
     }
 }
 
 fn pr_cmd(
-    repos: &Vec<String>,
+    repo: &str,
     num: Option<usize>,
     debug: bool,
     short: bool,
 ) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let mut dataset: Vec<repo_view::ResponseData> = vec![];
-    for repo in repos.iter() {
-        let (owner, name) = parse_repo_name(repo).unwrap_or(("-", "-"));
-        let data_or_error = client::query(&config.github_api_token, owner, name);
-        match data_or_error {
-            Ok(data) => dataset.push(data),
-            _ => {
-                return data_or_error;
-            }
-        }
-    }
+    // let mut dataset: Vec<repo_view::ResponseData> = vec![];
+    // for repo in repos.iter() {
+    //     let (owner, name) = parse_repo_name(repo).unwrap_or(("-", "-"));
+    //     let data_or_error = client::query(&config.github_api_token, owner, name);
+    //     match data_or_error {
+    //         Ok(data) => dataset.push(data),
+    //         _ => {
+    //             return data_or_error;
+    //         }
+    //     }
+    // }
+
+    let (owner, name) = parse_repo_name(repo).unwrap_or(("-", "-"));
+
+    let response_data: repo_view::ResponseData =
+        client::query(&config.github_api_token, owner, name)?;
 
     //     let data: Vec<repo_view::ResponseData> = repos
     //         .iter()
@@ -59,7 +64,7 @@ fn pr_cmd(
     //         })
     //         .collect();
 
-    let sprs = client::ranked_prs(&dataset);
+    let sprs = client::ranked_prs(&response_data);
     print::prs(&sprs, num, debug, short);
 
     // for repo in repos {
