@@ -15,7 +15,7 @@ Then, it orders the pull requests by rank. The highest first, the lowest last.
 The ranking algorithm is based on several pieces of information fetched from GitHub.
 
 ```
-pull request rank = 
+pull request score = 
   (last_commit_age * 10.0) +      # last_commit_age: hours from the last pushed commit
                                   # Older plull requests are showed first.
 
