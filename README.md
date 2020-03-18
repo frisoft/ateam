@@ -1,4 +1,4 @@
-# A Team
+# A-Team
 
 The tool that helps optimize the code review process.
 
