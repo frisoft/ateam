@@ -8,27 +8,27 @@ ATeam gives you two sub-commands: `pr` and `todo`
 
 This command helps the developers determine which pull request should be reviewed next.
 
-It implemets a ranking of your open pull requests (excluding the ones with "WIP" label).
+It implemets a ranking system of your open pull requests (excluding the ones with "WIP" label).
 
-Then, it orders the pull requests by rank. The highest first, the lowest last.
+It assigns a score to the pull requests. Then, it orders them by score. The highest first, the lowest last.
 
 The ranking algorithm is based on several pieces of information fetched from GitHub.
 
 ```
 pull request score = 
-  (last_commit_age * 10.0) +      # last_commit_age: hours from the last pushed commit
-                                  # Older plull requests are showed first.
+  (last_commit_age * 10.0) +      # last_commit_age: hours since the last pushed commit
+                                  # Older pull requests are shown first.
 
   ((tests_result-1) * -2000.0) +  # tests_result: 0=success, 1=in progress, 2=failing
                                   # - success gives 0
-                                  # -  in progress subtracts 200 from the final rank
-                                  # - failing subtracts 400 from the inal rank
+                                  # - in progress subtracts 2000 from the final score
+                                  # - failing subtracts 4000 from the final score
 
   (open_conversations * -20.0) +  # NO MORE AVAILABLE FROM GITHUB, IGNORED
                                   # open_conversations: number of unresolved and non-outdated conversations
                                   # A pull request with open conversations is ranked less than
                                   # one without conversations as you probably better off
-                                  # waiting for the convresations to be resolved.
+                                  # waiting for the conersation to be resolved.
 
   (approvals^2 * -50.0) +         # approvals: number reviews with state APPROVED
                                   # Approved pull requestes need less attention.

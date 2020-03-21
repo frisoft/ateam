@@ -80,12 +80,16 @@ fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_
         .expect("pull request nodes is null")
         .iter()
         .flatten() // Extract value from Some(value) and remove the Nones
-        .filter(|i| !has_wip_label(i))
+        .filter(|i| !has_wip_label(i) && !is_empty(i))
         .map(|i| pr_stats(i)) // <-- Refactor
 }
 
 fn has_wip_label(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> bool {
     pr_labels(pr).iter().any(|l| l == &"WIP")
+}
+
+fn is_empty(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> bool {
+    pr.additions == 0 && pr.deletions == 0
 }
 
 fn pr_labels(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Vec<&str> {
