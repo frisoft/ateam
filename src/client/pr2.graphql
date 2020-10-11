@@ -1,5 +1,5 @@
-query RepoView($query: String!) {
-  search(query: $query, last: 100, type: ISSUE) {
+query RepoView($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
     # homepageUrl
     # stargazers {
     #   totalCount
@@ -12,10 +12,8 @@ query RepoView($query: String!) {
     #     }
     #   }
     # }
-    edges {
-      node {
-      __typename
-      ... on PullRequest {
+    pullRequests(last: 100, states: OPEN, stati: [DRAFT]) {
+      nodes {
         title
         url
         additions
@@ -68,9 +66,7 @@ query RepoView($query: String!) {
             #   }
             # }
           }
-	}
         }
-            	
       }
     }
   }

@@ -13,16 +13,46 @@ pub struct RepoView;
 
 type URI = String;
 
+// pub fn quer2(github_api_token: &str, owner: &str, ticket: &str) -> Result<Vec<Pr>, failure::Error> {
+//     let q = PullRequests::build_query(pull_requests::Variables {
+//         query: format!("org:{} is:pr [{}] in:title", owner, ticket),
+//     });
+//     let client = reqwest::Client::new();
+//     let mut res = client
+//         .post("https://api.github.com/graphql")
+//         .bearer_auth(github_api_token)
+//         .json(&q)
+//         .send()?;
+//     let response_body: Response<pull_requests::ResponseData> = res.json()?;
+//     if let Some(errors) = response_body.errors {
+//         println!("there are errors:");
+//         for error in &errors {
+//             println!("{:?}", error);
+//         }
+//     }
+//     // Ok(prs(&response_body.data.expect("missing response data")).collect())
+//     // println!("{:?}", response_body.data);
+//     let prs: Vec<Pr> = prs(&response_body.data, &ticket);
+//     // println!("{:?}", prs);
+//     Ok(prs)
+// }
+
 pub fn query(
     github_api_token: &str,
     owner: &str,
-    name: &str,
+    _name: &str,
 ) -> Result<repo_view::ResponseData, failure::Error> {
+    let query = format!(
+        "is:pr is:open draft:false status:success repo:{}/api repo:{}/retire-api",
+        // "is:pr org:{} repository:smartpension/api draft:false states:OPEN",
+        "smartpension",
+        "smartpension"
+    );
+    println!(">> {:?}", query);
     let q = RepoView::build_query(repo_view::Variables {
         // ) -> Result<repo_view::ResponseData, failure::Error> {
         //     let q = RepoView::build_query(repo_view::Variables {
-        owner: owner.to_string(),
-        name: name.to_string(),
+        query,
     });
     let client = reqwest::Client::new();
     let mut res = client
@@ -32,8 +62,8 @@ pub fn query(
         .send()?;
 
     // println!(
-    //     ">>-----------------------------------\n{}\n-------------------------------\n",
-    //     res.text()?
+    // ">>-----------------------------------\n{}\n-------------------------------\n",
+    // res.text()?
     // );
     // println!(">> {:?}", res.json()?);
     // println!("{:?}", res);
@@ -52,7 +82,6 @@ pub fn query(
 }
 
 pub fn ranked_prs(response_data: &repo_view::ResponseData) -> Vec<ScoredPr> {
-
     // let mut sprs: Vec<ScoredPr> = response_data
     //     .iter()
     //     .map(|data| prs(&data).map(scored_pr))
@@ -71,28 +100,32 @@ fn scored_pr(pr: Pr) -> ScoredPr {
 
 fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_ {
     response_data
-        .repository
-        .as_ref()
-        .expect("missing repository")
-        .pull_requests
-        .nodes
-        .as_ref()
-        .expect("pull request nodes is null")
+        .search
+        .edges
         .iter()
+        .flatten()
+        .flatten()
+        .map(|i| i.node.as_ref()) // <-- Refactor
+        .map(|n| match n {
+            Some(repo_view::RepoViewSearchEdgesNode::PullRequest(pull_request)) => {
+                Some(pull_request)
+            }
+            _ => None,
+        }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .filter(|i| !has_wip_label(i) && !is_empty(i))
-        .map(|i| pr_stats(i)) // <-- Refactor
+        .map(|i| pr_stats(&i)) // <-- Refactor
 }
 
-fn has_wip_label(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> bool {
+fn has_wip_label(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr_labels(pr).iter().any(|l| l == &"WIP")
 }
 
-fn is_empty(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> bool {
+fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr.additions == 0 && pr.deletions == 0
 }
 
-fn pr_labels(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Vec<&str> {
+fn pr_labels(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
     match &pr.labels {
         Some(labels) => labels
             .nodes
@@ -105,7 +138,7 @@ fn pr_labels(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Vec<&str> {
     }
 }
 
-fn pr_stats(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Pr {
+fn pr_stats(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Pr {
     let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
     Pr {
         title: pr.title.clone(),
@@ -121,7 +154,7 @@ fn pr_stats(pr: &repo_view::RepoViewRepositoryPullRequestsNodes) -> Pr {
 }
 
 fn last_commit(
-    pr: &repo_view::RepoViewRepositoryPullRequestsNodes,
+    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> (Option<DateTime<Utc>>, Option<&repo_view::StatusState>) {
     if let Some((pushed_date, state)) = pr
         .commits
@@ -174,7 +207,7 @@ fn status_state_to_i(state: Option<&repo_view::StatusState>) -> i64 {
 // }
 
 fn pr_num_approvals(
-    reviews: &std::option::Option<repo_view::RepoViewRepositoryPullRequestsNodesReviews>,
+    reviews: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
 ) -> i64 {
     reviews
         .as_ref()
@@ -190,7 +223,7 @@ fn pr_num_approvals(
 }
 
 fn pr_num_reviewers(
-    reviews: &std::option::Option<repo_view::RepoViewRepositoryPullRequestsNodesReviews>,
+    reviews: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
 ) -> i64 {
     let reviewers = reviews
         .as_ref()
