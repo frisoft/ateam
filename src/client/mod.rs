@@ -39,21 +39,16 @@ type URI = String;
 
 pub fn query(
     github_api_token: &str,
-    owner: &str,
-    _name: &str,
+    repos: &[String],
+    query: &Option<String>
 ) -> Result<repo_view::ResponseData, failure::Error> {
-    let query = format!(
-        "is:pr is:open draft:false status:success repo:{}/api repo:{}/retire-api",
-        // "is:pr org:{} repository:smartpension/api draft:false states:OPEN",
-        "smartpension",
-        "smartpension"
+    let query_argument = format!(
+        "is:pr is:open draft:false -status:progess -status:failure {}{}",
+        query_repos(&repos),
+        &query.as_ref().unwrap_or(&"".to_string())
     );
-    println!(">> {:?}", query);
-    let q = RepoView::build_query(repo_view::Variables {
-        // ) -> Result<repo_view::ResponseData, failure::Error> {
-        //     let q = RepoView::build_query(repo_view::Variables {
-        query,
-    });
+    // println!(">> {:?}", query);
+    let q = RepoView::build_query(repo_view::Variables { query: query_argument });
     let client = reqwest::Client::new();
     let mut res = client
         .post("https://api.github.com/graphql")
@@ -81,12 +76,11 @@ pub fn query(
     Ok(response_body.data.expect("missing response data"))
 }
 
+fn query_repos(repos: &[String]) -> String {
+    repos.iter().map(|repo| format!("repo:{} ", repo)).collect()
+}
+
 pub fn ranked_prs(response_data: &repo_view::ResponseData) -> Vec<ScoredPr> {
-    // let mut sprs: Vec<ScoredPr> = response_data
-    //     .iter()
-    //     .map(|data| prs(&data).map(scored_pr))
-    //     .flatten()
-    //     .collect();
     let mut sprs: Vec<ScoredPr> = prs(&response_data).map(scored_pr).collect();
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
