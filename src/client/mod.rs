@@ -40,15 +40,17 @@ type URI = String;
 pub fn query(
     github_api_token: &str,
     repos: &[String],
-    query: &Option<String>
+    query: &Option<String>,
 ) -> Result<repo_view::ResponseData, failure::Error> {
     let query_argument = format!(
         "is:pr is:open draft:false -status:progess -status:failure {}{}",
         query_repos(&repos),
         &query.as_ref().unwrap_or(&"".to_string())
     );
-    // println!(">> {:?}", query);
-    let q = RepoView::build_query(repo_view::Variables { query: query_argument });
+    // println!(">> {:?}", query_argument);
+    let q = RepoView::build_query(repo_view::Variables {
+        query: query_argument,
+    });
     let client = reqwest::Client::new();
     let mut res = client
         .post("https://api.github.com/graphql")

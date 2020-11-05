@@ -10,6 +10,10 @@ This command helps the developers determine which pull request should be reviewe
 
 It implemets a ranking system of your open pull requests (excluding the ones with "WIP" label).
 
+Draft pull requiests and pull requires with "WIP" label are excluded.
+
+Pull requests with in progress of failing tests re excluded as well.
+
 It assigns a score to the pull requests. Then, it orders them by score. The highest first, the lowest last.
 
 The ranking algorithm is based on several pieces of information fetched from GitHub.
@@ -19,7 +23,8 @@ pull request score =
   (last_commit_age * 10.0) +      # last_commit_age: hours since the last pushed commit
                                   # Older pull requests are shown first.
 
-  ((tests_result-1) * -2000.0) +  # tests_result: 0=success, 1=in progress, 2=failing
+  ((tests_result-1) * -2000.0) +  # APPLIED BUT, AT THE MOMENT, ALL THE IN PROGRESS OR FAILING PR ARE REMOVED
+                                  # tests_result: 0=success, 1=in progress, 2=failing
                                   # - success gives 0
                                   # - in progress subtracts 2000 from the final score
                                   # - failing subtracts 4000 from the final score
