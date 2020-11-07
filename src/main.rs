@@ -13,30 +13,20 @@ fn main() -> Result<(), failure::Error> {
     let cmd = cli::command();
 
     match cmd {
-        cli::Command::Pr {
-            repo,
-            num,
+        cli::Ateam {
             debug,
-            short,
-            query,
-        } => pr_cmd(&repo, num, debug, short, &query),
+            cmd: cli::Command::Pr(pr),
+        } => pr_cmd(&pr, debug),
     }
 }
 
-fn pr_cmd(
-    repo: &[String],
-    num: Option<usize>,
-    debug: bool,
-    short: bool,
-    query: &Option<String>,
-) -> Result<(), failure::Error> {
+fn pr_cmd(pr: &cli::Pr, debug: bool) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let response_data: repo_view::ResponseData =
-        client::query(&config.github_api_token, repo, &query)?;
+    let response_data: repo_view::ResponseData = client::query(&config.github_api_token, &pr)?;
 
     let sprs = client::ranked_prs(&response_data);
-    print::prs(&sprs, num, debug, short);
+    print::prs(&sprs, pr.num, debug, pr.short);
 
     Ok(())
 }
