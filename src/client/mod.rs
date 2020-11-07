@@ -42,11 +42,7 @@ pub fn query(
     repos: &[String],
     query: &Option<String>,
 ) -> Result<repo_view::ResponseData, failure::Error> {
-    let query_argument = format!(
-        "is:pr is:open draft:false -status:progess -status:failure {}{}",
-        query_repos(&repos),
-        &query.as_ref().unwrap_or(&"".to_string())
-    );
+    let query_argument = github_query(repos, query);
     // println!(">> {:?}", query_argument);
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
@@ -76,6 +72,14 @@ pub fn query(
     }
     // println!("{:?}", response_body.data);
     Ok(response_body.data.expect("missing response data"))
+}
+
+fn github_query(repos: &[String], query: &Option<String>) -> String {
+    format!(
+        "is:pr is:open draft:false -status:progess -status:failure -author:@me -reviewed-by:@me {}{}",
+        query_repos(repos),
+        &query.as_ref().unwrap_or(&"".to_string())
+    )
 }
 
 fn query_repos(repos: &[String]) -> String {
