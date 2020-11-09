@@ -20,13 +20,14 @@ fn main() -> Result<(), failure::Error> {
     }
 }
 
-fn pr_cmd(pr: &cli::Pr, debug: bool) -> Result<(), failure::Error> {
+fn pr_cmd(options: &cli::Pr, debug: bool) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let response_data: repo_view::ResponseData = client::query(&config.github_api_token, &pr)?;
+    // println!(">> {:?}", options);
+    let response_data: repo_view::ResponseData = client::query(&config.github_api_token, &options)?;
 
     let sprs = client::ranked_prs(&response_data);
-    print::prs(&sprs, pr.num, debug, pr.short);
+    print::prs(&sprs, options.num, debug, options.short);
 
     Ok(())
 }

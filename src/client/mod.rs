@@ -43,7 +43,7 @@ pub fn query(
     options: &cli::Pr,
 ) -> Result<repo_view::ResponseData, failure::Error> {
     let query_argument = github_query(options);
-    println!(">> {:?}", query_argument);
+    // println!(">> {:?}", query_argument);
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
     });
@@ -76,20 +76,28 @@ pub fn query(
 
 fn github_query(options: &cli::Pr) -> String {
     format!(
-        "is:pr is:open draft:false -status:progess -status:failure -author:@me -reviewed-by:@me {}{}{}",
+        "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
+        query_include_mine(options.include_mine),
         query_excluse_reciewed_by_me(options.exclude_reviewed_by_me),
         query_repos(&options.repo),
         &options.query.as_ref().unwrap_or(&"".to_string())
     )
 }
 
-fn query_excluse_reciewed_by_me(exclude_reviewed_by_me: bool) -> String {
+fn query_include_mine(include_mine: bool) -> &'static str {
+    if include_mine {
+        ""
+    } else {
+        "-author:@me "
+    }
+}
+
+fn query_excluse_reciewed_by_me(exclude_reviewed_by_me: bool) -> &'static str {
     if exclude_reviewed_by_me {
         "-reviewer:@me "
     } else {
         ""
     }
-    .to_string()
 }
 
 fn query_repos(repos: &[String]) -> String {

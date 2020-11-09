@@ -31,6 +31,8 @@ pub struct Pr {
     pub query: Option<String>,
     #[structopt(long, help = "Exclude PRs I have reviewed")]
     pub exclude_reviewed_by_me: bool,
+    #[structopt(long, help = "Include my PRs")]
+    pub include_mine: bool,
 }
 
 pub fn command() -> Ateam {
