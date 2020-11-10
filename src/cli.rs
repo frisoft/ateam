@@ -29,6 +29,8 @@ pub struct Pr {
     pub short: bool,
     #[structopt(long, short, help = "GitHub query")]
     pub query: Option<String>,
+    #[structopt(long, help = "Regexp filter on titles")]
+    pub regex: Option<String>,
     #[structopt(long, help = "Exclude PRs I have reviewed")]
     pub exclude_reviewed_by_me: bool,
     #[structopt(long, help = "Include my PRs")]

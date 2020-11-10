@@ -5,6 +5,7 @@ mod client;
 use client::*;
 mod cli;
 mod config;
+mod filter;
 mod print;
 mod table;
 mod types;
@@ -27,6 +28,7 @@ fn pr_cmd(options: &cli::Pr, debug: bool) -> Result<(), failure::Error> {
     let response_data: repo_view::ResponseData = client::query(&config.github_api_token, &options)?;
 
     let sprs = client::ranked_prs(&response_data);
+    let sprs = filter::regex(&options.regex, sprs);
     print::prs(&sprs, options.num, debug, options.short);
 
     Ok(())
