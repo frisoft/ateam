@@ -94,7 +94,7 @@ fn query_include_mine(include_mine: bool) -> &'static str {
 
 fn query_excluse_reciewed_by_me(exclude_reviewed_by_me: bool) -> &'static str {
     if exclude_reviewed_by_me {
-        "-reviewer:@me "
+        "-reviewed-by:@me "
     } else {
         ""
     }
