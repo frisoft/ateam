@@ -76,9 +76,13 @@ pub fn query(
 
 fn github_query(options: &cli::Pr) -> String {
     format!(
-        "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
+        // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
+        "is:pr is:open draft:false {}{}{}{}{}{}{}",
         query_include_mine(options.include_mine),
+        query_include_tests_in_progress(options.include_tests_in_progress),
+        query_include_tests_failure(options.include_tests_failure),
         query_excluse_reciewed_by_me(options.exclude_reviewed_by_me),
+        query_labels(&options.label),
         query_repos(&options.repo),
         &options.query.as_ref().unwrap_or(&"".to_string())
     )
@@ -92,6 +96,22 @@ fn query_include_mine(include_mine: bool) -> &'static str {
     }
 }
 
+fn query_include_tests_in_progress(include_tests_in_progress: bool) -> &'static str {
+    if include_tests_in_progress {
+        ""
+    } else {
+        "-status:progess "
+    }
+}
+
+fn query_include_tests_failure(include_tests_failure: bool) -> &'static str {
+    if include_tests_failure {
+        ""
+    } else {
+        "-status:failure "
+    }
+}
+
 fn query_excluse_reciewed_by_me(exclude_reviewed_by_me: bool) -> &'static str {
     if exclude_reviewed_by_me {
         "-reviewed-by:@me "
@@ -100,19 +120,31 @@ fn query_excluse_reciewed_by_me(exclude_reviewed_by_me: bool) -> &'static str {
     }
 }
 
+fn query_labels(labels: &[String]) -> String {
+    labels
+        .iter()
+        .map(|label| format!("label:{} ", label))
+        .collect()
+}
+
 fn query_repos(repos: &[String]) -> String {
     repos.iter().map(|repo| format!("repo:{} ", repo)).collect()
 }
 
-pub fn ranked_prs(response_data: &repo_view::ResponseData) -> Vec<ScoredPr> {
-    let mut sprs: Vec<ScoredPr> = prs(&response_data).map(scored_pr).collect();
+pub fn ranked_prs(
+    required_approvals: u8,
+    response_data: &repo_view::ResponseData,
+) -> Vec<ScoredPr> {
+    let mut sprs: Vec<ScoredPr> = prs(&response_data)
+        .map(|pr| scored_pr(required_approvals, pr))
+        .collect();
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
     sprs
 }
 
-fn scored_pr(pr: Pr) -> ScoredPr {
-    let s = Score::from_pr(&pr);
+fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
+    let s = Score::from_pr(required_approvals, &pr);
     ScoredPr { pr, score: s }
 }
 

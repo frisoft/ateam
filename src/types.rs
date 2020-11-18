@@ -36,13 +36,13 @@ fn age(date_time: Option<DateTime<Utc>>) -> i64 {
 }
 
 impl Score {
-    pub fn from_pr(pr: &Pr) -> Score {
+    pub fn from_pr(required_approvals: u8, pr: &Pr) -> Score {
         Score {
             age: age(pr.last_commit_pushed_date) as f64 * 0.5,
             tests_result: (pr.tests_result - 1) as f64 * -200.0,
             open_conversations: pr.open_conversations as f64 * -20.0,
-            num_approvals: ((pr.num_approvals - 1) ^ 2) as f64 * -50.0,
-            num_reviewers: ((pr.num_reviewers - 1) ^ 2) as f64 * -20.0,
+            num_approvals: (pr.num_approvals - required_approvals as i64) as f64 * -80.0,
+            num_reviewers: (pr.num_reviewers - required_approvals as i64) as f64 * -50.0,
             additions: pr.additions as f64 * -0.5,
             deletions: pr.deletions as f64 * -0.1,
         }

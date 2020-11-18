@@ -51,6 +51,30 @@ pull request score =
                                   # is usually a quicker job.
 ```
 
+```
+ateam-pr 0.2.0
+
+USAGE:
+    ateam pr [FLAGS] [OPTIONS]
+
+FLAGS:
+        --exclude-reviewed-by-me       Exclude PRs I have reviewed
+    -h, --help                         Prints help information
+        --include-mine                 Include my PRs
+        --include-tests-failure        Include PRs with tests falure
+        --include-tests-in-progress    Include PRs with tests in progess
+    -s, --short                        Short version. No table
+    -V, --version                      Prints version information
+
+OPTIONS:
+        --label <label>...                           Filter by label. Can be used multiple times
+    -n, --num <num>                                  Number of pull requests to display
+    -q, --query <query>                              GitHub query
+        --regex <regex>                              Regexp filter on titles
+    -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one
+        --required-approvals <required-approvals>    Number of required approvals [default: 2]
+```
+
 ## ateam todo
 
 This second command give you a list of pull requests you are reviewing or you have already reviewed 
