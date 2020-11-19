@@ -8,48 +8,41 @@ ATeam gives you two sub-commands: `pr` and `todo`
 
 This command helps the developers determine which pull request should be reviewed next.
 
-It implemets a ranking system of your open pull requests (excluding the ones with "WIP" label).
+It implemets a ranking system of your open pull requests.
 
 Draft pull requiests and pull requires with "WIP" label are excluded.
 
-Pull requests with in progress of failing tests re excluded as well.
+Pull requests with in progress of failing tests are excluded as well, unless you ask for them.
 
 It assigns a score to the pull requests. Then, it orders them by score. The highest first, the lowest last.
 
-The ranking algorithm is based on several pieces of information fetched from GitHub.
+The ranking algorithm is based on several pieces of information:
 
-```
 pull request score = 
-  (last_commit_age * 10.0) +      # last_commit_age: hours since the last pushed commit
-                                  # Older pull requests are shown first.
+  last_commit_age * 10.0 +
+  (tests_result-1) * -2000.0 +
+  (approvals - required_approvals) * -80.0 +
+  (reviews - required_approvals) * -50.0 +
+  additions * -0.5 +
+  deletions * -0.1
 
-  ((tests_result-1) * -2000.0) +  # APPLIED BUT, AT THE MOMENT, ALL THE IN PROGRESS OR FAILING PR ARE REMOVED
-                                  # tests_result: 0=success, 1=in progress, 2=failing
-                                  # - success gives 0
-                                  # - in progress subtracts 2000 from the final score
-                                  # - failing subtracts 4000 from the final score
+where
 
-  (open_conversations * -20.0) +  # NO MORE AVAILABLE FROM GITHUB, IGNORED
-                                  # open_conversations: number of unresolved and non-outdated conversations
-                                  # A pull request with open conversations is ranked less than
-                                  # one without conversations as you probably better off
-                                  # waiting for the conersation to be resolved.
+`last_commit_age` is the number of hours since the last pushed commit. So, older pull requests are shown first.
 
-  (approvals^2 * -50.0) +         # approvals: number reviews with state APPROVED
-                                  # Approved pull requestes need less attention.
+`tests_result` is 0 for successful tests, 1 for in progress tests and 2 for failing tests. Note that this has only effect if 
+the --include-tests-failure and/or --include-tests-in-progress are used.
 
-  (reviewers^2 * -20.0) +         # reviewers: number of reviewers
-                                  # A pull requestes with many reviewers need less attention.
+`approvals` is the number of approvals of the pull requests and `required_approvals` is the minimum number of approcals required (default = 2).
+Approved pull requestes need less attention.
 
-  (additions * -0.5) +            # additions: number of added lines
-                                  # Small pull requests need to be reviewed first.
-                                  # They might quickly unblock other pull requests.
-                                  # We promote small pull requests.
+`reviews` is the number of reviews the pull requiest received. A pull requestes with many reviews needs less attention.
 
-  (deletions * -0.1)              # deletions: number of deleted lines
-                                  # Deleted lines need to be reviewed as well but it
-                                  # is usually a quicker job.
-```
+`additions` is the number of lines added by the pull request. Small pull requests should be reviewed first.
+They might quickly unblock other pull requests. We promote small pull requests.
+
+`deletions` is the number of lines removed by the pull request. Small pull requests should be reviewed first.
+Deleted lines need to be reviewed as well but it is usually a quicker job, so they have a lower weith in the formula.
 
 ```
 ateam-pr 0.2.0
@@ -76,6 +69,8 @@ OPTIONS:
 ```
 
 ## ateam todo
+
+NOT AVAILABLE YET
 
 This second command give you a list of pull requests you are reviewing or you have already reviewed 
 that needs your attenction or a list of your pull requests that need your intervention.

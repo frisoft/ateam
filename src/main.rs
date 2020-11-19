@@ -15,13 +15,12 @@ fn main() -> Result<(), failure::Error> {
 
     match cmd {
         cli::Ateam {
-            debug,
             cmd: cli::Command::Pr(pr),
-        } => pr_cmd(&pr, debug),
+        } => pr_cmd(&pr),
     }
 }
 
-fn pr_cmd(options: &cli::Pr, debug: bool) -> Result<(), failure::Error> {
+fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
     // println!(">> {:?}", options);
@@ -29,7 +28,7 @@ fn pr_cmd(options: &cli::Pr, debug: bool) -> Result<(), failure::Error> {
 
     let sprs = client::ranked_prs(options.required_approvals, &response_data);
     let sprs = filter::regex(&options.regex, sprs);
-    print::prs(&sprs, options.num, debug, options.short);
+    print::prs(&sprs, options.num, options.debug, options.short);
 
     Ok(())
 }

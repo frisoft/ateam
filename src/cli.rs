@@ -3,8 +3,6 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(author, about)]
 pub struct Ateam {
-    #[structopt(long, short, help = "Add debug information")]
-    pub debug: bool,
     #[structopt(subcommand)]
     pub cmd: Command,
 }
@@ -16,6 +14,8 @@ pub enum Command {
 
 #[derive(StructOpt, Debug)]
 pub struct Pr {
+    #[structopt(long, short, help = "Add debug information")]
+    pub debug: bool,
     #[structopt(
         long,
         short,
