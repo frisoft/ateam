@@ -18,13 +18,15 @@ It assigns a score to the pull requests. Then, it orders them by score. The high
 
 The ranking algorithm is based on several pieces of information:
 
-** pull request score = ** 
-**   last_commit_age * 10.0 + **
-**   (tests_result-1) * -2000.0 + **
-**   (approvals - required_approvals) * -80.0 + **
-**   (reviews - required_approvals) * -50.0 + **
-**   additions * -0.5 + **
-**   deletions * -0.1 **
+```
+ pull request score = 
+   last_commit_age * 10.0 +
+   (tests_result-1) * -2000.0 +
+   (approvals - required_approvals) * -80.0 +
+   (reviews - required_approvals) * -50.0 +
+   additions * -0.5 +
+   deletions * -0.1
+```
 
 where
 
