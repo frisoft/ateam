@@ -87,3 +87,11 @@ Somebody else pull requests:
 Your pull requests:
   - Somebody opened a conversation on your pull request. You need to reply or change the code.
   - Somebody asked explicit changes to your pull request.
+
+## Install
+
+`cargo install ateam`
+
+Create a GitHub API tocken and store it in the GITHUB_API_TOKEN env variable. You can also use a .env file.
+
+
