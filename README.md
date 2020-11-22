@@ -47,7 +47,7 @@ They might quickly unblock other pull requests. We promote small pull requests.
 Deleted lines need to be reviewed as well but it is usually a quicker job, so they have a lower weith in the formula.
 
 ```
-ateam-pr 0.2.2
+ateam-pr 0.2.3
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
