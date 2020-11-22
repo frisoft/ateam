@@ -92,6 +92,6 @@ Your pull requests:
 
 `cargo install ateam`
 
-Create a GitHub API tocken and store it in the GITHUB_API_TOKEN env variable. You can also use a .env file.
+Create a GitHub API token and store it in the GITHUB_API_TOKEN env variable. You can also use a .env file.
 
 
