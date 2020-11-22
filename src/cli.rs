@@ -23,6 +23,12 @@ pub struct Pr {
         help = "Repositiy. Can be used multiple times to select more than one"
     )]
     pub repo: Vec<String>,
+    #[structopt(
+        long,
+        name = "organization",
+        help = "Selest all the repositoris of the organization"
+    )]
+    pub org: Option<String>,
     #[structopt(long, short, help = "Number of pull requests to display")]
     pub num: Option<usize>,
     #[structopt(long, short, help = "Short version. No table")]

@@ -47,12 +47,13 @@ They might quickly unblock other pull requests. We promote small pull requests.
 Deleted lines need to be reviewed as well but it is usually a quicker job, so they have a lower weith in the formula.
 
 ```
-ateam-pr 0.2.0
+ateam-pr 0.2.2
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
 
 FLAGS:
+    -d, --debug                        Add debug information
         --exclude-reviewed-by-me       Exclude PRs I have reviewed
     -h, --help                         Prints help information
         --include-mine                 Include my PRs
@@ -64,6 +65,7 @@ FLAGS:
 OPTIONS:
         --label <label>...                           Filter by label. Can be used multiple times
     -n, --num <num>                                  Number of pull requests to display
+        --org <organization>                         Selest all the repositoris of the organization
     -q, --query <query>                              GitHub query
         --regex <regex>                              Regexp filter on titles
     -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one

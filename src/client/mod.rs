@@ -43,7 +43,9 @@ pub fn query(
     options: &cli::Pr,
 ) -> Result<repo_view::ResponseData, failure::Error> {
     let query_argument = github_query(options);
-    // println!(">> {:?}", query_argument);
+    if options.debug {
+        println!(">> GitHub query: {:?}", query_argument);
+    }
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
     });
@@ -77,13 +79,14 @@ pub fn query(
 fn github_query(options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
-        "is:pr is:open draft:false {}{}{}{}{}{}{}",
+        "is:pr is:open draft:false {}{}{}{}{}{}{}{}",
         query_include_mine(options.include_mine),
         query_include_tests_in_progress(options.include_tests_in_progress),
         query_include_tests_failure(options.include_tests_failure),
         query_excluse_reciewed_by_me(options.exclude_reviewed_by_me),
         query_labels(&options.label),
         query_repos(&options.repo),
+        query_org(&options.org),
         &options.query.as_ref().unwrap_or(&"".to_string())
     )
 }
@@ -129,6 +132,14 @@ fn query_labels(labels: &[String]) -> String {
 
 fn query_repos(repos: &[String]) -> String {
     repos.iter().map(|repo| format!("repo:{} ", repo)).collect()
+}
+
+fn query_org(org: &Option<String>) -> String {
+    if let Some(org) = org {
+        format!("org:{} ", org)
+    } else {
+        "".to_string()
+    }
 }
 
 pub fn ranked_prs(
