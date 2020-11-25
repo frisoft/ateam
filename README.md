@@ -14,6 +14,10 @@ Draft pull requiests and pull requires with "WIP" label are excluded.
 
 Pull requests with in progress of failing tests are excluded as well, unless you ask for them.
 
+Pull requests you created are excluded as well, unless you ask for them.
+
+Pull requests you alrady reviewed are excluded as well, unless you ask for them.
+
 It assigns a score to the pull requests. Then, it orders them by score. The highest first, the lowest last.
 
 The ranking algorithm is based on several pieces of information:
@@ -47,18 +51,18 @@ They might quickly unblock other pull requests. We promote small pull requests.
 Deleted lines need to be reviewed as well but it is usually a quicker job, so they have a lower weith in the formula.
 
 ```
-ateam-pr 0.2.3
+ateam-pr 0.3.0
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
 
 FLAGS:
     -d, --debug                        Add debug information
-        --exclude-reviewed-by-me       Exclude PRs I have reviewed
     -h, --help                         Prints help information
-        --include-mine                 Include my PRs
-        --include-tests-failure        Include PRs with tests falure
-        --include-tests-in-progress    Include PRs with tests in progess
+        --include-mine                 Include my pull requests
+        --include-reviewed-by-me       Include pull requests I have reviewed
+        --include-tests-failure        Include pull requests with tests falure
+        --include-tests-in-progress    Include pull requests with tests in progess
     -s, --short                        Short version. No table
     -V, --version                      Prints version information
 

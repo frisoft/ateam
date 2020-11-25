@@ -39,13 +39,13 @@ pub struct Pr {
     pub query: Option<String>,
     #[structopt(long, help = "Regexp filter on titles")]
     pub regex: Option<String>,
-    #[structopt(long, help = "Exclude PRs I have reviewed")]
-    pub exclude_reviewed_by_me: bool,
-    #[structopt(long, help = "Include my PRs")]
+    #[structopt(long, help = "Include pull requests I have reviewed")]
+    pub include_reviewed_by_me: bool,
+    #[structopt(long, help = "Include my pull requests")]
     pub include_mine: bool,
-    #[structopt(long, help = "Include PRs with tests in progess")]
+    #[structopt(long, help = "Include pull requests with tests in progess")]
     pub include_tests_in_progress: bool,
-    #[structopt(long, help = "Include PRs with tests falure")]
+    #[structopt(long, help = "Include pull requests with tests falure")]
     pub include_tests_failure: bool,
     #[structopt(long, help = "Number of required approvals", default_value = "2")]
     pub required_approvals: u8,

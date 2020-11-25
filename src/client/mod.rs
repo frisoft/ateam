@@ -83,7 +83,7 @@ fn github_query(options: &cli::Pr) -> String {
         query_include_mine(options.include_mine),
         query_include_tests_in_progress(options.include_tests_in_progress),
         query_include_tests_failure(options.include_tests_failure),
-        query_excluse_reciewed_by_me(options.exclude_reviewed_by_me),
+        query_include_reviewed_by_me(options.include_reviewed_by_me),
         query_labels(&options.label),
         query_repos(&options.repo),
         query_org(&options.org),
@@ -115,11 +115,11 @@ fn query_include_tests_failure(include_tests_failure: bool) -> &'static str {
     }
 }
 
-fn query_excluse_reciewed_by_me(exclude_reviewed_by_me: bool) -> &'static str {
-    if exclude_reviewed_by_me {
-        "-reviewed-by:@me "
-    } else {
+fn query_include_reviewed_by_me(include_reviewed_by_me: bool) -> &'static str {
+    if include_reviewed_by_me {
         ""
+    } else {
+        "-reviewed-by:@me "
     }
 }
 
