@@ -63,7 +63,7 @@ impl std::fmt::Display for Pr {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "{} ({})",
+            "{:60.60} {}",
             // "{} {} {:?} {} OC:{} Appr:{}/{} +{} -{}",
             self.title,
             self.url,

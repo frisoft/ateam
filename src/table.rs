@@ -19,8 +19,8 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> prettytable::Table 
         "URL",
         "Last commit",
         "CI",
-        "O.C.",
-        "Rev.",
+        // "O.C.",
+        "Appr.",
         "Diff",
         "Score"
     ]);
@@ -49,16 +49,25 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
         "".to_string()
     };
     row!(
-        format!("{}{}", spr.pr.title, debug_info),
+        format!("{:.60}{}", spr.pr.title, debug_info),
         spr.pr.url,
         match spr.pr.last_commit_pushed_date {
             Some(d) => d.format("%d-%m-%Y %H:%M").to_string(),
             None => String::from("-"),
         },
-        spr.pr.tests_result.to_string(),
-        spr.pr.open_conversations.to_string(),
+        tests_result_label(spr.pr.tests_result),
+        // spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
         format!("{:.1}", spr.score.total()),
     )
+}
+
+fn tests_result_label(tests_result: i64) -> char {
+    match tests_result {
+        0 => 'S',
+        1 => 'P',
+        2 => 'F',
+        _ => '?',
+    }
 }
