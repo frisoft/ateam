@@ -19,7 +19,7 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> prettytable::Table 
         "URL",
         "Last commit",
         "CI",
-        // "O.C.",
+        "O.C.",
         "Appr.",
         "Diff",
         "Score"
@@ -56,7 +56,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
             None => String::from("-"),
         },
         tests_result_label(spr.pr.tests_result),
-        // spr.pr.open_conversations.to_string(),
+        spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
         format!("{:.1}", spr.score.total()),

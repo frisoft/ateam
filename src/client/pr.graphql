@@ -36,20 +36,12 @@ query RepoView($query: String!) {
             }
           }
         }
-        # reviewThreads(last: 50) {
-        #   totalCount
-        #   nodes {
-        #     isResolved
-        #     comments(last: 20) {
-        #       totalCount
-        #       nodes {
-        #         # body
-        #         outdated
-        #         # publishedAt
-        #       }
-        #     }
-        #   }
-        # }
+        reviewThreads(last: 50) {
+          nodes {
+            isResolved
+            isOutdated
+          }
+        }
         reviews(first: 20) {
           totalCount
           nodes {

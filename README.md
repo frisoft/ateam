@@ -24,12 +24,13 @@ The ranking algorithm is based on several pieces of information:
 
 ```
  pull request score = 
-   last_commit_age * 10.0 +
-   (tests_result-1) * -2000.0 +
-   (approvals - required_approvals) * -80.0 +
-   (reviews - required_approvals) * -50.0 +
-   additions * -0.5 +
-   deletions * -0.1
+   last_commit_age * 10.0
+   - (tests_result-1) * 2000.0
+   - open_conversations * 30.0
+   - (approvals - required_approvals) * 80.0
+   - (reviews - required_approvals) * 50.0
+   - additions * 0.5
+   - deletions * 0.1
 ```
 
 where
@@ -38,6 +39,9 @@ where
 
 `tests_result` is 0 for successful tests, 1 for in progress tests and 2 for failing tests. Note that this has only effect if 
 the --include-tests-failure and/or --include-tests-in-progress are used.
+
+`open_conversations` is the number of conversation not resolved and not outdated.
+A pull request with open conversations is already subject to reviews and discussion and, so, needs less attention. 
 
 `approvals` is the number of approvals of the pull requests and `required_approvals` is the minimum number of approcals required (default = 2).
 Approved pull requestes need less attention.
@@ -51,7 +55,7 @@ They might quickly unblock other pull requests. We promote small pull requests.
 Deleted lines need to be reviewed as well but it is usually a quicker job, so they have a lower weith in the formula.
 
 ```
-ateam-pr 0.3.0
+ateam-pr 0.3.1
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]

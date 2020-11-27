@@ -206,7 +206,7 @@ fn pr_stats(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Pr {
         url: pr.url.clone(),
         last_commit_pushed_date,
         tests_result: status_state_to_i(last_commit_state),
-        open_conversations: 0, // pr_open_conversations(&pr.review_threads), <-- reviewThreads is no more provided by GitHub
+        open_conversations: pr_open_conversations(&pr.review_threads),
         num_approvals: pr_num_approvals(&pr.reviews),
         num_reviewers: pr_num_reviewers(&pr.reviews),
         additions: pr.additions,
@@ -249,23 +249,23 @@ fn status_state_to_i(state: Option<&repo_view::StatusState>) -> i64 {
     }
 }
 
-// fn pr_open_conversations(
-//     review_threads: &repo_view::RepoViewRepositoryPullRequestsNodesReviewThreads,
-// ) -> i64 {
-//     review_threads
-//         .nodes
-//         .as_ref()
-//         .map(|nodes| {
-//             nodes.iter().filter(|review_thread| {
-//                 review_thread
-//                     .as_ref()
-//                     .map(|review_thread| review_thread_resolved_or_outdated(review_thread))
-//                     .unwrap_or(false)
-//             })
-//         })
-//         .map(|list| list.count())
-//         .unwrap_or(0) as i64
-// }
+fn pr_open_conversations(
+    review_threads: &repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewThreads
+) -> i64 {
+    review_threads
+        .nodes
+        .as_ref()
+        .map(|nodes| {
+            nodes.iter().filter(|review_thread| {
+                review_thread
+                    .as_ref()
+                    .map(|review_thread| !review_thread.is_resolved && !review_thread.is_outdated)
+                    .unwrap_or(false)
+            })
+        })
+        .map(|list| list.count())
+        .unwrap_or(0) as i64
+}
 
 fn pr_num_approvals(
     reviews: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
@@ -318,22 +318,3 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
         None => None,
     }
 }
-
-// fn review_thread_resolved_or_outdated(
-//     review_thread: &repo_view::RepoViewRepositoryPullRequestsNodesReviewThreadsNodes,
-// ) -> bool {
-//     review_thread.is_resolved
-//         || review_thread
-//             .comments
-//             .nodes
-//             .as_ref()
-//             .map(|comments| {
-//                 comments.iter().all(|comment| {
-//                     comment
-//                         .as_ref()
-//                         .map(|comment| comment.outdated)
-//                         .unwrap_or(false)
-//                 })
-//             })
-//             .unwrap_or(false)
-// }
