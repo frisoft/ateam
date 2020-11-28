@@ -85,9 +85,9 @@ mod tests {
     #[test]
     fn pr_fmt_method() {
         let pr = Pr {
-            title: "[LED-567] All bank transfer payment to be updated after it is completed"
+            title: "Some important changes"
                 .to_string(),
-            url: "https://github.com/smartpension/api/pull/9313".to_string(),
+            url: "https://github.com/frisoft/ateam/pull/1".to_string(),
             last_commit_pushed_date: None,
             tests_result: 0,
             open_conversations: 0,
@@ -99,8 +99,7 @@ mod tests {
 
         assert_eq!(
             format!("{}", pr),
-            "[LED-567] All bank transfer payment to be updated after it is completed (https://github.com/smartpension/api/pull/9313)"
-            // "[LED-567] All bank transfer payment to be updated after it i (https://github.com/smartpension/api/pull/9313)"
+            "Some important changes                                       https://github.com/frisoft/ateam/pull/1"
         );
     }
 }
