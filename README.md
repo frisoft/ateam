@@ -2,8 +2,6 @@
 
 The tool that helps optimize the code review process.
 
-ATeam gives you two sub-commands: `pr` and `todo`
-
 ## Install
 
 `cargo install ateam`
@@ -18,11 +16,13 @@ You can use this guide to create one: https://docs.github.com/en/free-pro-team@l
 
 The token needs read access to GitHub.
 
-You need to set the token as env variable in your shell. You can add it to your `~.bashrc/~/.zshrc`, or you can use a `.env` file in the directory you will use ateam from (or one of the parent directories):
+You need to set the token as env variable in your shell. You can add it to your `~.bashrc`, or you can use a `.env` file in the directory you will use ateam from (or one of the parent directories):
 
 ```bash
 export GITHUB_API_TOKEN=YOUR_TOKEN
 ```
+
+ATeam gives you two sub-commands: `pr` and `todo`.
 
 ## ateam pr
 
