@@ -10,6 +10,7 @@ pub struct Pr {
     pub num_reviewers: i64,
     pub additions: i64,
     pub deletions: i64,
+    pub based_on_main_branch: i64,
 }
 
 pub struct ScoredPr {
@@ -26,6 +27,7 @@ pub struct Score {
     pub num_reviewers: f64,
     pub additions: f64,
     pub deletions: f64,
+    pub based_on_main_branch: f64,
 }
 
 fn age(date_time: Option<DateTime<Utc>>) -> i64 {
@@ -45,6 +47,7 @@ impl Score {
             num_reviewers: (pr.num_reviewers - required_approvals as i64) as f64 * -50.0,
             additions: pr.additions as f64 * -0.5,
             deletions: pr.deletions as f64 * -0.1,
+            based_on_main_branch: pr.based_on_main_branch as f64 * 200.0,
         }
     }
 
@@ -56,6 +59,7 @@ impl Score {
             + self.num_reviewers
             + self.additions
             + self.deletions
+            + self.based_on_main_branch
     }
 }
 
@@ -94,6 +98,7 @@ mod tests {
             num_reviewers: 2,
             additions: 1000,
             deletions: 999,
+            based_on_main_branch: 200,
         };
 
         assert_eq!(

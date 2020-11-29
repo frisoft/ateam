@@ -212,6 +212,7 @@ fn pr_stats(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Pr {
         num_reviewers: pr_num_reviewers(&pr.reviews),
         additions: pr.additions,
         deletions: pr.deletions,
+        based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
     }
 }
 
@@ -317,5 +318,12 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
             Err(_) => None,
         },
         None => None,
+    }
+}
+
+fn pr_based_on_main_branch(base_branch_name: &str) -> i64 {
+    match base_branch_name {
+        "main" | "master" => 1,
+        _ => 0
     }
 }
