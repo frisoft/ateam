@@ -61,9 +61,19 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
         spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
-        format!("{}", spr.pr.based_on_main_branch == 1),
+        format!("{}", show_based_on_main_branch(spr.pr.based_on_main_branch)),
         format!("{:.1}", spr.score.total()),
     )
+}
+
+const YES: &str = "yes";
+const NO: &str = "no";
+fn show_based_on_main_branch(based_on_main_branch: i64) -> &'static str {
+   if based_on_main_branch == 1 {
+     YES
+   } else {
+     NO
+   }
 }
 
 fn tests_result_label(tests_result: i64) -> char {
