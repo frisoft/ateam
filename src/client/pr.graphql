@@ -1,68 +1,41 @@
 query RepoView($query: String!) {
   search(query: $query, last: 100, type: ISSUE) {
-    # homepageUrl
-    # stargazers {
-    #   totalCount
-    # }
-    # issues(first: 20, states: OPEN) {
-    #   nodes {
-    #     title
-    #     comments {
-    #       totalCount
-    #     }
-    #   }
-    # }
     edges {
       node {
-      __typename
-      ... on PullRequest {
-        title
-        url
-        additions
-        deletions
-        labels(first: 10) { 
-          nodes { 
-            name
-          } 
-        }
-        commits(last: 1) {
-          nodes {
-            commit {
-              commitUrl
-              pushedDate
-              status {
-                state
+        __typename
+        ... on PullRequest {
+          title
+          url
+          additions
+          deletions
+          commits(last: 1) {
+            nodes {
+              commit {
+                commitUrl
+                pushedDate
+                status {
+                  state
+                }
               }
             }
           }
-        }
-        reviewThreads(last: 50) {
-          nodes {
-            isResolved
-            isOutdated
-          }
-        }
-        reviews(first: 20) {
-          totalCount
-          nodes {
-            author {
-              __typename
-              login
+          reviewThreads(last: 40) {
+            nodes {
+              isResolved
+              isOutdated
             }
-            state
-            # comments(last: 1) {
-            #   totalCount
-            #   nodes {
-            #     body
-            #     replyTo {
-            #       body
-            #     }
-            #   }
-            # }
           }
-	}
+          reviews(first: 20) {
+            totalCount
+            nodes {
+              author {
+                __typename
+                login
+              }
+              state
+            }
+	  }
         }
-            	
       }
     }
   }

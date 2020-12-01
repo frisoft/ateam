@@ -93,7 +93,7 @@ OPTIONS:
 
 It implements a ranking system of your open pull requests.
 
-Draft pull requests and pull requests with "WIP" label are excluded.
+Draft pull requests are excluded.
 
 Pull requests with in progress or failing tests are excluded as well unless you ask for them.
 

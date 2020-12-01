@@ -85,8 +85,7 @@ mod tests {
     #[test]
     fn pr_fmt_method() {
         let pr = Pr {
-            title: "Some important changes"
-                .to_string(),
+            title: "Some important changes".to_string(),
             url: "https://github.com/frisoft/ateam/pull/1".to_string(),
             last_commit_pushed_date: None,
             tests_result: 0,

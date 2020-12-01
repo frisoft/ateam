@@ -174,29 +174,12 @@ fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_
             _ => None,
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
-        .filter(|i| !has_wip_label(i) && !is_empty(i))
+        .filter(|i| !is_empty(i))
         .map(|i| pr_stats(&i)) // <-- Refactor
-}
-
-fn has_wip_label(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
-    pr_labels(pr).iter().any(|l| l == &"WIP")
 }
 
 fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr.additions == 0 && pr.deletions == 0
-}
-
-fn pr_labels(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
-    match &pr.labels {
-        Some(labels) => labels
-            .nodes
-            .iter()
-            .flatten()
-            .flatten()
-            .map(|l| l.name.as_ref())
-            .collect(),
-        None => vec![],
-    }
 }
 
 fn pr_stats(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Pr {
@@ -250,7 +233,7 @@ fn status_state_to_i(state: Option<&repo_view::StatusState>) -> i64 {
 }
 
 fn pr_open_conversations(
-    review_threads: &repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewThreads
+    review_threads: &repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewThreads,
 ) -> i64 {
     review_threads
         .nodes
