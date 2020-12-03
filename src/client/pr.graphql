@@ -8,6 +8,7 @@ query RepoView($query: String!) {
           url
           additions
           deletions
+          baseRefName
           commits(last: 1) {
             nodes {
               commit {

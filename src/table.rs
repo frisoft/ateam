@@ -22,6 +22,7 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> prettytable::Table 
         "O.C.",
         "Appr.",
         "Diff",
+        "On Main",
         "Score"
     ]);
 
@@ -35,7 +36,7 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> prettytable::Table 
 fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
     let debug_info = if debug {
         format!(
-            "\nAge:{:.1} T:{:.1} OC:{:.1} Ap:{:.1} R:{:.1} +:{:.1} -:{:.1} Tot:{:.1}",
+            "\nAge:{:.1} T:{:.1} OC:{:.1} Ap:{:.1} R:{:.1} +:{:.1} -:{:.1} Br:{:.1} Tot:{:.1}",
             spr.score.age,
             spr.score.tests_result,
             spr.score.open_conversations,
@@ -43,6 +44,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
             spr.score.num_reviewers,
             spr.score.additions,
             spr.score.deletions,
+            spr.score.based_on_main_branch,
             spr.score.total()
         )
     } else {
@@ -59,8 +61,19 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
         spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
+        show_bool(spr.pr.based_on_main_branch).to_string(),
         format!("{:.1}", spr.score.total()),
     )
+}
+
+const YES: &str = "yes";
+const NO: &str = "no";
+fn show_bool(value: bool) -> &'static str {
+   if value {
+     YES
+   } else {
+     NO
+   }
 }
 
 fn tests_result_label(tests_result: i64) -> char {

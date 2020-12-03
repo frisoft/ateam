@@ -2,8 +2,6 @@
 
 The tool that helps optimize the code review process.
 
-ATeam gives you two sub-commands: `pr` and `todo`
-
 ## Install
 
 `cargo install ateam`
@@ -18,11 +16,13 @@ You can use this guide to create one: https://docs.github.com/en/free-pro-team@l
 
 The token needs read access to GitHub.
 
-You need to set the token as env variable in your shell. You can add it to your `~.bashrc/~/.zshrc`, or you can use a `.env` file in the directory you will use ateam from (or one of the parent directories):
+You need to set the token as env variable in your shell. You can add it to your `~.bashrc`, or you can use a `.env` file in the directory you will use ateam from (or one of the parent directories):
 
 ```bash
 export GITHUB_API_TOKEN=YOUR_TOKEN
 ```
+
+ATeam gives you two sub-commands: `pr` and `todo`.
 
 ## ateam pr
 
@@ -64,7 +64,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.2
+ateam-pr 0.3.3
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -114,6 +114,7 @@ The ranking algorithm is based on several pieces of information:
    - (reviews - required_approvals) * 50.0
    - additions * 0.5
    - deletions * 0.1
+   + based_on_main_branch * 200.0
 ```
 
 where
@@ -136,6 +137,10 @@ They might quickly unblock other pull requests. We promote small pull requests.
 
 `deletions` is the number of lines removed by the pull request. Small pull requests should be reviewed first.
 Deleted lines need to be reviewed as well, but it is usually a quicker job, so they have a lower weight in the formula.
+
+`based_on_main_branch` is 1 if the pull request is based on the main branch. It is 0 if based on another pull request.
+It is best reviewing first pull request based on the main branch.
+
 
 ## ateam todo
 
