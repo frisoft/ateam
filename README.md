@@ -114,6 +114,7 @@ The ranking algorithm is based on several pieces of information:
    - (reviews - required_approvals) * 50.0
    - additions * 0.5
    - deletions * 0.1
+   + based_on_main_branch * 200.0
 ```
 
 where
@@ -136,6 +137,10 @@ They might quickly unblock other pull requests. We promote small pull requests.
 
 `deletions` is the number of lines removed by the pull request. Small pull requests should be reviewed first.
 Deleted lines need to be reviewed as well, but it is usually a quicker job, so they have a lower weight in the formula.
+
+`based_on_main_branch` is 1 if the pull request is based on the main branch. It is 0 if based on another pull request.
+It is best reviewing first pull request based on the main branch.
+
 
 ## ateam todo
 
