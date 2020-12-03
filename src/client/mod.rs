@@ -321,9 +321,6 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
     }
 }
 
-fn pr_based_on_main_branch(base_branch_name: &str) -> i64 {
-    match base_branch_name {
-        "main" | "master" => 1,
-        _ => 0
-    }
+fn pr_based_on_main_branch(base_branch_name: &str) -> bool {
+    base_branch_name == "main" || base_branch_name == "master"
 }

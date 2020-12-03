@@ -68,8 +68,8 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
 
 const YES: &str = "yes";
 const NO: &str = "no";
-fn show_based_on_main_branch(based_on_main_branch: i64) -> &'static str {
-   if based_on_main_branch == 1 {
+fn show_based_on_main_branch(based_on_main_branch: bool) -> &'static str {
+   if based_on_main_branch {
      YES
    } else {
      NO
