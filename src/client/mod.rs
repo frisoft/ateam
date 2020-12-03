@@ -3,6 +3,7 @@ use super::types::*;
 use chrono::prelude::*;
 use graphql_client::*;
 use std::collections::HashSet;
+use regex::Regex;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -144,9 +145,11 @@ fn query_org(org: &Option<String>) -> String {
 
 pub fn ranked_prs(
     required_approvals: u8,
+    regex_text: &Option<String>,
     response_data: &repo_view::ResponseData,
 ) -> Vec<ScoredPr> {
-    let mut sprs: Vec<ScoredPr> = prs(&response_data)
+    let re = regex(regex_text);
+    let mut sprs: Vec<ScoredPr> = prs(&response_data, &re)
         .map(|pr| scored_pr(required_approvals, pr))
         .collect();
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
@@ -154,12 +157,20 @@ pub fn ranked_prs(
     sprs
 }
 
+fn regex(regex_text: &Option<String>) -> Option<Regex> {
+    let text = match regex_text {
+      Some(text) => text,
+      None => return None
+    };
+    Some(Regex::new(&text).unwrap())
+}
+
 fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
     let s = Score::from_pr(required_approvals, &pr);
     ScoredPr { pr, score: s }
 }
 
-fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_ {
+fn prs<'a>(response_data: &'a repo_view::ResponseData, regex: &'a Option<Regex>) -> impl Iterator<Item = Pr> + 'a {
     response_data
         .search
         .edges
@@ -174,8 +185,15 @@ fn prs(response_data: &repo_view::ResponseData) -> impl Iterator<Item = Pr> + '_
             _ => None,
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
-        .filter(|i| !is_empty(i))
+        .filter(move |i| !is_empty(i) && regex_match(regex, i))
         .map(|i| pr_stats(&i)) // <-- Refactor
+}
+
+fn regex_match(regex: &Option<Regex>, pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+    match regex {
+      Some(re) => re.is_match(&pr.title),
+      None => true
+    }
 }
 
 fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
