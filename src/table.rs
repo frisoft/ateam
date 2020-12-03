@@ -61,15 +61,15 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
         spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
-        show_based_on_main_branch(spr.pr.based_on_main_branch).to_string(),
+        show_bool(spr.pr.based_on_main_branch).to_string(),
         format!("{:.1}", spr.score.total()),
     )
 }
 
 const YES: &str = "yes";
 const NO: &str = "no";
-fn show_based_on_main_branch(based_on_main_branch: bool) -> &'static str {
-   if based_on_main_branch {
+fn show_bool(value: bool) -> &'static str {
+   if value {
      YES
    } else {
      NO
