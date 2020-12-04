@@ -3,8 +3,8 @@ use super::types::*;
 use chrono::prelude::*;
 use graphql_client::*;
 use rayon::prelude::*;
-use std::collections::HashSet;
 use regex::Regex;
+use std::collections::HashSet;
 mod blame;
 pub mod username;
 
@@ -123,14 +123,14 @@ fn query_org(org: &Option<String>) -> String {
 }
 
 pub fn ranked_prs<'a>(
-    github_api_token: &'a str,
-    username: &str,
+    github_api_token: &str,
+    username: &Option<String>,
     required_approvals: u8,
-    regex_text: &Option<String>,
+    options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<ScoredPr<'a>> {
-    let re = regex(regex_text);
-    let mut sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, &response_data)
+    let re = regex(&options.regex);
+    let mut sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, options, &response_data)
         .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect();
@@ -141,8 +141,8 @@ pub fn ranked_prs<'a>(
 
 fn regex(regex_text: &Option<String>) -> Option<Regex> {
     let text = match regex_text {
-      Some(text) => text,
-      None => return None
+        Some(text) => text,
+        None => return None,
     };
     Some(Regex::new(&text).unwrap())
 }
@@ -153,9 +153,10 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
 }
 
 fn prs<'a>(
-    github_api_token: &'a str,
-    username: &str,
-    regex: &'a Option<Regex>,
+    github_api_token: &str,
+    username: &Option<String>,
+    regex: &Option<Regex>,
+    options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<Pr<'a>> {
     response_data
@@ -173,14 +174,17 @@ fn prs<'a>(
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .filter(move |i| !is_empty(i) && regex_match(regex, i))
-        .map(move |i| pr_stats(github_api_token, username, &i)) // <-- Refactor
+        .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
         .collect()
 }
 
-fn regex_match(regex: &Option<Regex>, pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+fn regex_match(
+    regex: &Option<Regex>,
+    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+) -> bool {
     match regex {
-      Some(re) => re.is_match(&pr.title),
-      None => true
+        Some(re) => re.is_match(&pr.title),
+        None => true,
     }
 }
 
@@ -203,12 +207,24 @@ fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
 
 fn pr_stats<'a>(
     github_api_token: &str,
-    username: &str,
+    username: &Option<String>,
+    options: &cli::Pr,
     pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Pr<'a> {
     let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
-    let files = pr_files(&pr);
-    let is_author = blame::is_author(github_api_token, &pr.repository.name, &pr.repository.owner.login, &files, username);
+    let (files, is_author) = if options.blame {
+        let files = pr_files(&pr);
+        let is_author = blame::is_author(
+            github_api_token,
+            &pr.repository.name,
+            &pr.repository.owner.login,
+            &files,
+            &username.as_ref().unwrap_or(&"".to_string()),
+        );
+        (files, is_author)
+    } else {
+        (vec![], false)
+    };
     Pr {
         title: pr.title.clone(),
         url: pr.url.clone(),
@@ -220,8 +236,8 @@ fn pr_stats<'a>(
         additions: pr.additions,
         deletions: pr.deletions,
         based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
-        files: files,
-        is_author: is_author,
+        files,
+        is_author,
     }
 }
 

@@ -104,6 +104,8 @@ mod tests {
             additions: 1000,
             deletions: 999,
             based_on_main_branch: true,
+            files: vec![],
+            is_author: false,
         };
 
         assert_eq!(

@@ -9,17 +9,22 @@ use rayon::prelude::*;
 )]
 pub struct Blame;
 
-pub fn is_author(github_api_token: &str, repo_name: &str, repo_owner: &str, files: &[&str], login: &str) -> bool {
+pub fn is_author(
+    github_api_token: &str,
+    repo_name: &str,
+    repo_owner: &str,
+    files: &[&str],
+    login: &str,
+) -> bool {
     // println!(">> {:?}", files);
     files.par_iter().any(|file| {
         eprint!(".");
 
-        let response_data: blame::ResponseData = match blame(
-              github_api_token, repo_name, repo_owner, file
-            ) {
-            Ok(data) => data,
-            Err(_) => panic!("Can't get the authors for {}", file),
-        };
+        let response_data: blame::ResponseData =
+            match blame(github_api_token, repo_name, repo_owner, file) {
+                Ok(data) => data,
+                Err(_) => panic!("Can't get the authors for {}", file),
+            };
         is_file_author(&response_data, login)
     })
 }
@@ -64,7 +69,12 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
     authors.contains(&&login.to_string())
 }
 
-fn blame(github_api_token: &str, repo_name: &str, repo_owner: &str, path: &str) -> Result<blame::ResponseData, failure::Error> {
+fn blame(
+    github_api_token: &str,
+    repo_name: &str,
+    repo_owner: &str,
+    path: &str,
+) -> Result<blame::ResponseData, failure::Error> {
     let q = Blame::build_query(blame::Variables {
         repo_name: repo_name.to_string(),
         repo_owner: repo_owner.to_string(),

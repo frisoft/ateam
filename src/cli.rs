@@ -49,6 +49,8 @@ pub struct Pr {
     pub include_tests_failure: bool,
     #[structopt(long, help = "Number of required approvals", default_value = "2")]
     pub required_approvals: u8,
+    #[structopt(long, help = "Look if I changed the same files in the past (SLOW)")]
+    pub blame: bool,
 }
 
 pub fn command() -> Ateam {
