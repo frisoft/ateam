@@ -143,7 +143,7 @@ Deleted lines need to be reviewed as well, but it is usually a quicker job, so t
 `based_on_main_branch` is 1 if the pull request is based on the main branch. It is 0 if based on another pull request.
 It is best reviewing first pull request based on the main branch.
 
-`blame` is 1 if you chnaged in the past one of the first 5 files changed by the pull requiest.
+`blame` is 1 if you changed in the past one of the first 5 files changed by the pull requiest.
 
 ## ateam todo
 
