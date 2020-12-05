@@ -40,7 +40,7 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     );
 
     println!();
-    print::prs(&sprs, options.num, options.debug, options.short);
+    print::prs(&sprs, options.num, options.debug, options.short, options.hyperlink);
 
     Ok(())
 }

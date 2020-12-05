@@ -1,21 +1,21 @@
 use super::table;
 use super::types::ScoredPr;
 
-pub fn prs(sprs: &[ScoredPr], num: Option<usize>, debug: bool, short: bool) {
+pub fn prs(sprs: &[ScoredPr], num: Option<usize>, debug: bool, short: bool, hyperlink: bool) {
     let limit = num.unwrap_or(10000);
     if short {
-        short_prs(&sprs, limit, debug);
+        short_prs(&sprs, limit, debug, hyperlink);
     } else {
         print!("{}", table::from(&sprs, limit, debug));
     }
 }
 
-fn short_prs(sprs: &[ScoredPr], limit: usize, debug: bool) {
+fn short_prs(sprs: &[ScoredPr], limit: usize, debug: bool, hyperlink: bool) {
     for spr in sprs.iter().take(limit) {
-        pr(spr, debug);
+        pr(spr, debug, hyperlink);
     }
 }
 
-fn pr(spr: &ScoredPr, _debug: bool) {
+fn pr(spr: &ScoredPr, _debug: bool, hyperlink: bool) {
     println!("{}", &spr.pr);
 }

@@ -56,6 +56,8 @@ pub struct Pr {
     pub required_approvals: u8,
     #[structopt(long, help = "Look if I changed the same files in the past (SLOW)")]
     pub blame: bool,
+    #[structopt(long, help = "Use terminal hyperlinks")]
+    pub hyperlink: bool,
 }
 
 pub fn command() -> Ateam {
