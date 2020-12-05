@@ -20,13 +20,13 @@ query RepoView($query: String!) {
               }
             }
           }
-          reviewThreads(last: 40) {
+          reviewThreads(last: 20) {
             nodes {
               isResolved
               isOutdated
             }
           }
-          reviews(first: 20) {
+          reviews(first: 10) {
             totalCount
             nodes {
               author {
@@ -35,7 +35,19 @@ query RepoView($query: String!) {
               }
               state
             }
-	  }
+          }
+          files(last: 5) {
+            nodes {
+              path
+            }
+          }
+          repository {
+            name
+            owner {
+              __typename
+              login
+            }
+          }
         }
       }
     }

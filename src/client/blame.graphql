@@ -1,0 +1,26 @@
+query Blame($repo_name: String!, $repo_owner: String!, $path: String!) {
+  repository(name: $repo_name, owner: $repo_owner) {
+    id
+    name
+    defaultBranchRef {
+      target {
+        __typename
+        ... on Commit {
+          blame(path: $path) {
+            ranges {
+              commit {
+                authors(last: 10) {
+                  nodes {
+                    user {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

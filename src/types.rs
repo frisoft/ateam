@@ -1,6 +1,6 @@
 use chrono::prelude::{DateTime, Utc};
 
-pub struct Pr {
+pub struct Pr<'a> {
     pub title: String,
     pub url: String,
     pub last_commit_pushed_date: Option<DateTime<Utc>>,
@@ -11,10 +11,12 @@ pub struct Pr {
     pub additions: i64,
     pub deletions: i64,
     pub based_on_main_branch: bool,
+    pub files: Vec<&'a str>,
+    pub is_author: bool,
 }
 
-pub struct ScoredPr {
-    pub pr: Pr,
+pub struct ScoredPr<'a> {
+    pub pr: Pr<'a>,
     pub score: Score,
 }
 
@@ -28,6 +30,7 @@ pub struct Score {
     pub additions: f64,
     pub deletions: f64,
     pub based_on_main_branch: f64,
+    pub is_author: f64,
 }
 
 fn age(date_time: Option<DateTime<Utc>>) -> i64 {
@@ -48,6 +51,7 @@ impl Score {
             additions: pr.additions as f64 * -0.5,
             deletions: pr.deletions as f64 * -0.1,
             based_on_main_branch: pr.based_on_main_branch as u8 as f64 * 200.0,
+            is_author: pr.is_author as u8 as f64 * 400.0,
         }
     }
 
@@ -60,10 +64,11 @@ impl Score {
             + self.additions
             + self.deletions
             + self.based_on_main_branch
+            + self.is_author
     }
 }
 
-impl std::fmt::Display for Pr {
+impl std::fmt::Display for Pr<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -99,6 +104,8 @@ mod tests {
             additions: 1000,
             deletions: 999,
             based_on_main_branch: true,
+            files: vec![],
+            is_author: false,
         };
 
         assert_eq!(

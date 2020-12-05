@@ -2,8 +2,11 @@ use super::cli;
 use super::types::*;
 use chrono::prelude::*;
 use graphql_client::*;
-use std::collections::HashSet;
+use rayon::prelude::*;
 use regex::Regex;
+use std::collections::HashSet;
+mod blame;
+pub mod username;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -14,30 +17,6 @@ use regex::Regex;
 pub struct RepoView;
 
 type URI = String;
-
-// pub fn quer2(github_api_token: &str, owner: &str, ticket: &str) -> Result<Vec<Pr>, failure::Error> {
-//     let q = PullRequests::build_query(pull_requests::Variables {
-//         query: format!("org:{} is:pr [{}] in:title", owner, ticket),
-//     });
-//     let client = reqwest::Client::new();
-//     let mut res = client
-//         .post("https://api.github.com/graphql")
-//         .bearer_auth(github_api_token)
-//         .json(&q)
-//         .send()?;
-//     let response_body: Response<pull_requests::ResponseData> = res.json()?;
-//     if let Some(errors) = response_body.errors {
-//         println!("there are errors:");
-//         for error in &errors {
-//             println!("{:?}", error);
-//         }
-//     }
-//     // Ok(prs(&response_body.data.expect("missing response data")).collect())
-//     // println!("{:?}", response_body.data);
-//     let prs: Vec<Pr> = prs(&response_body.data, &ticket);
-//     // println!("{:?}", prs);
-//     Ok(prs)
-// }
 
 pub fn query(
     github_api_token: &str,
@@ -143,13 +122,16 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub fn ranked_prs(
+pub fn ranked_prs<'a>(
+    github_api_token: &str,
+    username: &Option<String>,
     required_approvals: u8,
-    regex_text: &Option<String>,
-    response_data: &repo_view::ResponseData,
-) -> Vec<ScoredPr> {
-    let re = regex(regex_text);
-    let mut sprs: Vec<ScoredPr> = prs(&response_data, &re)
+    options: &cli::Pr,
+    response_data: &'a repo_view::ResponseData,
+) -> Vec<ScoredPr<'a>> {
+    let re = regex(&options.regex);
+    let mut sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, options, &response_data)
+        .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect();
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
@@ -159,8 +141,8 @@ pub fn ranked_prs(
 
 fn regex(regex_text: &Option<String>) -> Option<Regex> {
     let text = match regex_text {
-      Some(text) => text,
-      None => return None
+        Some(text) => text,
+        None => return None,
     };
     Some(Regex::new(&text).unwrap())
 }
@@ -170,11 +152,17 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
     ScoredPr { pr, score: s }
 }
 
-fn prs<'a>(response_data: &'a repo_view::ResponseData, regex: &'a Option<Regex>) -> impl Iterator<Item = Pr> + 'a {
+fn prs<'a>(
+    github_api_token: &str,
+    username: &Option<String>,
+    regex: &Option<Regex>,
+    options: &cli::Pr,
+    response_data: &'a repo_view::ResponseData,
+) -> Vec<Pr<'a>> {
     response_data
         .search
         .edges
-        .iter()
+        .par_iter()
         .flatten()
         .flatten()
         .map(|i| i.node.as_ref()) // <-- Refactor
@@ -186,13 +174,17 @@ fn prs<'a>(response_data: &'a repo_view::ResponseData, regex: &'a Option<Regex>)
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .filter(move |i| !is_empty(i) && regex_match(regex, i))
-        .map(|i| pr_stats(&i)) // <-- Refactor
+        .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
+        .collect()
 }
 
-fn regex_match(regex: &Option<Regex>, pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+fn regex_match(
+    regex: &Option<Regex>,
+    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+) -> bool {
     match regex {
-      Some(re) => re.is_match(&pr.title),
-      None => true
+        Some(re) => re.is_match(&pr.title),
+        None => true,
     }
 }
 
@@ -200,8 +192,39 @@ fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr.additions == 0 && pr.deletions == 0
 }
 
-fn pr_stats(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Pr {
+fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
+    match &pr.files {
+        Some(files) => files
+            .nodes
+            .iter()
+            .flatten()
+            .flatten()
+            .map(|f| f.path.as_ref())
+            .collect(),
+        None => vec![],
+    }
+}
+
+fn pr_stats<'a>(
+    github_api_token: &str,
+    username: &Option<String>,
+    options: &cli::Pr,
+    pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+) -> Pr<'a> {
     let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
+    let (files, is_author) = if options.blame {
+        let files = pr_files(&pr);
+        let is_author = blame::is_author(
+            github_api_token,
+            &pr.repository.name,
+            &pr.repository.owner.login,
+            &files,
+            &username.as_ref().unwrap_or(&"".to_string()),
+        );
+        (files, is_author)
+    } else {
+        (vec![], false)
+    };
     Pr {
         title: pr.title.clone(),
         url: pr.url.clone(),
@@ -213,6 +236,8 @@ fn pr_stats(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Pr {
         additions: pr.additions,
         deletions: pr.deletions,
         based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
+        files,
+        is_author,
     }
 }
 

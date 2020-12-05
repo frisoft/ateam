@@ -64,12 +64,13 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.3
+ateam-pr 0.3.4
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
 
 FLAGS:
+        --blame                        Look if I changed the same files in the past (SLOW)
     -d, --debug                        Add debug information
     -h, --help                         Prints help information
         --include-mine                 Include my pull requests

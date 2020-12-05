@@ -25,7 +25,21 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     // println!(">> {:?}", options);
     let response_data: repo_view::ResponseData = client::query(&config.github_api_token, &options)?;
 
-    let sprs = client::ranked_prs(options.required_approvals, &options.regex, &response_data);
+    let username = if options.blame {
+        Some(client::username::username(&config.github_api_token))
+    } else {
+        None
+    };
+
+    let sprs = client::ranked_prs(
+        &config.github_api_token,
+        &username,
+        options.required_approvals,
+        &options,
+        &response_data,
+    );
+
+    println!();
     print::prs(&sprs, options.num, options.debug, options.short);
 
     Ok(())
