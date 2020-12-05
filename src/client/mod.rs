@@ -212,16 +212,16 @@ fn pr_stats<'a>(
     pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Pr<'a> {
     let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
-    let (files, is_author) = if options.blame {
+    let (files, blame) = if options.blame {
         let files = pr_files(&pr);
-        let is_author = blame::is_author(
+        let blame = blame::blame(
             github_api_token,
             &pr.repository.name,
             &pr.repository.owner.login,
             &files,
             &username.as_ref().unwrap_or(&"".to_string()),
         );
-        (files, is_author)
+        (files, blame)
     } else {
         (vec![], false)
     };
@@ -237,7 +237,7 @@ fn pr_stats<'a>(
         deletions: pr.deletions,
         based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
         files,
-        is_author,
+        blame,
     }
 }
 

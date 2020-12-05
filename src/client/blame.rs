@@ -9,7 +9,7 @@ use rayon::prelude::*;
 )]
 pub struct Blame;
 
-pub fn is_author(
+pub fn blame(
     github_api_token: &str,
     repo_name: &str,
     repo_owner: &str,
@@ -21,7 +21,7 @@ pub fn is_author(
         eprint!(".");
 
         let response_data: blame::ResponseData =
-            match blame(github_api_token, repo_name, repo_owner, file) {
+            match girhub_blame(github_api_token, repo_name, repo_owner, file) {
                 Ok(data) => data,
                 Err(_) => panic!("Can't get the authors for {}", file),
             };
@@ -69,7 +69,7 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
     authors.contains(&&login.to_string())
 }
 
-fn blame(
+fn girhub_blame(
     github_api_token: &str,
     repo_name: &str,
     repo_owner: &str,

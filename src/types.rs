@@ -12,7 +12,7 @@ pub struct Pr<'a> {
     pub deletions: i64,
     pub based_on_main_branch: bool,
     pub files: Vec<&'a str>,
-    pub is_author: bool,
+    pub blame: bool,
 }
 
 pub struct ScoredPr<'a> {
@@ -30,7 +30,7 @@ pub struct Score {
     pub additions: f64,
     pub deletions: f64,
     pub based_on_main_branch: f64,
-    pub is_author: f64,
+    pub blame: f64,
 }
 
 fn age(date_time: Option<DateTime<Utc>>) -> i64 {
@@ -51,7 +51,7 @@ impl Score {
             additions: pr.additions as f64 * -0.5,
             deletions: pr.deletions as f64 * -0.1,
             based_on_main_branch: pr.based_on_main_branch as u8 as f64 * 200.0,
-            is_author: pr.is_author as u8 as f64 * 400.0,
+            blame: pr.blame as u8 as f64 * 400.0,
         }
     }
 
@@ -64,7 +64,7 @@ impl Score {
             + self.additions
             + self.deletions
             + self.based_on_main_branch
-            + self.is_author
+            + self.blame
     }
 }
 
@@ -105,7 +105,7 @@ mod tests {
             deletions: 999,
             based_on_main_branch: true,
             files: vec![],
-            is_author: false,
+            blame: false,
         };
 
         assert_eq!(

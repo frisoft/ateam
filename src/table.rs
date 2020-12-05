@@ -36,7 +36,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
             spr.score.additions,
             spr.score.deletions,
             spr.score.based_on_main_branch,
-            spr.score.is_author,
+            spr.score.blame,
             spr.score.total(),
             show_files(&spr.pr.files)
         )
@@ -55,7 +55,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
         show_bool(spr.pr.based_on_main_branch).to_string(),
-        show_bool(spr.pr.is_author).to_string(),
+        show_bool(spr.pr.blame).to_string(),
         format!("{:.1}", spr.score.total()),
     )
 }
