@@ -347,7 +347,7 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
     }
 }
 
-fn age(date_time: Option<DateTime<Utc>>) -> Option<<i64> {
+fn age(date_time: Option<DateTime<Utc>>) -> Option<i64> {
     match date_time {
         Some(date_time) => Some((Utc::now() - date_time).num_minutes()),
         None => None,
