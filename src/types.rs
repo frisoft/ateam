@@ -4,6 +4,7 @@ pub struct Pr<'a> {
     pub title: String,
     pub url: String,
     pub last_commit_pushed_date: Option<DateTime<Utc>>,
+    pub last_commit_age_min: Option<i64>,
     pub tests_result: i64,
     pub open_conversations: i64,
     pub num_approvals: i64,
@@ -33,17 +34,10 @@ pub struct Score {
     pub blame: f64,
 }
 
-fn age(date_time: Option<DateTime<Utc>>) -> i64 {
-    match date_time {
-        Some(date_time) => (Utc::now() - date_time).num_hours(),
-        None => 0,
-    }
-}
-
 impl Score {
     pub fn from_pr(required_approvals: u8, pr: &Pr) -> Score {
         Score {
-            age: age(pr.last_commit_pushed_date) as f64 * 0.5,
+            age: pr.last_commit_age_min.unwrap_or(0) as f64 / 60.0 * 2.0,
             tests_result: (pr.tests_result - 1) as f64 * -200.0,
             open_conversations: pr.open_conversations as f64 * -30.0,
             num_approvals: (pr.num_approvals - required_approvals as i64) as f64 * -80.0,
@@ -97,6 +91,7 @@ mod tests {
             title: "Some important changes".to_string(),
             url: "https://github.com/frisoft/ateam/pull/1".to_string(),
             last_commit_pushed_date: None,
+            last_commit_age_min: None,
             tests_result: 0,
             open_conversations: 0,
             num_approvals: 1,

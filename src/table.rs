@@ -5,16 +5,7 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> prettytable::Table 
     let mut table = prettytable::Table::new();
     table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
     table.set_titles(row![
-        "Title",
-        "URL",
-        "Last commit",
-        "CI",
-        "O.C.",
-        "Appr.",
-        "Diff",
-        "On Main",
-        "Blame",
-        "Score"
+        "Title", "URL", "Age", "CI", "O.C.", "Appr.", "Diff", "On Main", "Blame", "Score"
     ]);
 
     for spr in sprs.iter().take(limit) {
@@ -46,10 +37,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> prettytable::row::Row {
     row!(
         format!("{:.60}{}", spr.pr.title, debug_info),
         spr.pr.url,
-        match spr.pr.last_commit_pushed_date {
-            Some(d) => d.format("%d-%m-%Y %H:%M").to_string(),
-            None => String::from("-"),
-        },
+        show_duration(spr.pr.last_commit_age_min),
         tests_result_label(spr.pr.tests_result),
         spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
@@ -84,5 +72,36 @@ fn show_files(files: &[&str]) -> String {
         "".to_string()
     } else {
         format!("\n{}\n", files.join("\n"))
+    }
+}
+
+fn show_duration(minutes: Option<i64>) -> String {
+    match minutes {
+        Some(min) => {
+            let d = min / 60 / 24;
+            let h = (min - d * 24 * 60) / 60;
+            let m = min - d * 24 * 60 - h * 60;
+            format!(
+                "{}{}{}",
+                if d > 0 {
+                    format!("{} d ", d)
+                } else {
+                    "".to_string()
+                },
+                if h > 0 {
+                    format!("{} h ", h)
+                } else {
+                    "".to_string()
+                },
+                // Display minutes only if days is 0
+                if d == 0 && m > 0 {
+                    format!("{} m ", m)
+                } else {
+                    "".to_string()
+                }
+            )
+        }
+        // d.format("%d-%m-%Y %H:%M").to_string(),
+        None => String::from("-"),
     }
 }
