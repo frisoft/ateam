@@ -108,7 +108,7 @@ The ranking algorithm is based on several pieces of information:
 
 ```
  pull request score = 
-   last_commit_age * 10.0
+   last_commit_age * 2.0
    - (tests_result-1) * 2000.0
    - open_conversations * 30.0
    - (approvals - required_approvals) * 80.0
@@ -160,5 +160,3 @@ Somebody else's pull requests:
 Your pull requests:
   - Somebody opened a conversation on your pull request. You need to reply or change the code.
   - Somebody asked explicit changes to your pull request.
-
-

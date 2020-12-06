@@ -37,7 +37,7 @@ pub struct Score {
 impl Score {
     pub fn from_pr(required_approvals: u8, pr: &Pr) -> Score {
         Score {
-            age: pr.last_commit_age_min.unwrap_or(0) as f64 / 60.0 * 0.5,
+            age: pr.last_commit_age_min.unwrap_or(0) as f64 / 60.0 * 2.0,
             tests_result: (pr.tests_result - 1) as f64 * -200.0,
             open_conversations: pr.open_conversations as f64 * -30.0,
             num_approvals: (pr.num_approvals - required_approvals as i64) as f64 * -80.0,
