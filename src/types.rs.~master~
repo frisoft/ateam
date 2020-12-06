@@ -4,7 +4,6 @@ pub struct Pr<'a> {
     pub title: String,
     pub url: String,
     pub last_commit_pushed_date: Option<DateTime<Utc>>,
-    pub last_commit_age_min: Option<i64>,
     pub tests_result: i64,
     pub open_conversations: i64,
     pub num_approvals: i64,
@@ -32,6 +31,13 @@ pub struct Score {
     pub deletions: f64,
     pub based_on_main_branch: f64,
     pub blame: f64,
+}
+
+fn age(date_time: Option<DateTime<Utc>>) -> i64 {
+    match date_time {
+        Some(date_time) => (Utc::now() - date_time).num_hours(),
+        None => 0,
+    }
 }
 
 impl Score {

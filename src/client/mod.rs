@@ -229,6 +229,7 @@ fn pr_stats<'a>(
         title: pr.title.clone(),
         url: pr.url.clone(),
         last_commit_pushed_date,
+        last_commit_age_min: age(last_commit_pushed_date),
         tests_result: status_state_to_i(last_commit_state),
         open_conversations: pr_open_conversations(&pr.review_threads),
         num_approvals: pr_num_approvals(&pr.reviews),
@@ -342,6 +343,13 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
             Ok(date_time) => Some(date_time),
             Err(_) => None,
         },
+        None => None,
+    }
+}
+
+fn age(date_time: Option<DateTime<Utc>>) -> Option<<i64> {
+    match date_time {
+        Some(date_time) => Some((Utc::now() - date_time).num_minutes()),
         None => None,
     }
 }
