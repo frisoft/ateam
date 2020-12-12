@@ -64,7 +64,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.5
+ateam-pr 0.3.6
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
