@@ -9,7 +9,7 @@ homepage = "https://github.com/frisoft/ateam"
 repository = "https://github.com/frisoft/ateam"
 readme = "README.md"
 edition = "2018"
-keywords = ["cli", "github", "pull-request", "command-line"]
+keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
