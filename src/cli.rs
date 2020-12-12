@@ -35,6 +35,11 @@ pub struct Pr {
     pub short: bool,
     #[structopt(long, help = "Filter by label. Can be used multiple times")]
     pub label: Vec<String>,
+    #[structopt(
+        long,
+        help = "Exclude pull requests with this label. Can be used multiple times"
+    )]
+    pub exclude_label: Vec<String>,
     #[structopt(long, short, help = "GitHub query")]
     pub query: Option<String>,
     #[structopt(long, help = "Regexp filter on titles")]

@@ -14,6 +14,12 @@ pub struct Pr<'a> {
     pub based_on_main_branch: bool,
     pub files: Vec<&'a str>,
     pub blame: bool,
+    pub labels: Vec<Label<'a>>,
+}
+
+pub struct Label<'a> {
+    pub name: &'a str,
+    pub color: &'a str,
 }
 
 pub struct ScoredPr<'a> {

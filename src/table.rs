@@ -60,7 +60,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
         "".to_string()
     };
     vec![
-        format!("{}\n{}{}", spr.pr.url, spr.pr.title, debug_info),
+        format!("{}\n{}{}{}", spr.pr.url, spr.pr.title, show_labels(&spr.pr.labels), debug_info),
         show_duration(spr.pr.last_commit_age_min),
         tests_result_label(spr.pr.tests_result).to_string(),
         spr.pr.open_conversations.to_string(),
@@ -96,6 +96,21 @@ fn show_files(files: &[&str]) -> String {
         "".to_string()
     } else {
         format!("\n{}\n", files.join("\n"))
+    }
+}
+
+fn show_labels(labels: &[Label]) -> String {
+    if labels.is_empty() {
+        "".to_string()
+    } else {
+        format!(
+            " - {}",
+            labels
+                .iter()
+                .map(|label| label.name)
+                .collect::<Vec<&str>>()
+                .join(", ")
+        )
     }
 }
 

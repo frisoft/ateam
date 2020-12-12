@@ -48,6 +48,12 @@ query RepoView($query: String!) {
               login
             }
           }
+	  labels(last: 20) {
+            nodes {
+              color
+	      name
+	    }
+	  }
         }
       }
     }

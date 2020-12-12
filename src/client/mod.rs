@@ -64,7 +64,7 @@ fn github_query(options: &cli::Pr) -> String {
         query_include_tests_in_progress(options.include_tests_in_progress),
         query_include_tests_failure(options.include_tests_failure),
         query_include_reviewed_by_me(options.include_reviewed_by_me),
-        query_labels(&options.label),
+        query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
         query_org(&options.org),
         &options.query.as_ref().unwrap_or(&"".to_string())
@@ -103,11 +103,18 @@ fn query_include_reviewed_by_me(include_reviewed_by_me: bool) -> &'static str {
     }
 }
 
-fn query_labels(labels: &[String]) -> String {
-    labels
-        .iter()
-        .map(|label| format!("label:{} ", label))
-        .collect()
+fn query_labels(labels: &[String], exclude_label: &[String]) -> String {
+    format!(
+        "{}{}",
+        labels
+            .iter()
+            .map(|label| format!("label:{} ", label))
+            .collect::<String>(),
+        exclude_label
+            .iter()
+            .map(|label| format!("-label:{} ", label))
+            .collect::<String>()
+    )
 }
 
 fn query_repos(repos: &[String]) -> String {
@@ -205,6 +212,24 @@ fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
     }
 }
 
+fn pr_labels(
+    labels: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>,
+) -> Vec<Label> {
+    match labels {
+        Some(labels) => labels
+            .nodes
+            .iter()
+            .flatten()
+            .flatten()
+            .map(|l| Label {
+                name: l.name.as_ref(),
+                color: l.color.as_ref(),
+            })
+            .collect(),
+        None => vec![],
+    }
+}
+
 fn pr_stats<'a>(
     github_api_token: &str,
     username: &Option<String>,
@@ -239,6 +264,7 @@ fn pr_stats<'a>(
         based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
         files,
         blame,
+        labels: pr_labels(&pr.labels),
     }
 }
 
