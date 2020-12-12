@@ -6,7 +6,7 @@ pub fn prs(sprs: &[ScoredPr], num: Option<usize>, debug: bool, short: bool) {
     if short {
         short_prs(&sprs, limit, debug);
     } else {
-        table::from(&sprs, limit, debug).printstd();
+        print!("{}", table::from(&sprs, limit, debug));
     }
 }
 
