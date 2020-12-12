@@ -60,8 +60,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
         "".to_string()
     };
     vec![
-        format!("{}\n{:.60}{}", spr.pr.url, spr.pr.title, debug_info),
-        // spr.pr.url.to_string(),
+        format!("{}\n{}{}", spr.pr.url, spr.pr.title, debug_info),
         show_duration(spr.pr.last_commit_age_min),
         tests_result_label(spr.pr.tests_result).to_string(),
         spr.pr.open_conversations.to_string(),
