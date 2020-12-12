@@ -109,7 +109,7 @@ fn show_labels(labels: &[Label]) -> String {
                 .iter()
                 .map(|label| label.name)
                 .collect::<Vec<&str>>()
-                .join(", ")
+                .join(" ")
         )
     }
 }
