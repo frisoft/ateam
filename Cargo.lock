@@ -45,6 +45,7 @@ version = "0.3.7"
 dependencies = [
  "chrono",
  "comfy-table",
+ "crossterm",
  "dotenv",
  "env_logger",
  "envy",
