@@ -232,6 +232,21 @@ fn pr_labels(
     }
 }
 
+fn pr_requested(
+    requests: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
+    username: &str
+) -> bool {
+    match requests {
+        Some(requests) => requests
+            .nodes
+            .iter()
+            .flatten()
+            .flatten()
+            .any(|r| r.as_code_owner && r.requested_reviewer.login == username),
+        None => false,
+    }
+}
+
 fn pr_stats<'a>(
     github_api_token: &str,
     username: &Option<String>,
@@ -267,6 +282,8 @@ fn pr_stats<'a>(
         files,
         blame,
         labels: pr_labels(&pr.labels),
+        requested: pr_requested(&pr.review_requests, &username.as_ref().unwrap_or(&"".to_string())),
+        codeowner: false,
     }
 }
 

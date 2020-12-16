@@ -15,6 +15,8 @@ pub struct Pr<'a> {
     pub files: Files<'a>,
     pub blame: bool,
     pub labels: Labels<'a>,
+    pub requested: bool,
+    pub codeowner: bool,
 }
 
 pub struct Files<'a>(pub Vec<&'a str>);
@@ -42,6 +44,8 @@ pub struct Score {
     pub deletions: f64,
     pub based_on_main_branch: f64,
     pub blame: f64,
+    pub requested: f64,
+    pub codeowner: f64,
 }
 
 impl Score {
@@ -56,6 +60,8 @@ impl Score {
             deletions: pr.deletions as f64 * -0.1,
             based_on_main_branch: pr.based_on_main_branch as u8 as f64 * 200.0,
             blame: pr.blame as u8 as f64 * 400.0,
+            requested: pr.requested as u8 as f64 * 200.0,
+            codeowner: pr.codeowner as u8 as f64 * 400.0,
         }
     }
 
@@ -69,6 +75,8 @@ impl Score {
             + self.deletions
             + self.based_on_main_branch
             + self.blame
+            + self.requested
+            + self.codeowner
     }
 }
 
@@ -133,6 +141,8 @@ mod tests {
             files: Files(vec![]),
             blame: false,
             labels: Labels(vec![]),
+            requested: false,
+            codeowner: false,
         };
 
         assert_eq!(

@@ -12,7 +12,6 @@ query RepoView($query: String!) {
           commits(last: 1) {
             nodes {
               commit {
-                commitUrl
                 pushedDate
                 status {
                   state
@@ -54,6 +53,17 @@ query RepoView($query: String!) {
 	      name
 	    }
 	  }
+	  reviewRequests(first: 20) {
+            nodes {
+              asCodeOwner
+              requestedReviewer {
+                __typename
+                ... on User {
+                  login
+                }
+              }
+            }
+          }
         }
       }
     }
