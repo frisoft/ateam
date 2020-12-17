@@ -64,23 +64,24 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.6
+ateam-pr 0.3.7
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
 
 FLAGS:
-        --blame                        Look if I changed the same files in the past (SLOW)
-    -d, --debug                        Add debug information
-    -h, --help                         Prints help information
-        --include-mine                 Include my pull requests
-        --include-reviewed-by-me       Include pull requests I have reviewed
-        --include-tests-failure        Include pull requests with tests falure
-        --include-tests-pending        Include pull requests with tests in progess
-    -s, --short                        Short version. No table
-    -V, --version                      Prints version information
+        --blame                     Look if I changed the same files in the past (SLOW)
+    -d, --debug                     Add debug information
+    -h, --help                      Prints help information
+        --include-mine              Include my pull requests
+        --include-reviewed-by-me    Include pull requests I have reviewed
+        --include-tests-failure     Include pull requests with tests falure
+        --include-tests-pending     Include pull requests with pending tests
+    -s, --short                     Short version. No table
+    -V, --version                   Prints version information
 
 OPTIONS:
+        --exclude-label <exclude-label>...           Exclude pull requests with this label. Can be used multiple times
         --label <label>...                           Filter by label. Can be used multiple times
     -n, --num <num>                                  Number of pull requests to display
         --org <organization>                         Selest all the repositoris of the organization
