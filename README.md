@@ -76,7 +76,7 @@ FLAGS:
         --include-mine                 Include my pull requests
         --include-reviewed-by-me       Include pull requests I have reviewed
         --include-tests-failure        Include pull requests with tests falure
-        --include-tests-in-progress    Include pull requests with tests in progess
+        --include-tests-pending        Include pull requests with tests in progess
     -s, --short                        Short version. No table
     -V, --version                      Prints version information
 
@@ -96,7 +96,7 @@ It implements a ranking system of your open pull requests.
 
 Draft pull requests are excluded.
 
-Pull requests with in progress or failing tests are excluded as well unless you ask for them.
+Pull requests with pending or failing tests are excluded as well unless you ask for them.
 
 Pull requests you created are excluded too unless you ask for them.
 
@@ -123,8 +123,8 @@ where
 
 `last_commit_age` is the number of hours since the last pushed commit. So, older pull requests will appear first.
 
-`tests_result` is 0 for successful tests, 1 for in-progress tests and 2 for failing tests. Note that this has only effect if 
-the --include-tests-failure and/or --include-tests-in-progress are used.
+`tests_result` is 0 for successful tests, 1 for pending tests and 2 for failing tests. Note that this has only effect if 
+the --include-tests-failure and/or --include-tests-pending are used.
 
 `open_conversations` is the number of conversation not resolved and not outdated.
 A pull request with open conversations is already subject to reviews and discussion and, so, needs less attention. 

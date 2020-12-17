@@ -61,7 +61,7 @@ fn github_query(options: &cli::Pr) -> String {
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open draft:false {}{}{}{}{}{}{}{}",
         query_include_mine(options.include_mine),
-        query_include_tests_in_progress(options.include_tests_in_progress),
+        query_include_tests_pending(options.include_tests_pending),
         query_include_tests_failure(options.include_tests_failure),
         query_include_reviewed_by_me(options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
@@ -79,11 +79,11 @@ fn query_include_mine(include_mine: bool) -> &'static str {
     }
 }
 
-fn query_include_tests_in_progress(include_tests_in_progress: bool) -> &'static str {
-    if include_tests_in_progress {
+fn query_include_tests_pending(include_tests_pending: bool) -> &'static str {
+    if include_tests_pending {
         ""
     } else {
-        "-status:progess "
+        "-status:pending "
     }
 }
 
