@@ -48,8 +48,8 @@ pub struct Pr {
     pub include_reviewed_by_me: bool,
     #[structopt(long, help = "Include my pull requests")]
     pub include_mine: bool,
-    #[structopt(long, help = "Include pull requests with tests in progess")]
-    pub include_tests_in_progress: bool,
+    #[structopt(long, help = "Include pull requests with pending tests")]
+    pub include_tests_pending: bool,
     #[structopt(long, help = "Include pull requests with tests falure")]
     pub include_tests_failure: bool,
     #[structopt(long, help = "Number of required approvals", default_value = "2")]
