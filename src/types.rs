@@ -12,10 +12,14 @@ pub struct Pr<'a> {
     pub additions: i64,
     pub deletions: i64,
     pub based_on_main_branch: bool,
-    pub files: Vec<&'a str>,
+    pub files: Files<'a>,
     pub blame: bool,
-    pub labels: Vec<Label<'a>>,
+    pub labels: Labels<'a>,
 }
+
+pub struct Files<'a>(pub Vec<&'a str>);
+
+pub struct Labels<'a>(pub Vec<Label<'a>>);
 
 pub struct Label<'a> {
     pub name: &'a str,
@@ -72,10 +76,11 @@ impl std::fmt::Display for Pr<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "{:60.60} {}",
+            "{} - {} {}",
             // "{} {} {:?} {} OC:{} Appr:{}/{} +{} -{}",
-            self.title,
             self.url,
+            self.title,
+            self.labels,
             // self.last_commit_pushed_date,
             // self.tests_result,
             // self.open_conversations,
@@ -84,6 +89,26 @@ impl std::fmt::Display for Pr<'_> {
             // self.additions,
             // self.deletions,
         )
+    }
+}
+
+impl std::fmt::Display for Labels<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|label| label.to_string())
+                .collect::<Vec<String>>()
+                .join(" "),
+        )
+    }
+}
+
+impl std::fmt::Display for Label<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "({})", self.name,)
     }
 }
 
@@ -105,13 +130,14 @@ mod tests {
             additions: 1000,
             deletions: 999,
             based_on_main_branch: true,
-            files: vec![],
+            files: Files(vec![]),
             blame: false,
+            labels: Labels(vec![]),
         };
 
         assert_eq!(
             format!("{}", pr),
-            "Some important changes                                       https://github.com/frisoft/ateam/pull/1"
+            "https://github.com/frisoft/ateam/pull/1 - Some important changes ",
         );
     }
 }
