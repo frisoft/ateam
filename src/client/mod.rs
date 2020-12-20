@@ -214,19 +214,21 @@ fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
 
 fn pr_labels(
     labels: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>,
-) -> Vec<Label> {
+) -> Labels {
     match labels {
-        Some(labels) => labels
-            .nodes
-            .iter()
-            .flatten()
-            .flatten()
-            .map(|l| Label {
-                name: l.name.as_ref(),
-                color: l.color.as_ref(),
-            })
-            .collect(),
-        None => vec![],
+        Some(labels) => Labels(
+            labels
+                .nodes
+                .iter()
+                .flatten()
+                .flatten()
+                .map(|l| Label {
+                    name: l.name.as_ref(),
+                    color: l.color.as_ref(),
+                })
+                .collect(),
+        ),
+        None => Labels(vec![]),
     }
 }
 
@@ -246,9 +248,9 @@ fn pr_stats<'a>(
             &files,
             &username.as_ref().unwrap_or(&"".to_string()),
         );
-        (files, blame)
+        (Files(files), blame)
     } else {
-        (vec![], false)
+        (Files(vec![]), false)
     };
     Pr {
         title: pr.title.clone(),
