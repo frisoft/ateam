@@ -5,7 +5,7 @@
 
 ### Improvements
 - Consider if I have been requested to review the PR
-- Show labels and --exclude-label option 
+- Show label's colours.
 - Shell autocompletion.
 - Add Homebrew formula.
 - URLs to PRs can be displayed with shorter text in terminal (cmd+click still works), example in tty-link. It can save some space in console, but not all terminals support it.
