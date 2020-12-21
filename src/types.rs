@@ -82,21 +82,7 @@ impl Score {
 
 impl std::fmt::Display for Pr<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{} - {} {}",
-            // "{} {} {:?} {} OC:{} Appr:{}/{} +{} -{}",
-            self.url,
-            self.title,
-            self.labels,
-            // self.last_commit_pushed_date,
-            // self.tests_result,
-            // self.open_conversations,
-            // self.num_approvals,
-            // self.num_reviewers,
-            // self.additions,
-            // self.deletions,
-        )
+        write!(f, "{} - {} {}", self.url, self.title, self.labels,)
     }
 }
 
