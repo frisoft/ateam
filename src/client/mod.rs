@@ -232,21 +232,6 @@ fn pr_labels(
     }
 }
 
-fn pr_requested(
-    requests: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
-    username: &str
-) -> bool {
-    match requests {
-        Some(requests) => requests
-            .nodes
-            .iter()
-            .flatten()
-            .flatten()
-            .any(|r| r.as_code_owner && r.requested_reviewer.login == username),
-        None => false,
-    }
-}
-
 fn pr_stats<'a>(
     github_api_token: &str,
     username: &Option<String>,
@@ -282,8 +267,11 @@ fn pr_stats<'a>(
         files,
         blame,
         labels: pr_labels(&pr.labels),
-        requested: pr_requested(&pr.review_requests, &username.as_ref().unwrap_or(&"".to_string())),
-        codeowner: false,
+        requested: false,
+        codeowner: is_codeowner(
+            &pr.review_requests,
+            &username.as_ref().unwrap_or(&"".to_string()),
+        ),
     }
 }
 
@@ -401,4 +389,21 @@ fn age(date_time: Option<DateTime<Utc>>) -> Option<i64> {
 
 fn pr_based_on_main_branch(base_branch_name: &str) -> bool {
     base_branch_name == "main" || base_branch_name == "master"
+}
+
+fn is_codeowner(
+    requests: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
+    username: &str,
+) -> bool {
+    match requests {
+        Some(requests) => requests.nodes.iter().flatten().flatten().any(|r| {
+            r.as_code_owner
+                && match &r.requested_reviewer {
+                    Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::User(reviewer)) =>
+                        reviewer.login == username,
+                    _ => false,
+                }
+        }),
+        None => false,
+    }
 }
