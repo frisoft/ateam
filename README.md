@@ -64,7 +64,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.7
+ateam-pr 0.3.8
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -118,6 +118,7 @@ The ranking algorithm is based on several pieces of information:
    - deletions * 0.1
    + based_on_main_branch * 200.0
    + blame * 400.0
+   + codeowner * 400.0
 ```
 
 where

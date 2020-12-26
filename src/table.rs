@@ -45,7 +45,7 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> Table {
 fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
     let debug_info = if debug {
         format!(
-            "\nAge:{:.1} T:{:.1} OC:{:.1} Ap:{:.1} R:{:.1} +:{:.1} -:{:.1} M.br:{:.1} Bl:{:.1} Req.:{:.1} C.Owner:{:.1} Tot:{:.1}{}\n",
+            "\nAge:{:.1} T:{:.1} OC:{:.1} Ap:{:.1} R:{:.1} +:{:.1} -:{:.1} M.br:{:.1} Bl:{:.1} C.Owner:{:.1} Tot:{:.1}{}\n",
             spr.score.age,
             spr.score.tests_result,
             spr.score.open_conversations,
@@ -55,7 +55,6 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
             spr.score.deletions,
             spr.score.based_on_main_branch,
             spr.score.blame,
-            spr.score.requested,
             spr.score.codeowner,
             spr.score.total(),
             show_files(&spr.pr.files)
