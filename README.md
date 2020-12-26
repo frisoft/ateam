@@ -147,6 +147,8 @@ It is best reviewing first pull request based on the main branch.
 
 `blame` is 1 if you changed in the past one of the first 5 files changed by the pull requiest.
 
+`codeowner` is 1 if you are one of the [code owners](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/about-code-owners) for this pull request.
+
 ## ateam todo
 
 NOT AVAILABLE YET
