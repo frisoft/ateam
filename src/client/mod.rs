@@ -267,7 +267,6 @@ fn pr_stats<'a>(
         files,
         blame,
         labels: pr_labels(&pr.labels),
-        requested: false,
         codeowner: is_codeowner(&pr.review_requests, username),
     }
 }

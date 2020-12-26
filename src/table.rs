@@ -74,7 +74,6 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
         show_bool(spr.pr.based_on_main_branch).to_string(),
         show_bool(spr.pr.blame).to_string(),
-        show_bool(spr.pr.requested).to_string(),
         show_bool(spr.pr.codeowner).to_string(),
         format!("{:.1}", spr.score.total()),
     ]

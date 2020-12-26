@@ -15,7 +15,6 @@ pub struct Pr<'a> {
     pub files: Files<'a>,
     pub blame: bool,
     pub labels: Labels<'a>,
-    pub requested: bool,
     pub codeowner: bool,
 }
 
@@ -124,7 +123,6 @@ mod tests {
             files: Files(vec![]),
             blame: false,
             labels: Labels(vec![]),
-            requested: false,
             codeowner: false,
         };
 
