@@ -15,6 +15,7 @@ pub struct Pr<'a> {
     pub files: Files<'a>,
     pub blame: bool,
     pub labels: Labels<'a>,
+    pub codeowner: bool,
 }
 
 pub struct Files<'a>(pub Vec<&'a str>);
@@ -42,6 +43,7 @@ pub struct Score {
     pub deletions: f64,
     pub based_on_main_branch: f64,
     pub blame: f64,
+    pub codeowner: f64,
 }
 
 impl Score {
@@ -56,6 +58,7 @@ impl Score {
             deletions: pr.deletions as f64 * -0.1,
             based_on_main_branch: pr.based_on_main_branch as u8 as f64 * 200.0,
             blame: pr.blame as u8 as f64 * 400.0,
+            codeowner: pr.codeowner as u8 as f64 * 400.0,
         }
     }
 
@@ -69,26 +72,13 @@ impl Score {
             + self.deletions
             + self.based_on_main_branch
             + self.blame
+            + self.codeowner
     }
 }
 
 impl std::fmt::Display for Pr<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{} - {} {}",
-            // "{} {} {:?} {} OC:{} Appr:{}/{} +{} -{}",
-            self.url,
-            self.title,
-            self.labels,
-            // self.last_commit_pushed_date,
-            // self.tests_result,
-            // self.open_conversations,
-            // self.num_approvals,
-            // self.num_reviewers,
-            // self.additions,
-            // self.deletions,
-        )
+        write!(f, "{} - {} {}", self.url, self.title, self.labels,)
     }
 }
 
@@ -133,6 +123,7 @@ mod tests {
             files: Files(vec![]),
             blame: false,
             labels: Labels(vec![]),
+            codeowner: false,
         };
 
         assert_eq!(

@@ -64,7 +64,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.7
+ateam-pr 0.3.8
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -118,6 +118,7 @@ The ranking algorithm is based on several pieces of information:
    - deletions * 0.1
    + based_on_main_branch * 200.0
    + blame * 400.0
+   + codeowner * 400.0
 ```
 
 where
@@ -145,6 +146,8 @@ Deleted lines need to be reviewed as well, but it is usually a quicker job, so t
 It is best reviewing first pull request based on the main branch.
 
 `blame` is 1 if you changed in the past one of the first 5 files changed by the pull requiest.
+
+`codeowner` is 1 if you are one of the [code owners](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/about-code-owners) for this pull request.
 
 ## ateam todo
 
