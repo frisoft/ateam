@@ -19,7 +19,6 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> Table {
             "Diff",
             "On Main",
             "Blame",
-            "Req.",
             "C. Owner",
             "Score",
         ]);
