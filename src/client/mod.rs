@@ -131,7 +131,7 @@ fn query_org(org: &Option<String>) -> String {
 
 pub fn ranked_prs<'a>(
     github_api_token: &str,
-    username: &Option<String>,
+    username: &str,
     required_approvals: u8,
     options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
@@ -161,7 +161,7 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
 
 fn prs<'a>(
     github_api_token: &str,
-    username: &Option<String>,
+    username: &str,
     regex: &Option<Regex>,
     options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
@@ -234,7 +234,7 @@ fn pr_labels(
 
 fn pr_stats<'a>(
     github_api_token: &str,
-    username: &Option<String>,
+    username: &str,
     options: &cli::Pr,
     pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Pr<'a> {
@@ -246,7 +246,7 @@ fn pr_stats<'a>(
             &pr.repository.name,
             &pr.repository.owner.login,
             &files,
-            &username.as_ref().unwrap_or(&"".to_string()),
+            username,
         );
         (Files(files), blame)
     } else {
@@ -268,10 +268,7 @@ fn pr_stats<'a>(
         blame,
         labels: pr_labels(&pr.labels),
         requested: false,
-        codeowner: is_codeowner(
-            &pr.review_requests,
-            &username.as_ref().unwrap_or(&"".to_string()),
-        ),
+        codeowner: is_codeowner(&pr.review_requests, username),
     }
 }
 
