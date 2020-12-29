@@ -59,10 +59,8 @@ pub fn query(
 fn github_query(options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
-        "is:pr is:open draft:false {}{}{}{}{}{}{}{}",
+        "is:pr is:open draft:false {}{}{}{}{}{}",
         query_include_mine(options.include_mine),
-        query_include_tests_pending(options.include_tests_pending),
-        query_include_tests_failure(options.include_tests_failure),
         query_include_reviewed_by_me(options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
@@ -76,22 +74,6 @@ fn query_include_mine(include_mine: bool) -> &'static str {
         ""
     } else {
         "-author:@me "
-    }
-}
-
-fn query_include_tests_pending(include_tests_pending: bool) -> &'static str {
-    if include_tests_pending {
-        ""
-    } else {
-        "-status:pending "
-    }
-}
-
-fn query_include_tests_failure(include_tests_failure: bool) -> &'static str {
-    if include_tests_failure {
-        ""
-    } else {
-        "-status:failure "
     }
 }
 

@@ -47,7 +47,7 @@ You can also search for specific pull requests. You can use the `--query` option
 ❯ ateam pr --org GitHubOrgName --query 'urgent'
 ```
 
-Unfortunately, the `--query` option does not allow to combine tests with the OR operator.
+Unfortunately, the `--query` option does not allow to combine texts with the OR operator.
 In the case you want to search for two or more strigs, you can use the `--regex` option:
 
 ```
@@ -64,7 +64,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.3.8
+ateam-pr 0.4.0
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -75,7 +75,8 @@ FLAGS:
     -h, --help                      Prints help information
         --include-mine              Include my pull requests
         --include-reviewed-by-me    Include pull requests I have reviewed
-        --include-tests-failure     Include pull requests with tests falure
+        --include-tests-failure     Include pull requests with tests failure
+        --include-tests-none        Include pull requests with no tests executed (usually because of conflicts)
         --include-tests-pending     Include pull requests with pending tests
     -s, --short                     Short version. No table
     -V, --version                   Prints version information
