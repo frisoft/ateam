@@ -5,7 +5,7 @@ pub struct Pr<'a> {
     pub url: String,
     pub last_commit_pushed_date: Option<DateTime<Utc>>,
     pub last_commit_age_min: Option<i64>,
-    pub tests_result: i64,
+    pub tests_result: TestsState,
     pub open_conversations: i64,
     pub num_approvals: i64,
     pub num_reviewers: i64,
@@ -16,6 +16,13 @@ pub struct Pr<'a> {
     pub blame: bool,
     pub labels: Labels<'a>,
     pub codeowner: bool,
+}
+
+pub enum TestsState {
+    Pending,
+    Success,
+    Failure,
+    None,
 }
 
 pub struct Files<'a>(pub Vec<&'a str>);
@@ -48,9 +55,15 @@ pub struct Score {
 
 impl Score {
     pub fn from_pr(required_approvals: u8, pr: &Pr) -> Score {
+        let tests_result_i = match pr.tests_result {
+            TestsState::Success => 0,
+            TestsState::Pending => 1,
+            TestsState::Failure => 2,
+            TestsState::None => 3,
+        };
         Score {
             age: pr.last_commit_age_min.unwrap_or(0) as f64 / 60.0 * 2.0,
-            tests_result: (pr.tests_result - 1) as f64 * -200.0,
+            tests_result: (tests_result_i - 1) as f64 * -200.0,
             open_conversations: pr.open_conversations as f64 * -30.0,
             num_approvals: (pr.num_approvals - required_approvals as i64) as f64 * -80.0,
             num_reviewers: (pr.num_reviewers - required_approvals as i64) as f64 * -50.0,
@@ -113,7 +126,7 @@ mod tests {
             url: "https://github.com/frisoft/ateam/pull/1".to_string(),
             last_commit_pushed_date: None,
             last_commit_age_min: None,
-            tests_result: 0,
+            tests_result: TestsState::Success,
             open_conversations: 0,
             num_approvals: 1,
             num_reviewers: 2,

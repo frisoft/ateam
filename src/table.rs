@@ -67,7 +67,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
             spr.pr.url, spr.pr.title, spr.pr.labels, debug_info
         ),
         show_duration(spr.pr.last_commit_age_min),
-        tests_result_label(spr.pr.tests_result).to_string(),
+        tests_result_label(&spr.pr.tests_result).to_string(),
         spr.pr.open_conversations.to_string(),
         format!("{}/{}", spr.pr.num_approvals, spr.pr.num_reviewers),
         format!("+{} -{}", spr.pr.additions, spr.pr.deletions),
@@ -88,12 +88,12 @@ fn show_bool(value: bool) -> &'static str {
     }
 }
 
-fn tests_result_label(tests_result: i64) -> &'static str {
+fn tests_result_label(tests_result: &TestsState) -> &'static str {
     match tests_result {
-        0 => "OK",
-        1 => "..",
-        2 => "Fail",
-        _ => "?",
+        TestsState::Success => "OK",
+        TestsState::Pending => "..",
+        TestsState::Failure => "Fail",
+        TestsState::None => "-",
     }
 }
 

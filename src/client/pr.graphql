@@ -13,7 +13,7 @@ query RepoView($query: String!) {
             nodes {
               commit {
                 pushedDate
-                status {
+                statusCheckRollup {
                   state
                 }
               }
