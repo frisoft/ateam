@@ -3,6 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/ateam.svg)](https://crates.io/crates/ateam)
 [![Crates.io](https://img.shields.io/crates/d/ateam.svg)](https://crates.io/crates/ateam)
 [![CI](https://github.com/frisoft/ateam/workflows/CI/badge.svg)](https://github.com/frisoft/ateam/actions)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/frisoft/ateam/blob/master/LICENSE)
 
 The tool that helps optimize the code review process.
 
