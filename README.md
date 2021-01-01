@@ -1,5 +1,9 @@
 # A-Team
 
+[![Crates.io](https://img.shields.io/crates/v/ateam.svg)](https://crates.io/crates/ateam)
+[![Crates.io](https://img.shields.io/crates/d/ateam.svg)](https://crates.io/crates/ateam)
+[![CI](https://github.com/frisoft/ateam/workflows/CI/badge.svg)](https://github.com/frisoft/ateam/actions)
+
 The tool that helps optimize the code review process.
 
 ## Install
