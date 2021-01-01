@@ -36,12 +36,12 @@ This command helps the developers determine which pull request should be reviewe
 To get all the pull requests of your organization (any repo), use the following command:
 
 ```bash
-❯ ateam pr --org GitHubOrgName --include-mine --include-reviewed-by-me
+❯ ateam pr --org OrgName --include-mine --include-reviewed-by-me
 ```
 
 The previous list also includes your pull requests and all the ones you already reviewed. You probably want to exclude them:
 ```
-❯ ateam pr --org GitHubOrgName
+❯ ateam pr --org OrgName
 ```
 
 The pull requests are in the order they are supposed to be reviewed. The first one is probably the one you should review first.
@@ -49,19 +49,19 @@ The pull requests are in the order they are supposed to be reviewed. The first o
 You can also search for specific pull requests. You can use the `--query` option for this. It allows you to use any condition you can use int GitHub as well. The most common search is by text:
 
 ```
-❯ ateam pr --org GitHubOrgName --query 'urgent'
+❯ ateam pr --org OrgName --query 'urgent'
 ```
 
 Unfortunately, the `--query` option does not allow to combine texts with the OR operator.
 In the case you want to search for two or more strigs, you can use the `--regex` option:
 
 ```
-❯ ateam pr --org GitHubOrgName --regex 'urgent|bugfix|awesome'
+❯ ateam pr --org OrgName --regex 'urgent|bugfix|awesome'
 ```
 You can also filter by labels:
 
 ```
-❯ ateam pr --org GitHubOrgName --label LABEL1 --label LABEL2
+❯ ateam pr --org OrgName --label LABEL1 --label LABEL2
 ```
 
 To see all the possible options, you can use `--help`:
