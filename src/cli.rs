@@ -50,8 +50,13 @@ pub struct Pr {
     pub include_mine: bool,
     #[structopt(long, help = "Include pull requests with pending tests")]
     pub include_tests_pending: bool,
-    #[structopt(long, help = "Include pull requests with tests falure")]
+    #[structopt(long, help = "Include pull requests with tests failure")]
     pub include_tests_failure: bool,
+    #[structopt(
+        long,
+        help = "Include pull requests with no tests executed (usually because of conflicts)"
+    )]
+    pub include_tests_none: bool,
     #[structopt(long, help = "Number of required approvals", default_value = "2")]
     pub required_approvals: u8,
     #[structopt(long, help = "Look if I changed the same files in the past (SLOW)")]

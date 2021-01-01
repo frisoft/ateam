@@ -59,10 +59,8 @@ pub fn query(
 fn github_query(options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
-        "is:pr is:open draft:false {}{}{}{}{}{}{}{}",
+        "is:pr is:open draft:false {}{}{}{}{}{}",
         query_include_mine(options.include_mine),
-        query_include_tests_pending(options.include_tests_pending),
-        query_include_tests_failure(options.include_tests_failure),
         query_include_reviewed_by_me(options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
@@ -76,22 +74,6 @@ fn query_include_mine(include_mine: bool) -> &'static str {
         ""
     } else {
         "-author:@me "
-    }
-}
-
-fn query_include_tests_pending(include_tests_pending: bool) -> &'static str {
-    if include_tests_pending {
-        ""
-    } else {
-        "-status:pending "
-    }
-}
-
-fn query_include_tests_failure(include_tests_failure: bool) -> &'static str {
-    if include_tests_failure {
-        ""
-    } else {
-        "-status:failure "
     }
 }
 
@@ -182,6 +164,7 @@ fn prs<'a>(
         .flatten() // Extract value from Some(value) and remove the Nones
         .filter(move |i| !is_empty(i) && regex_match(regex, i))
         .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
+        .flatten() // Extract value from Some(value) and remove the Nones
         .collect()
 }
 
@@ -237,8 +220,14 @@ fn pr_stats<'a>(
     username: &str,
     options: &cli::Pr,
     pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
-) -> Pr<'a> {
+) -> Option<Pr<'a>> {
     let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
+
+    let tests_result = tests_state(last_commit_state);
+    if !include_by_tests_state(&tests_result, options) {
+        return None;
+    }
+
     let (files, blame) = if options.blame {
         let files = pr_files(&pr);
         let blame = blame::blame(
@@ -252,12 +241,13 @@ fn pr_stats<'a>(
     } else {
         (Files(vec![]), false)
     };
-    Pr {
+
+    Some(Pr {
         title: pr.title.clone(),
         url: pr.url.clone(),
         last_commit_pushed_date,
         last_commit_age_min: age(last_commit_pushed_date),
-        tests_result: status_state_to_i(last_commit_state),
+        tests_result,
         open_conversations: pr_open_conversations(&pr.review_threads),
         num_approvals: pr_num_approvals(&pr.reviews),
         num_reviewers: pr_num_reviewers(&pr.reviews),
@@ -268,6 +258,15 @@ fn pr_stats<'a>(
         blame,
         labels: pr_labels(&pr.labels),
         codeowner: is_codeowner(&pr.review_requests, username),
+    })
+}
+
+fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
+    match state {
+        TestsState::Success => true,
+        TestsState::Failure => options.include_tests_failure,
+        TestsState::Pending => options.include_tests_pending,
+        TestsState::None => options.include_tests_none,
     }
 }
 
@@ -282,7 +281,10 @@ fn last_commit(
         .map(|node| {
             (
                 &node.commit.pushed_date,
-                node.commit.status.as_ref().map(|status| &status.state),
+                node.commit
+                    .status_check_rollup
+                    .as_ref()
+                    .map(|status| &status.state),
             )
         })
     {
@@ -292,17 +294,17 @@ fn last_commit(
     }
 }
 
-fn status_state_to_i(state: Option<&repo_view::StatusState>) -> i64 {
+fn tests_state(state: Option<&repo_view::StatusState>) -> TestsState {
     match state {
         Some(state) => match state {
-            repo_view::StatusState::SUCCESS => 0,
-            repo_view::StatusState::PENDING => 1,
-            repo_view::StatusState::FAILURE => 2,
-            repo_view::StatusState::ERROR => 3,
-            repo_view::StatusState::EXPECTED => 3,
-            repo_view::StatusState::Other(_) => 3,
+            repo_view::StatusState::SUCCESS => TestsState::Success,
+            repo_view::StatusState::PENDING | repo_view::StatusState::EXPECTED => {
+                TestsState::Pending
+            }
+            repo_view::StatusState::FAILURE | repo_view::StatusState::ERROR => TestsState::Failure,
+            repo_view::StatusState::Other(_) => TestsState::None,
         },
-        None => 3,
+        None => TestsState::None,
     }
 }
 
