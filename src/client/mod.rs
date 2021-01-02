@@ -60,7 +60,7 @@ fn github_query(options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open draft:false {}{}{}{}{}{}",
-        query_include_mine(options.include_mine),
+        query_mine(options.include_mine, options.only_mine),
         query_include_reviewed_by_me(options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
@@ -69,8 +69,10 @@ fn github_query(options: &cli::Pr) -> String {
     )
 }
 
-fn query_include_mine(include_mine: bool) -> &'static str {
-    if include_mine {
+fn query_mine(include_mine: bool, only_mine: bool) -> &'static str {
+    if only_mine {
+        "author:@me "
+    } else if include_mine {
         ""
     } else {
         "-author:@me "
