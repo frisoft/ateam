@@ -69,7 +69,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.4.0
+ateam-pr 0.4.1
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -83,6 +83,7 @@ FLAGS:
         --include-tests-failure     Include pull requests with tests failure
         --include-tests-none        Include pull requests with no tests executed (usually because of conflicts)
         --include-tests-pending     Include pull requests with pending tests
+        --only-mine                 select only my pull requests
     -s, --short                     Short version. No table
     -V, --version                   Prints version information
 
