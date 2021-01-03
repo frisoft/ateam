@@ -69,7 +69,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.4.1
+ateam-pr 0.4.2
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -77,6 +77,7 @@ USAGE:
 FLAGS:
         --blame                     Look if I changed the same files in the past (SLOW)
     -d, --debug                     Add debug information
+        --exclude-tests-success     Exclide pull requests with tests successful
     -h, --help                      Prints help information
         --include-mine              Include my pull requests
         --include-reviewed-by-me    Include pull requests I have reviewed

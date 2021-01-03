@@ -59,6 +59,8 @@ pub struct Pr {
         help = "Include pull requests with no tests executed (usually because of conflicts)"
     )]
     pub include_tests_none: bool,
+    #[structopt(long, help = "Exclide pull requests with tests successful")]
+    pub exclude_tests_success: bool,
     #[structopt(long, help = "Number of required approvals", default_value = "2")]
     pub required_approvals: u8,
     #[structopt(long, help = "Look if I changed the same files in the past (SLOW)")]

@@ -265,7 +265,7 @@ fn pr_stats<'a>(
 
 fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
     match state {
-        TestsState::Success => true,
+        TestsState::Success => !options.exclude_tests_success,
         TestsState::Failure => options.include_tests_failure,
         TestsState::Pending => options.include_tests_pending,
         TestsState::None => options.include_tests_none,
