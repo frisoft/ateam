@@ -28,6 +28,10 @@ pub fn query(
     }
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
+        num_checks: match options.tests_regex {
+            Some(_) => 20,
+            None => 0,
+        },
     });
     let client = reqwest::Client::new();
     let mut res = client
@@ -223,9 +227,8 @@ fn pr_stats<'a>(
     options: &cli::Pr,
     pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Option<Pr<'a>> {
-    let (last_commit_pushed_date, last_commit_state) = last_commit(&pr);
+    let (last_commit_pushed_date, tests_result) = last_commit(&pr, &options.tests_regex);
 
-    let tests_result = tests_state(last_commit_state);
     if !include_by_tests_state(&tests_result, options) {
         return None;
     }
@@ -272,9 +275,11 @@ fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
     }
 }
 
-fn last_commit(
-    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
-) -> (Option<DateTime<Utc>>, Option<&repo_view::StatusState>) {
+fn last_commit<'a>(
+    pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+    tests_regex: &Option<String>,
+) -> (Option<DateTime<Utc>>, TestsState) {
+    let tests_re = regex(&tests_regex);
     if let Some((pushed_date, state)) = pr
         .commits
         .nodes
@@ -286,27 +291,68 @@ fn last_commit(
                 node.commit
                     .status_check_rollup
                     .as_ref()
-                    .map(|status| &status.state),
+                    .map(|status| commit_status_state(&status, &tests_re)),
             )
         })
     {
-        (parse_date(pushed_date), state)
+        (parse_date(pushed_date), state.unwrap_or(TestsState::None))
     } else {
-        (None, None)
+        (None, TestsState::None)
     }
 }
 
-fn tests_state(state: Option<&repo_view::StatusState>) -> TestsState {
-    match state {
-        Some(state) => match state {
-            repo_view::StatusState::SUCCESS => TestsState::Success,
-            repo_view::StatusState::PENDING | repo_view::StatusState::EXPECTED => {
-                TestsState::Pending
+fn commit_status_state<'a>(
+    status: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
+    tests_re: &Option<Regex>,
+) -> TestsState {
+    match tests_re {
+        Some(tests_re) => commit_tests_state_from_contexts(&status.contexts.nodes, tests_re),
+        None => tests_state(&status.state),
+    }
+}
+
+fn commit_tests_state_from_contexts(
+    contexts_nodes: &Option<Vec<Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes>>>,
+    tests_re: &Regex,
+) -> TestsState {
+    match contexts_nodes {
+        Some(nodes) => {
+            let states: Vec<TestsState> = nodes.iter().map(|node|
+                match node {
+                  Some(value) => match value {
+                      repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes::StatusContext(status_context) =>
+                        if tests_re.is_match(&status_context.context) {
+                            Some(tests_state(&status_context.state))
+                        } else {
+                            None
+                        }
+                      _ => None,
+                  },
+                  None => None
+              }).flatten().collect();
+            match states {
+                v if v.iter().any(|state| matches!(state, TestsState::Failure)) => {
+                    TestsState::Failure
+                }
+                v if v.iter().any(|state| matches!(state, TestsState::Pending)) => {
+                    TestsState::Pending
+                }
+                v if v.iter().all(|state| matches!(state, TestsState::Success)) => {
+                    TestsState::Success
+                }
+                _ => TestsState::None,
             }
-            repo_view::StatusState::FAILURE | repo_view::StatusState::ERROR => TestsState::Failure,
-            repo_view::StatusState::Other(_) => TestsState::None,
-        },
+        }
         None => TestsState::None,
+    }
+}
+
+fn tests_state(state: &repo_view::StatusState) -> TestsState {
+    match state {
+        repo_view::StatusState::SUCCESS => TestsState::Success,
+        repo_view::StatusState::PENDING | repo_view::StatusState::EXPECTED => TestsState::Pending,
+        repo_view::StatusState::FAILURE | repo_view::StatusState::ERROR => TestsState::Failure,
+        repo_view::StatusState::Other(_) => TestsState::None,
     }
 }
 

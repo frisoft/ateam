@@ -1,6 +1,6 @@
 [package]
 name = "ateam"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Andrea Frigido"]
 license = "MIT"
 description = "The tool that helps optimize the code review process."
