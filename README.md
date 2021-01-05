@@ -17,7 +17,7 @@ Create a GitHub API token and store it in the GITHUB_API_TOKEN env variable. You
 
 A-team needs to connect to GitHub's API using your GitHub API token.
 
-You can use this guide to create one: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token#creating-a-token
+You can use this [guide to create one](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token#creating-a-token).
 
 The token needs read access to GitHub.
 
@@ -46,14 +46,14 @@ The previous list also includes your pull requests and all the ones you already 
 
 The pull requests are in the order they are supposed to be reviewed. The first one is probably the one you should review first.
 
-You can also search for specific pull requests. You can use the `--query` option for this. It allows you to use any condition you can use int GitHub as well. The most common search is by text:
+You can also search for specific pull requests. You can use the `--query` option for this. It allows you to use any condition you can use int GitHub search. The most common search is by text:
 
 ```
 ❯ ateam pr --org OrgName --query 'urgent'
 ```
 
 Unfortunately, the `--query` option does not allow to combine texts with the OR operator.
-In the case you want to search for two or more strigs, you can use the `--regex` option:
+In the case you want to search for two or more strings, you can use the `--regex` option:
 
 ```
 ❯ ateam pr --org OrgName --regex 'urgent|bugfix|awesome'
@@ -69,7 +69,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.4.2
+ateam-pr 0.5.0
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -97,6 +97,7 @@ OPTIONS:
         --regex <regex>                              Regexp filter on titles
     -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one
         --required-approvals <required-approvals>    Number of required approvals [default: 2]
+        --tests-regex <tests-regex>                  Select tests via regexp. The others are ignored
 ```
 
 ### How does it work?

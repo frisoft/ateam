@@ -1,4 +1,4 @@
-query RepoView($query: String!) {
+query RepoView($query: String!, $num_checks: Int!) {
   search(query: $query, last: 100, type: ISSUE) {
     edges {
       node {
@@ -15,7 +15,16 @@ query RepoView($query: String!) {
                 pushedDate
                 statusCheckRollup {
                   state
-                }
+                  contexts(last: $num_checks) {
+                    nodes {
+                      __typename
+                      ... on StatusContext {
+                        context
+                        state
+                      }
+                    }
+                  }
+		}
               }
             }
           }
