@@ -121,11 +121,11 @@ fn query_labels(labels: &[String], exclude_label: &[String]) -> String {
         "{}{}",
         labels
             .iter()
-            .map(|label| format!("label:{} ", label))
+            .map(|label| format!("label:\"{}\" ", label))
             .collect::<String>(),
         exclude_label
             .iter()
-            .map(|label| format!("-label:{} ", label))
+            .map(|label| format!("-label:\"{}\" ", label))
             .collect::<String>()
     )
 }
