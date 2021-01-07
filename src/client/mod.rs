@@ -150,6 +150,7 @@ pub fn ranked_prs<'a>(
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<ScoredPr<'a>> {
     let re = regex(&options.regex);
+    let re_not = regex(&options.regex_not);
     let sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, options, &response_data)
         .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
@@ -180,6 +181,7 @@ fn prs<'a>(
     github_api_token: &str,
     username: &str,
     regex: &Option<Regex>,
+    regex_not: &Option<Regex>,
     options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<Pr<'a>> {
@@ -197,7 +199,7 @@ fn prs<'a>(
             _ => None,
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
-        .filter(move |i| !is_empty(i) && regex_match(regex, i))
+        .filter(move |i| !is_empty(i) && regex_match(regex, i) && !regex_match(regex_not, i))
         .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .collect()
