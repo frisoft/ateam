@@ -1,6 +1,7 @@
-query RepoView($query: String!, $num_checks: Int!) {
-  search(query: $query, last: 100, type: ISSUE) {
+query RepoView($query: String!, $first: Int!, $after: String, $num_checks: Int!) {
+  search(query: $query, first: $first, after: $after, type: ISSUE) {
     edges {
+      cursor
       node {
         __typename
         ... on PullRequest {
