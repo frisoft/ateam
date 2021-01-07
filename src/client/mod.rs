@@ -20,6 +20,40 @@ type URI = String;
 
 const LIMIT:u16 = 40;
 
+pub fn ranked_prs<'a>(
+    github_api_token: &'a str,
+    options: &'a cli::Pr,
+) -> Result<Vec<ScoredPr<'a>>, failure::Error> {
+    let username = username::username(github_api_token);
+    let (responses, _) = get_responses(vec![], github_api_token, options, None)?;
+    let sprs = responses.iter().map(|response_data|
+                                    scored_prs(
+                                        github_api_token,
+                                        &username,
+                                        options.required_approvals,
+                                        options,
+                                        response_data,
+                                        )
+                                   ).flatten().collect::<Vec<ScoredPr>>();
+    Ok(sorted_scored_prs(sprs))
+}
+
+pub fn get_responses(
+    mut list: Vec<repo_view::ResponseData>,
+    github_api_token: &str,
+    options: &cli::Pr,
+    after: Option<String>
+) -> Result<(Vec<repo_view::ResponseData>, Option<String>), failure::Error> {
+    let (response_data, cursor) = query(github_api_token, options, after.clone())?;
+    println!("{:?}", cursor);
+    list.push(response_data);
+    if cursor == None {
+        Ok((list, cursor))
+    } else {
+        get_responses(list, github_api_token, options, cursor) 
+    }
+}
+
 pub fn query(
     github_api_token: &str,
     options: &cli::Pr,
@@ -143,7 +177,7 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub fn ranked_prs<'a>(
+pub fn scored_prs<'a>(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
@@ -160,7 +194,7 @@ pub fn ranked_prs<'a>(
     sprs
 }
 
-pub fn sorted_ranked_prs(mut sprs: Vec<ScoredPr>) -> Vec<ScoredPr> {
+pub fn sorted_scored_prs(mut sprs: Vec<ScoredPr>) -> Vec<ScoredPr> {
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
     sprs
