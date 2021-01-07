@@ -44,6 +44,8 @@ pub struct Pr {
     pub query: Option<String>,
     #[structopt(long, help = "Regexp filter on titles")]
     pub regex: Option<String>,
+    #[structopt(long, help = "Regexp filter on titles to exclude pull requests")]
+    pub regex_not: Option<String>,
     #[structopt(long, help = "Include pull requests I have reviewed")]
     pub include_reviewed_by_me: bool,
     #[structopt(long, help = "Include my pull requests")]
