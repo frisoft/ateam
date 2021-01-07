@@ -24,8 +24,6 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
 
     let username = client::username::username(&config.github_api_token);
 
-    // println!(">> {:?}", options);
-    
     let (responses, _) = get_responses(vec![], &config.github_api_token, &options, None)?;
     let sprs = responses.iter().map(|response_data|
         client::ranked_prs(

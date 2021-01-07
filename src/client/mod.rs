@@ -154,8 +154,6 @@ pub fn ranked_prs<'a>(
         .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect();
-    // sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
-    // sprs.reverse();
     sprs
 }
 
