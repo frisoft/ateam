@@ -18,7 +18,7 @@ pub struct RepoView;
 
 type URI = String;
 
-const LIMIT:u16 = 50;
+const LIMIT:u16 = 40;
 
 pub fn query(
     github_api_token: &str,
