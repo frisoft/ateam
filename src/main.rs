@@ -40,29 +40,6 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     println!();
     print::prs(&client::sorted_ranked_prs(sprs), options.num, options.debug, options.short);
 
-    // let mut pull_requests: Vec<types::ScoredPr> = vec![];
-    // let cursor = None;
-    // loop {
-    //     let (response_data, cursor) = client::query(&config.github_api_token, &options, cursor.clone())?;
-    //     println!("{:?}", cursor);
-       
-        // let sprs = client::ranked_prs(
-        //     &config.github_api_token,
-        //     &username,
-        //     options.required_approvals,
-        //     &options,
-        //     &response_data,
-        // );
-
-        // pull_requests.extend(sprs);
-
-        // if cursor == None {
-        //     println!();
-        //     print::prs(&pull_requests, options.num, options.debug, options.short);
-        //     break;
-        // }
-    // }
-
     Ok(())
 }
 
@@ -72,8 +49,8 @@ pub fn get_responses(
     options: &cli::Pr,
     after: Option<String>
 ) -> Result<(Vec<repo_view::ResponseData>, Option<String>), failure::Error> {
+    eprint!(".");
     let (response_data, cursor) = client::query(github_api_token, options, after.clone())?;
-    println!("{:?}", cursor);
     list.push(response_data);
     if cursor == None {
         Ok((list, cursor))

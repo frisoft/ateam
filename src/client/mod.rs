@@ -72,7 +72,6 @@ pub fn query(
 fn last_item_cursor(response_data: &repo_view::ResponseData) -> Option<String> {
     match &response_data.search.edges {
        Some(items) => {
-          println!("-----n: {}", items.len());
           if items.len() < LIMIT as usize {
              None
           } else {
