@@ -18,12 +18,12 @@ pub struct RepoView;
 
 type URI = String;
 
-const LIMIT:u16 = 40;
+const LIMIT: u16 = 40;
 
 pub fn query(
     github_api_token: &str,
     options: &cli::Pr,
-    after: Option<String>
+    after: Option<String>,
 ) -> Result<(repo_view::ResponseData, Option<String>), failure::Error> {
     let query_argument = github_query(options);
     if options.debug {
@@ -32,7 +32,7 @@ pub fn query(
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
         first: LIMIT as i64,
-        after: after,
+        after,
         num_checks: match options.tests_regex {
             Some(_) => 20,
             None => 0,
@@ -62,7 +62,7 @@ pub fn query(
         }
     }
     // println!("{:?}", response_body.data);
-    
+
     let response_data = response_body.data.expect("missing response data");
     let cursor = last_item_cursor(&response_data);
 
@@ -71,17 +71,17 @@ pub fn query(
 
 fn last_item_cursor(response_data: &repo_view::ResponseData) -> Option<String> {
     match &response_data.search.edges {
-       Some(items) => {
-          if items.len() < LIMIT as usize {
-             None
-          } else {
-             match items.last() {
-               Some(Some(item)) => Some(item.cursor.clone()), 
-               _ => None
-             }
-          }
-       }
-       None => None
+        Some(items) => {
+            if items.len() < LIMIT as usize {
+                None
+            } else {
+                match items.last() {
+                    Some(Some(item)) => Some(item.cursor.clone()),
+                    _ => None,
+                }
+            }
+        }
+        None => None,
     }
 }
 
@@ -151,10 +151,17 @@ pub fn ranked_prs<'a>(
 ) -> Vec<ScoredPr<'a>> {
     let re = regex(&options.regex);
     let re_not = regex(&options.regex_not);
-    let sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, options, &response_data)
-        .into_par_iter()
-        .map(|pr| scored_pr(required_approvals, pr))
-        .collect();
+    let sprs: Vec<ScoredPr> = prs(
+        github_api_token,
+        username,
+        &re,
+        &re_not,
+        options,
+        &response_data,
+    )
+    .into_par_iter()
+    .map(|pr| scored_pr(required_approvals, pr))
+    .collect();
     sprs
 }
 
@@ -199,7 +206,9 @@ fn prs<'a>(
             _ => None,
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
-        .filter(move |i| !is_empty(i) && regex_match(regex, i) && !regex_match(regex_not, i))
+        .filter(move |i| {
+            !is_empty(i) && regex_match(regex, true, i) && !regex_match(regex_not, false, i)
+        })
         .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .collect()
@@ -207,11 +216,12 @@ fn prs<'a>(
 
 fn regex_match(
     regex: &Option<Regex>,
+    or: bool,
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> bool {
     match regex {
         Some(re) => re.is_match(&pr.title),
-        None => true,
+        None => or,
     }
 }
 

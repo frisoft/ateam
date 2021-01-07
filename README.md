@@ -69,7 +69,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.5.0
+ateam-pr 0.6.0
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -95,6 +95,7 @@ OPTIONS:
         --org <organization>                         Selest all the repositoris of the organization
     -q, --query <query>                              GitHub query
         --regex <regex>                              Regexp filter on titles
+        --regex-not <regex-not>                      Regexp filter on titles to exclude pull requests
     -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one
         --required-approvals <required-approvals>    Number of required approvals [default: 2]
         --tests-regex <tests-regex>                  Select tests via regexp. The others are ignored
