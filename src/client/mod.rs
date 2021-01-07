@@ -18,16 +18,21 @@ pub struct RepoView;
 
 type URI = String;
 
+const LIMIT:u16 = 50;
+
 pub fn query(
     github_api_token: &str,
     options: &cli::Pr,
-) -> Result<repo_view::ResponseData, failure::Error> {
+    after: Option<String>
+) -> Result<(repo_view::ResponseData, Option<String>), failure::Error> {
     let query_argument = github_query(options);
     if options.debug {
         println!(">> GitHub query: {:?}", query_argument);
     }
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
+        first: LIMIT as i64,
+        after: after,
         num_checks: match options.tests_regex {
             Some(_) => 20,
             None => 0,
@@ -57,7 +62,28 @@ pub fn query(
         }
     }
     // println!("{:?}", response_body.data);
-    Ok(response_body.data.expect("missing response data"))
+    
+    let response_data = response_body.data.expect("missing response data");
+    let cursor = last_item_cursor(&response_data);
+
+    Ok((response_data, cursor))
+}
+
+fn last_item_cursor(response_data: &repo_view::ResponseData) -> Option<String> {
+    match &response_data.search.edges {
+       Some(items) => {
+          println!("-----n: {}", items.len());
+          if items.len() < LIMIT as usize {
+             None
+          } else {
+             match items.last() {
+               Some(Some(item)) => Some(item.cursor.clone()), 
+               _ => None
+             }
+          }
+       }
+       None => None
+    }
 }
 
 fn github_query(options: &cli::Pr) -> String {
@@ -125,10 +151,16 @@ pub fn ranked_prs<'a>(
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<ScoredPr<'a>> {
     let re = regex(&options.regex);
-    let mut sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, options, &response_data)
+    let sprs: Vec<ScoredPr> = prs(github_api_token, username, &re, options, &response_data)
         .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect();
+    // sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
+    // sprs.reverse();
+    sprs
+}
+
+pub fn sorted_ranked_prs(mut sprs: Vec<ScoredPr>) -> Vec<ScoredPr> {
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
     sprs
