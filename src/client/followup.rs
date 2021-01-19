@@ -64,6 +64,7 @@ fn parse(
             .flatten()
             .map(|pr| parse_pr(&pr))
             .flatten()
+            .filter(|pr| match pr.0 { followup::PullRequestReviewState::APPROVED => false, _ => true } )
             .collect(),
         _ => vec![],
     }
