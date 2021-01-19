@@ -1,0 +1,16 @@
+query Followup($login: String!) {
+  search(query: "is:pr is:open reviewed-by:@me -author:@me", type: ISSUE, first: 100) {
+    nodes {
+      __typename
+      ... on PullRequest {
+        url
+        reviews(last: 1, author: $login) {
+          nodes {
+            state
+            url
+          }
+        }
+      }
+    }
+  }
+}

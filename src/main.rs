@@ -16,6 +16,9 @@ fn main() -> Result<(), failure::Error> {
         cli::Ateam {
             cmd: cli::Command::Pr(pr),
         } => pr_cmd(&pr),
+        cli::Ateam {
+            cmd: cli::Command::Followup,
+        } => followup_cmd(),
     }
 }
 
@@ -46,6 +49,16 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
         options.debug,
         options.short,
     );
+
+    Ok(())
+}
+
+fn followup_cmd() -> Result<(), failure::Error> {
+    let config = config::get_config().context("while reading from environment")?;
+
+    let username = client::username::username(&config.github_api_token);
+
+    client::followup::followup(&config.github_api_token, &username);
 
     Ok(())
 }
