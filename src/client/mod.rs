@@ -6,8 +6,8 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashSet;
 mod blame;
-pub mod username;
 pub mod followup;
+pub mod username;
 
 #[derive(GraphQLQuery)]
 #[graphql(

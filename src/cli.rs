@@ -10,7 +10,7 @@ pub struct Ateam {
 #[derive(StructOpt, Debug)]
 pub enum Command {
     Pr(Pr),
-    Followup
+    Followup,
 }
 
 #[derive(StructOpt, Debug)]

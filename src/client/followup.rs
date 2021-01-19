@@ -11,19 +11,19 @@ pub struct Followup;
 
 type URI = String;
 
-pub fn followup(
-    github_api_token: &str,
-    login: &str,
-) {
-    let response_data: followup::ResponseData =
-        match girhub_followup(github_api_token, login) {
-            Ok(data) => data,
-            Err(_) => panic!("Can't get the follow up actions"),
-        };
-    
+pub fn followup(github_api_token: &str, login: &str) {
+    let response_data: followup::ResponseData = match girhub_followup(github_api_token, login) {
+        Ok(data) => data,
+        Err(_) => panic!("Can't get the follow up actions"),
+    };
+
     println!(">> {:?}", &response_data);
-    
-    parse(&response_data);
+    println!("=============================================================");
+
+    let reviews = parse(&response_data);
+
+    println!("{:?}", reviews);
+
     // println!(">> {:?}", files);
 }
 
@@ -53,7 +53,55 @@ fn girhub_followup(
     Ok(response_body.data.expect("missing response data"))
 }
 
-fn parse(response_data: &followup::ResponseData) {
+fn parse(
+    response_data: &followup::ResponseData,
+) -> Vec<(&followup::PullRequestReviewState, &String)> {
+    match response_data {
+        followup::ResponseData {
+            search: followup::FollowupSearch { nodes: Some(prs) },
+        } => prs
+            .iter()
+            .flatten()
+            .map(|pr| parse_pr(&pr))
+            .flatten()
+            .collect(),
+        _ => vec![],
+    }
+}
 
+fn parse_pr(
+    pr: &followup::FollowupSearchNodes,
+) -> Option<(&followup::PullRequestReviewState, &String)> {
+    match pr {
+        followup::FollowupSearchNodes::PullRequest(
+            followup::FollowupSearchNodesOnPullRequest {
+                url: _,
+                reviews:
+                    Some(followup::FollowupSearchNodesOnPullRequestReviews {
+                        nodes: Some(reviews),
+                    }),
+            },
+        ) => reviews
+            .iter()
+            .flatten()
+            .map(|review| parse_review(&review))
+            .flatten()
+            .next(),
+        _ => None,
+    }
+}
 
+fn parse_review(
+    review: &followup::FollowupSearchNodesOnPullRequestReviewsNodes,
+) -> Option<(&followup::PullRequestReviewState, &String)> {
+    match review {
+        followup::FollowupSearchNodesOnPullRequestReviewsNodes {
+            state: state,
+            url: url,
+        } => {
+            // println!("{:?} -- {}", state, url);
+            Some((state, url))
+        }
+        _ => None,
+    }
 }
