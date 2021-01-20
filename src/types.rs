@@ -115,6 +115,19 @@ impl std::fmt::Display for Label<'_> {
     }
 }
 
+#[derive(Debug)]
+pub struct Review {
+    pub state: ReviewState,
+    pub url: String,
+    pub pr_title: String,
+}
+
+#[derive(Debug)]
+pub enum ReviewState {
+    Dismissed,
+    WithResolvedComments,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

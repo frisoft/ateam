@@ -317,8 +317,8 @@ fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
     }
 }
 
-fn last_commit<'a>(
-    pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+fn last_commit(
+    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
     tests_regex: &Option<String>,
 ) -> (Option<DateTime<Utc>>, TestsState) {
     let tests_re = regex(&tests_regex);
@@ -343,8 +343,8 @@ fn last_commit<'a>(
     }
 }
 
-fn commit_status_state<'a>(
-    status: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
+fn commit_status_state(
+    status: &repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
     tests_re: &Option<Regex>,
 ) -> TestsState {
     match tests_re {
