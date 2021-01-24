@@ -208,7 +208,10 @@ fn prs<'a>(
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .filter(move |i| {
-            !is_empty(i) && regex_match(regex, true, i) && !regex_match(regex_not, false, i)
+            !is_empty(i)
+                && !has_conflicts(i)
+                && regex_match(regex, true, i)
+                && !regex_match(regex_not, false, i)
         })
         .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
@@ -228,6 +231,10 @@ fn regex_match(
 
 fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr.additions == 0 && pr.deletions == 0
+}
+
+fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+    pr.mergeable == repo_view::MergeableState::CONFLICTING
 }
 
 fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {

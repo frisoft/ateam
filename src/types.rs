@@ -125,7 +125,17 @@ pub struct Review {
 #[derive(Debug)]
 pub enum ReviewState {
     Dismissed,
-    WithResolvedComments,
+    WithAddressedConversations,
+}
+
+impl std::fmt::Display for ReviewState {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let text = match self {
+            ReviewState::Dismissed => "Dismissed",
+            ReviewState::WithAddressedConversations => "With addressed conversations",
+        };
+        write!(f, "{}", text)
+    }
 }
 
 #[cfg(test)]

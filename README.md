@@ -113,6 +113,8 @@ Pull requests you created are excluded too unless you ask for them.
 
 Pull requests you already reviewed are excluded unless you ask for them.
 
+Pull requests with conflicts are excluded.
+
 It assigns a score to the pull requests. Then, it orders them by score. The highest first, the lowest last.
 
 The ranking algorithm is based on several pieces of information:
@@ -159,17 +161,19 @@ It is best reviewing first pull request based on the main branch.
 
 `codeowner` is 1 if you are one of the [code owners](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/about-code-owners) for this pull request.
 
+## ateam followup
+
+This second subcommand gives you some information about the reviews you already submitted and need your attention.
+
+The list of reviews includes:
+
+- Dismissed reviews: A review is usually dismissed when the branch is rebased. You probably want to re-review or re-approve.
+- Reviews with addressed conversations: The author replied to your questions or the conversations are outdated 
+  by the requested changes. The review is in this list only if all your conversations have been addressed. 
+
 ## ateam todo
 
 NOT AVAILABLE YET
-
-This second command gives you a list of pull requests you are reviewing or you have already reviewed 
-that needs your attention or a list of your pull requests that need your intervention.
-
-Somebody else's pull requests:
-  - Your approval has been dismissed by a new commit; you need to review again.
-  - All your comments have been outdated by recent changes. You need to review it again.
-  - Somebody replied to one of your comment. You need to answer or resolve the conversation.
 
 Your pull requests:
   - Somebody opened a conversation on your pull request. You need to reply or change the code.

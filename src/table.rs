@@ -5,27 +5,19 @@ use comfy_table::*;
 use terminal_size::{terminal_size, Height, Width};
 
 pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> Table {
-    let mut table = Table::new();
-    table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec![
-            "Pull request",
-            "Age",
-            "CI",
-            "O.C.",
-            "Appr.",
-            "Diff",
-            "On Main",
-            "Blame",
-            "C. Owner",
-            "Score",
-        ]);
-
-    if let Some((Width(w), Height(_h))) = terminal_size() {
-        table.set_table_width(w);
-    }
+    let mut table = build_table();
+    table.set_header(vec![
+        "Pull request",
+        "Age",
+        "CI",
+        "O.C.",
+        "Appr.",
+        "Diff",
+        "On Main",
+        "Blame",
+        "C. Owner",
+        "Score",
+    ]);
 
     for c in 1..8 {
         table
@@ -134,4 +126,37 @@ fn show_duration(minutes: Option<i64>) -> String {
         // d.format("%d-%m-%Y %H:%M").to_string(),
         None => String::from("-"),
     }
+}
+
+fn build_table() -> Table {
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic);
+
+    if let Some((Width(w), Height(_h))) = terminal_size() {
+        table.set_table_width(w);
+    }
+
+    table
+}
+
+pub fn from_reviews(reviews: &[Review]) -> Table {
+    let mut table = build_table();
+    table.set_header(vec!["Review", "State", "Pull request"]);
+
+    reviews.iter().for_each(|review| {
+        table.add_row(review_row(review));
+    });
+
+    table
+}
+
+fn review_row(review: &Review) -> Vec<String> {
+    vec![
+        review.url.to_string(),
+        review.state.to_string(),
+        review.pr_title.to_string(),
+    ]
 }

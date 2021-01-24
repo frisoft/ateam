@@ -58,7 +58,9 @@ fn followup_cmd() -> Result<(), failure::Error> {
 
     let username = client::username::username(&config.github_api_token);
 
-    client::followup::followup(&config.github_api_token, &username);
+    let reviews = client::followup::followup(&config.github_api_token, &username);
+
+    print::reviews(&reviews);
 
     Ok(())
 }

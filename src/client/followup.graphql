@@ -4,7 +4,8 @@ query Followup($login: String!) {
       __typename
       ... on PullRequest {
 	title
-        url
+        # url
+	mergeable
         reviews(last: 1, author: $login) {
           nodes {
             state
@@ -13,8 +14,8 @@ query Followup($login: String!) {
         }
 	reviewThreads(last: 50) {
           nodes {
-            isCollapsed
-            # isOutdated
+            # isCollapsed
+            isOutdated
             # isResolved
             comments(last: 20) {
               nodes {

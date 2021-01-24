@@ -1,6 +1,5 @@
 use super::super::types::{Review, ReviewState};
 use graphql_client::*;
-// use rayon::prelude::*;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -12,19 +11,13 @@ pub struct Followup;
 
 type URI = String;
 
-pub fn followup(github_api_token: &str, login: &str) {
+pub fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
     let response_data: followup::ResponseData = match girhub_followup(github_api_token, login) {
         Ok(data) => data,
         Err(_) => panic!("Can't get the follow up actions"),
     };
 
-    let reviews = parse(&response_data, login);
-
-    reviews.iter().for_each(|review| {
-        println!("{:?}", review);
-    })
-
-    // println!(">> {:?}", files);
+    parse(&response_data, login)
 }
 
 fn girhub_followup(
@@ -72,7 +65,8 @@ fn parse_pr(pr: &followup::FollowupSearchNodes, login: &str) -> Option<Review> {
         followup::FollowupSearchNodes::PullRequest(
             followup::FollowupSearchNodesOnPullRequest {
                 title,
-                url: _,
+                // url: _,
+                mergeable,
                 reviews:
                     Some(followup::FollowupSearchNodesOnPullRequestReviews {
                         nodes: Some(reviews),
@@ -80,25 +74,39 @@ fn parse_pr(pr: &followup::FollowupSearchNodes, login: &str) -> Option<Review> {
                 review_threads,
             },
         ) => {
-            let has_unresolved_review_threads =
-                has_unresolved_review_threads(review_threads, login);
-            reviews
-                .iter()
-                .flatten()
-                .map(|review| parse_review(&review, has_unresolved_review_threads, &title))
-                .flatten()
-                .next()
+            if *mergeable == followup::MergeableState::CONFLICTING {
+                // the PR has conflicts, let's exclude it
+                None
+            } else {
+                last_dismissed_or_addressed_review(reviews, &review_threads, login, &title)
+            }
         }
         _ => None,
     }
 }
 
+fn last_dismissed_or_addressed_review(
+    reviews: &[Option<followup::FollowupSearchNodesOnPullRequestReviewsNodes>],
+    review_threads: &followup::FollowupSearchNodesOnPullRequestReviewThreads,
+    login: &str,
+    title: &str,
+) -> Option<Review> {
+    let has_unaddressed_review_threads = has_unaddressed_review_threads(review_threads, login);
+    reviews
+        .iter()
+        .flatten()
+        .map(|review| parse_review(&review, has_unaddressed_review_threads, title))
+        .flatten()
+        .next()
+}
+
 fn parse_review(
     review: &followup::FollowupSearchNodesOnPullRequestReviewsNodes,
-    has_unresolved_review_threads: bool,
+    has_unaddressed_review_threads: bool,
     pr_title: &str,
 ) -> Option<Review> {
     let followup::FollowupSearchNodesOnPullRequestReviewsNodes { state, url } = review;
+    // println!("{:?}", url);
     match state {
         followup::PullRequestReviewState::DISMISSED => Some(Review {
             state: ReviewState::Dismissed,
@@ -106,9 +114,9 @@ fn parse_review(
             pr_title: pr_title.to_string(),
         }),
         followup::PullRequestReviewState::COMMENTED => {
-            if !has_unresolved_review_threads {
+            if !has_unaddressed_review_threads {
                 Some(Review {
-                    state: ReviewState::WithResolvedComments,
+                    state: ReviewState::WithAddressedConversations,
                     url: url.to_string(),
                     pr_title: pr_title.to_string(),
                 })
@@ -120,7 +128,7 @@ fn parse_review(
     }
 }
 
-fn has_unresolved_review_threads(
+fn has_unaddressed_review_threads(
     review_threads: &followup::FollowupSearchNodesOnPullRequestReviewThreads,
     login: &str,
 ) -> bool {
@@ -128,35 +136,30 @@ fn has_unresolved_review_threads(
         followup::FollowupSearchNodesOnPullRequestReviewThreads { nodes: Some(nodes) } => nodes
             .iter()
             .flatten()
-            .any(|review_thread| is_unresolved_review_thread(review_thread, login)),
+            .any(|review_thread| is_unaddressed_review_thread(review_thread, login)),
         _ => false,
-    };
-    // println!("{:?}", review_threads);
-    // println!("---------------------------------");
-    true
+    }
 }
 
-fn is_unresolved_review_thread(
+fn is_unaddressed_review_thread(
     review_thread: &followup::FollowupSearchNodesOnPullRequestReviewThreadsNodes,
     login: &str,
 ) -> bool {
     match review_thread {
         followup::FollowupSearchNodesOnPullRequestReviewThreadsNodes {
-            is_collapsed,
+            // is_collapsed,
+            // is_unresolved,
+            is_outdated,
             comments:
                 followup::FollowupSearchNodesOnPullRequestReviewThreadsNodesComments {
                     nodes: Some(comments),
                 },
         } => {
-            if *is_collapsed {
+            if *is_outdated {
                 false
             } else {
                 let first_comment_author = comment_author(comments.first());
                 let last_comment_author = comment_author(comments.last());
-                // println!(
-                //     "{:?} - {:?} - {:?}",
-                //     is_collapsed, first_comment_author, last_comment_author
-                // );
                 first_comment_author == login && last_comment_author == login
             }
         }
