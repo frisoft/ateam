@@ -6,6 +6,7 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashSet;
 mod blame;
+pub mod followup;
 pub mod username;
 
 #[derive(GraphQLQuery)]
@@ -207,7 +208,10 @@ fn prs<'a>(
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .filter(move |i| {
-            !is_empty(i) && regex_match(regex, true, i) && !regex_match(regex_not, false, i)
+            !is_empty(i)
+                && !has_conflicts(i)
+                && regex_match(regex, true, i)
+                && !regex_match(regex_not, false, i)
         })
         .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
@@ -227,6 +231,10 @@ fn regex_match(
 
 fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr.additions == 0 && pr.deletions == 0
+}
+
+fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+    pr.mergeable == repo_view::MergeableState::CONFLICTING
 }
 
 fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
@@ -316,8 +324,8 @@ fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
     }
 }
 
-fn last_commit<'a>(
-    pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+fn last_commit(
+    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
     tests_regex: &Option<String>,
 ) -> (Option<DateTime<Utc>>, TestsState) {
     let tests_re = regex(&tests_regex);
@@ -342,8 +350,8 @@ fn last_commit<'a>(
     }
 }
 
-fn commit_status_state<'a>(
-    status: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
+fn commit_status_state(
+    status: &repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
     tests_re: &Option<Regex>,
 ) -> TestsState {
     match tests_re {

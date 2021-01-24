@@ -1,4 +1,5 @@
 use super::table;
+use super::types::Review;
 use super::types::ScoredPr;
 
 pub fn prs(sprs: &[ScoredPr], num: Option<usize>, debug: bool, short: bool) {
@@ -18,4 +19,8 @@ fn short_prs(sprs: &[ScoredPr], limit: usize, debug: bool) {
 
 fn pr(spr: &ScoredPr, _debug: bool) {
     println!("{}", &spr.pr);
+}
+
+pub fn reviews(reviews: &[Review]) {
+    print!("{}", table::from_reviews(reviews));
 }
