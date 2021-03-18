@@ -78,6 +78,8 @@ pub struct Pr {
 
 #[derive(StructOpt, Debug)]
 pub struct Followup {
+    #[structopt(long, help = "Output in JSON")]
+    pub json: bool,
     #[structopt(long, help = "Query for another user")]
     pub user: Option<String>,
 }

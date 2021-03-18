@@ -62,7 +62,7 @@ fn followup_cmd(options: &cli::Followup) -> Result<(), failure::Error> {
 
     let reviews = client::followup::followup(&config.github_api_token, &username);
 
-    print::reviews(&reviews);
+    print::reviews(&reviews, options.json);
 
     Ok(())
 }
