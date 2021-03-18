@@ -48,6 +48,7 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
         options.num,
         options.debug,
         options.short,
+        options.json,
     );
 
     Ok(())

@@ -34,6 +34,8 @@ pub struct Pr {
     pub num: Option<usize>,
     #[structopt(long, short, help = "Short version. No table")]
     pub short: bool,
+    #[structopt(long, help = "Output in JSON")]
+    pub json: bool,
     #[structopt(long, help = "Filter by label. Can be used multiple times")]
     pub label: Vec<String>,
     #[structopt(
