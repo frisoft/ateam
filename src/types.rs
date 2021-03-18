@@ -1,5 +1,7 @@
 use chrono::prelude::{DateTime, Utc};
 
+use crossterm::style::{Color, Colors, ResetColor, SetColors};
+
 pub struct Pr<'a> {
     pub title: String,
     pub url: String,
@@ -92,6 +94,37 @@ impl Score {
 impl std::fmt::Display for Pr<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} - {} {}", self.url, self.title, self.labels,)
+    }
+}
+
+impl std::fmt::Display for Labels<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|label| label.to_string())
+                .collect::<Vec<String>>()
+                .join(" "),
+        )
+    }
+}
+
+impl std::fmt::Display for Label<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let c: u32 = u32::from_str_radix(self.color, 16).unwrap_or(0);
+        let (r, g, b) = ((c >> 16) as u8, ((c >> 8) & 0xff) as u8, (c & 0xff) as u8);
+        write!(
+            f,
+            "{} {} {}",
+            SetColors(Colors::new(
+                Color::Rgb { r: 0, g: 0, b: 0 },
+                Color::Rgb { r, g, b }
+            )),
+            self.name,
+            ResetColor
+        )
     }
 }
 
