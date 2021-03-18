@@ -1,5 +1,5 @@
-query Followup($login: String!) {
-  search(query: "is:pr is:open draft:false reviewed-by:@me -author:@me", type: ISSUE, first: 100) {
+query Followup($login: String!, $query: String!) {
+  search(query: $query, type: ISSUE, first: 100) {
     nodes {
       __typename
       ... on PullRequest {

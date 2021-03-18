@@ -23,10 +23,11 @@ const LIMIT: u16 = 40;
 
 pub fn query(
     github_api_token: &str,
+    username: &str,
     options: &cli::Pr,
     after: Option<String>,
 ) -> Result<(repo_view::ResponseData, Option<String>), failure::Error> {
-    let query_argument = github_query(options);
+    let query_argument = github_query(username, options);
     if options.debug {
         println!(">> GitHub query: {:?}", query_argument);
     }
@@ -86,12 +87,12 @@ fn last_item_cursor(response_data: &repo_view::ResponseData) -> Option<String> {
     }
 }
 
-fn github_query(options: &cli::Pr) -> String {
+fn github_query(username: &str, options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open draft:false {}{}{}{}{}{}",
-        query_mine(options.include_mine, options.only_mine),
-        query_include_reviewed_by_me(options.include_reviewed_by_me),
+        query_mine(username, options.include_mine, options.only_mine),
+        query_include_reviewed_by_me(username, options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
         query_org(&options.org),
@@ -99,21 +100,21 @@ fn github_query(options: &cli::Pr) -> String {
     )
 }
 
-fn query_mine(include_mine: bool, only_mine: bool) -> &'static str {
+fn query_mine(username: &str, include_mine: bool, only_mine: bool) -> String {
     if only_mine {
-        "author:@me "
+        format!("author:{} ", username)
     } else if include_mine {
-        ""
+        "".to_string()
     } else {
-        "-author:@me "
+        format!("-author:{} ", username)
     }
 }
 
-fn query_include_reviewed_by_me(include_reviewed_by_me: bool) -> &'static str {
+fn query_include_reviewed_by_me(username: &str, include_reviewed_by_me: bool) -> String {
     if include_reviewed_by_me {
-        ""
+        "".to_string()
     } else {
-        "-reviewed-by:@me "
+        format!("-reviewed-by:{} ", username)
     }
 }
 

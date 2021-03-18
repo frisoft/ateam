@@ -26,6 +26,10 @@ fn girhub_followup(
 ) -> Result<followup::ResponseData, failure::Error> {
     let q = Followup::build_query(followup::Variables {
         login: login.to_string(),
+        query: format!(
+            "is:pr is:open draft:false reviewed-by:{} -author:{}",
+            login, login
+        ),
     });
     let client = reqwest::Client::new();
     let mut res = client

@@ -10,7 +10,7 @@ pub struct Ateam {
 #[derive(StructOpt, Debug)]
 pub enum Command {
     Pr(Pr),
-    Followup,
+    Followup(Followup),
 }
 
 #[derive(StructOpt, Debug)]
@@ -72,6 +72,14 @@ pub struct Pr {
     pub required_approvals: u8,
     #[structopt(long, help = "Look if I changed the same files in the past (SLOW)")]
     pub blame: bool,
+    #[structopt(long, help = "Query for another user")]
+    pub user: Option<String>,
+}
+
+#[derive(StructOpt, Debug)]
+pub struct Followup {
+    #[structopt(long, help = "Query for another user")]
+    pub user: Option<String>,
 }
 
 pub fn command() -> Ateam {
