@@ -368,16 +368,14 @@ fn commit_tests_state_from_contexts(
         Some(nodes) => {
             let states: Vec<TestsState> = nodes.iter().map(|node|
                 match node {
-                  Some(value) => match value {
-                      repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes::StatusContext(status_context) =>
-                        if tests_re.is_match(&status_context.context) {
-                            Some(tests_state(&status_context.state))
-                        } else {
-                            None
-                        }
-                      _ => None,
+                  Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes::StatusContext(status_context)) => {
+                      if tests_re.is_match(&status_context.context) {
+                          Some(tests_state(&status_context.state))
+                      } else {
+                          None
+                      }
                   },
-                  None => None
+                  _ => None
               }).flatten().collect();
             match states {
                 v if v.iter().any(|state| matches!(state, TestsState::Failure)) => {
