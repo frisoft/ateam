@@ -42,7 +42,7 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
         .flatten()
         .collect::<Vec<types::ScoredPr>>();
 
-    println!();
+    eprintln!(".");
     print::prs(
         &client::sorted_ranked_prs(sprs),
         options.num,
