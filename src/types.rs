@@ -1,5 +1,7 @@
 use chrono::prelude::{DateTime, Utc};
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct Pr<'a> {
     pub title: String,
     pub url: String,
@@ -18,6 +20,7 @@ pub struct Pr<'a> {
     pub codeowner: bool,
 }
 
+#[derive(Serialize)]
 pub enum TestsState {
     Pending,
     Success,
@@ -25,21 +28,25 @@ pub enum TestsState {
     None,
 }
 
+#[derive(Serialize)]
 pub struct Files<'a>(pub Vec<&'a str>);
 
+#[derive(Serialize)]
 pub struct Labels<'a>(pub Vec<Label<'a>>);
 
+#[derive(Serialize)]
 pub struct Label<'a> {
     pub name: &'a str,
     pub color: &'a str,
 }
 
+#[derive(Serialize)]
 pub struct ScoredPr<'a> {
     pub pr: Pr<'a>,
     pub score: Score,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Score {
     pub age: f64,
     pub tests_result: f64,
@@ -115,14 +122,14 @@ impl std::fmt::Display for Label<'_> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Review {
     pub state: ReviewState,
     pub url: String,
     pub pr_title: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum ReviewState {
     Dismissed,
     WithAddressedConversations,

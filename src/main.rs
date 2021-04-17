@@ -17,17 +17,18 @@ fn main() -> Result<(), failure::Error> {
             cmd: cli::Command::Pr(pr),
         } => pr_cmd(&pr),
         cli::Ateam {
-            cmd: cli::Command::Followup,
-        } => followup_cmd(),
+            cmd: cli::Command::Followup(followup),
+        } => followup_cmd(&followup),
     }
 }
 
 fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let username = client::username::username(&config.github_api_token);
+    let username = get_username(&options.user, &config.github_api_token);
 
-    let (responses, _) = get_responses(vec![], &config.github_api_token, &options, None)?;
+    let (responses, _) =
+        get_responses(vec![], &config.github_api_token, &username, &options, None)?;
     let sprs = responses
         .iter()
         .map(|response_data| {
@@ -42,42 +43,51 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
         .flatten()
         .collect::<Vec<types::ScoredPr>>();
 
-    println!();
+    eprintln!(".");
     print::prs(
         &client::sorted_ranked_prs(sprs),
         options.num,
         options.debug,
         options.short,
+        options.json,
     );
 
     Ok(())
 }
 
-fn followup_cmd() -> Result<(), failure::Error> {
+fn followup_cmd(options: &cli::Followup) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let username = client::username::username(&config.github_api_token);
+    let username = get_username(&options.user, &config.github_api_token);
 
     let reviews = client::followup::followup(&config.github_api_token, &username);
 
-    print::reviews(&reviews);
+    print::reviews(&reviews, options.json);
 
     Ok(())
+}
+
+fn get_username(user: &Option<String>, github_api_token: &str) -> String {
+    match user {
+        Some(username) => username.to_string(),
+        None => client::username::username(github_api_token),
+    }
 }
 
 pub fn get_responses(
     mut list: Vec<repo_view::ResponseData>,
     github_api_token: &str,
+    username: &str,
     options: &cli::Pr,
     after: Option<String>,
 ) -> Result<(Vec<repo_view::ResponseData>, Option<String>), failure::Error> {
     eprint!(".");
-    let (response_data, cursor) = client::query(github_api_token, options, after)?;
+    let (response_data, cursor) = client::query(github_api_token, username, options, after)?;
     list.push(response_data);
     if cursor == None {
         Ok((list, cursor))
     } else {
-        get_responses(list, github_api_token, options, cursor)
+        get_responses(list, github_api_token, username, options, cursor)
     }
 }
 
