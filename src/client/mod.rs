@@ -19,8 +19,6 @@ pub struct RepoView;
 
 type URI = String;
 
-const LIMIT: u16 = 40;
-
 pub fn query(
     github_api_token: &str,
     username: &str,
@@ -31,9 +29,10 @@ pub fn query(
     if options.debug {
         println!(">> GitHub query: {:?}", query_argument);
     }
+    let batch_size = limited_batch_size(options.batch_size);
     let q = RepoView::build_query(repo_view::Variables {
         query: query_argument,
-        first: LIMIT as i64,
+        first: batch_size,
         after,
         num_checks: match options.tests_regex {
             Some(_) => 20,
@@ -66,15 +65,19 @@ pub fn query(
     // println!("{:?}", response_body.data);
 
     let response_data = response_body.data.expect("missing response data");
-    let cursor = last_item_cursor(&response_data);
+    let cursor = last_item_cursor(&response_data, batch_size);
 
     Ok((response_data, cursor))
 }
 
-fn last_item_cursor(response_data: &repo_view::ResponseData) -> Option<String> {
+fn limited_batch_size(batch_size: u8) -> i64 {
+    (if batch_size <= 100 { batch_size } else { 100 }) as i64
+}
+
+fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) -> Option<String> {
     match &response_data.search.edges {
         Some(items) => {
-            if items.len() < LIMIT as usize {
+            if items.len() < batch_size as usize {
                 None
             } else {
                 match items.last() {
@@ -89,7 +92,6 @@ fn last_item_cursor(response_data: &repo_view::ResponseData) -> Option<String> {
 
 fn github_query(username: &str, options: &cli::Pr) -> String {
     format!(
-        // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open draft:false {}{}{}{}{}{}",
         query_mine(username, options.include_mine, options.only_mine),
         query_include_reviewed_by_me(username, options.include_reviewed_by_me),
