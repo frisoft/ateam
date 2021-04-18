@@ -74,6 +74,12 @@ pub struct Pr {
     pub blame: bool,
     #[structopt(long, help = "Query for another user")]
     pub user: Option<String>,
+    #[structopt(
+        long,
+        help = "Mumber of pull requests requested per batch",
+        default_value = "30"
+    )]
+    pub batch_size: u8,
 }
 
 #[derive(StructOpt, Debug)]
