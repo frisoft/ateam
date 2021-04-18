@@ -36,7 +36,7 @@ query RepoView($query: String!, $first: Int!, $after: String, $num_checks: Int!)
               isOutdated
             }
           }
-          reviews(first: 10) {
+          reviews(last: 30) {
             totalCount
             nodes {
               author {
