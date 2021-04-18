@@ -76,7 +76,7 @@ pub struct Pr {
     pub user: Option<String>,
     #[structopt(
         long,
-        help = "Mumber of items requested per batch",
+        help = "Mumber of pull requests requested per batch",
         default_value = "30"
     )]
     pub batch_size: u8,

@@ -92,6 +92,7 @@ fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) ->
 
 fn github_query(username: &str, options: &cli::Pr) -> String {
     format!(
+        // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open draft:false {}{}{}{}{}{}",
         query_mine(username, options.include_mine, options.only_mine),
         query_include_reviewed_by_me(username, options.include_reviewed_by_me),
