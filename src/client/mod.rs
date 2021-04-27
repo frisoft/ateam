@@ -301,7 +301,8 @@ fn pr_stats<'a>(
         (Files(vec![]), false)
     };
 
-    let reviews = review_states(&pr.reviews);
+    let author = author(&pr);
+    let reviews = review_states(&pr.reviews, &author);
 
     Some(Pr {
         title: pr.title.clone(),
@@ -320,6 +321,15 @@ fn pr_stats<'a>(
         labels: pr_labels(&pr.labels),
         codeowner: is_codeowner(&pr.review_requests, username),
     })
+}
+
+fn author(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> String {
+    match &pr.author {
+        Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestAuthor { login, on: _ }) => {
+            login.to_string()
+        }
+        _ => "".to_string(),
+    }
 }
 
 fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
@@ -428,9 +438,10 @@ fn pr_open_conversations(
         .unwrap_or(0) as i64
 }
 
-fn review_states(
-    reviews: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
-) -> Vec<&repo_view::PullRequestReviewState> {
+fn review_states<'a>(
+    reviews: &'a std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
+    author: &str,
+) -> Vec<&'a repo_view::PullRequestReviewState> {
     // println!("{:?}", reviews);
     if let Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews {
         total_count: _,
@@ -457,6 +468,7 @@ fn review_states(
                 }
             })
             .rev() // reverse order: from the newest to the oldest
+            .filter(|review| review.0 != author) // exclude reviews given by the author of the PR
             .unique_by(|review| review.0) // unique by user
             .map(|review| review.1) // take only the state
             .collect()
@@ -465,14 +477,14 @@ fn review_states(
     }
 }
 
-fn pr_num_approvals(review_states: &Vec<&repo_view::PullRequestReviewState>) -> i64 {
+fn pr_num_approvals(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
     review_states
         .iter()
         .filter(|&&state| state == &repo_view::PullRequestReviewState::APPROVED)
         .count() as i64
 }
 
-fn pr_num_reviewers(review_states: &Vec<&repo_view::PullRequestReviewState>) -> i64 {
+fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
     review_states.len() as i64
 }
 

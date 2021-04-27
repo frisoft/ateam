@@ -69,7 +69,7 @@ To see all the possible options, you can use `--help`:
 ```bash
 ❯ ateam pr --help
 
-ateam-pr 0.7.0
+ateam-pr 0.7.1
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -84,11 +84,13 @@ FLAGS:
         --include-tests-failure     Include pull requests with tests failure
         --include-tests-none        Include pull requests with no tests executed (usually because of conflicts)
         --include-tests-pending     Include pull requests with pending tests
+        --json                      Output in JSON
         --only-mine                 select only my pull requests
     -s, --short                     Short version. No table
     -V, --version                   Prints version information
 
 OPTIONS:
+        --batch-size <batch-size>                    Mumber of pull requests requested per batch [default: 30]
         --exclude-label <exclude-label>...           Exclude pull requests with this label. Can be used multiple times
         --label <label>...                           Filter by label. Can be used multiple times
     -n, --num <num>                                  Number of pull requests to display
@@ -99,6 +101,8 @@ OPTIONS:
     -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one
         --required-approvals <required-approvals>    Number of required approvals [default: 2]
         --tests-regex <tests-regex>                  Select tests via regexp. The others are ignored
+        --user <user>                                Query for another user
+
 ```
 
 ### How does it work?
