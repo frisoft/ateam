@@ -64,7 +64,7 @@ pub struct Pr {
         help = "Include pull requests with no tests executed (usually because of conflicts)"
     )]
     pub include_tests_none: bool,
-    #[structopt(long, help = "Exclide pull requests with tests successful")]
+    #[structopt(long, help = "Exclude pull requests with tests successful")]
     pub exclude_tests_success: bool,
     #[structopt(long, help = "Select tests via regexp. The others are ignored")]
     pub tests_regex: Option<String>,
