@@ -66,7 +66,7 @@ You can also filter by labels:
 
 To see all the possible options, you can use `--help`:
 
-```bash
+```
 ❯ ateam pr --help
 
 ateam-pr 0.7.1
@@ -79,6 +79,7 @@ FLAGS:
     -d, --debug                     Add debug information
         --exclude-tests-success     Exclide pull requests with tests successful
     -h, --help                      Prints help information
+        --include-drafts            Include draft pull requests
         --include-mine              Include my pull requests
         --include-reviewed-by-me    Include pull requests I have reviewed
         --include-tests-failure     Include pull requests with tests failure

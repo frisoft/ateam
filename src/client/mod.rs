@@ -5,7 +5,6 @@ use graphql_client::*;
 use itertools::Itertools;
 use rayon::prelude::*;
 use regex::Regex;
-use repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodes;
 mod blame;
 pub mod followup;
 pub mod username;
@@ -94,7 +93,8 @@ fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) ->
 fn github_query(username: &str, options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
-        "is:pr is:open draft:false {}{}{}{}{}{}",
+        "is:pr is:open {}{}{}{}{}{}{}",
+        query_drafts(options.include_drafts),
         query_mine(username, options.include_mine, options.only_mine),
         query_include_reviewed_by_me(username, options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
@@ -102,6 +102,14 @@ fn github_query(username: &str, options: &cli::Pr) -> String {
         query_org(&options.org),
         &options.query.as_ref().unwrap_or(&"".to_string())
     )
+}
+
+fn query_drafts(include_drafts: bool) -> &'static str {
+    if include_drafts {
+        ""
+    } else {
+        "draft:false "
+    }
 }
 
 fn query_mine(username: &str, include_mine: bool, only_mine: bool) -> String {
@@ -453,7 +461,7 @@ fn review_states<'a>(
             .flat_map(|review| {
                 // println!("{:?}", review);
                 match review {
-                    Some(RepoViewSearchEdgesNodeOnPullRequestReviewsNodes {
+                    Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodes {
                         author:
                             Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodesAuthor {
                                 login,
