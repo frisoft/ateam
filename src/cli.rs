@@ -55,6 +55,8 @@ pub struct Pr {
     pub include_mine: bool,
     #[structopt(long, help = "select only my pull requests")]
     pub only_mine: bool,
+    #[structopt(long, help = "Include draft pull requests")]
+    pub include_drafts: bool,
     #[structopt(long, help = "Include pull requests with pending tests")]
     pub include_tests_pending: bool,
     #[structopt(long, help = "Include pull requests with tests failure")]

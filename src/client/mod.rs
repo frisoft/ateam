@@ -2,9 +2,9 @@ use super::cli;
 use super::types::*;
 use chrono::prelude::*;
 use graphql_client::*;
+use itertools::Itertools;
 use rayon::prelude::*;
 use regex::Regex;
-use std::collections::HashSet;
 mod blame;
 pub mod followup;
 pub mod username;
@@ -93,7 +93,8 @@ fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) ->
 fn github_query(username: &str, options: &cli::Pr) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
-        "is:pr is:open draft:false {}{}{}{}{}{}",
+        "is:pr is:open {}{}{}{}{}{}{}",
+        query_drafts(options.include_drafts),
         query_mine(username, options.include_mine, options.only_mine),
         query_include_reviewed_by_me(username, options.include_reviewed_by_me),
         query_labels(&options.label, &options.exclude_label),
@@ -101,6 +102,14 @@ fn github_query(username: &str, options: &cli::Pr) -> String {
         query_org(&options.org),
         &options.query.as_ref().unwrap_or(&"".to_string())
     )
+}
+
+fn query_drafts(include_drafts: bool) -> &'static str {
+    if include_drafts {
+        ""
+    } else {
+        "draft:false "
+    }
 }
 
 fn query_mine(username: &str, include_mine: bool, only_mine: bool) -> String {
@@ -300,6 +309,9 @@ fn pr_stats<'a>(
         (Files(vec![]), false)
     };
 
+    let author = author(&pr);
+    let reviews = review_states(&pr.reviews, &author);
+
     Some(Pr {
         title: pr.title.clone(),
         url: pr.url.clone(),
@@ -307,8 +319,8 @@ fn pr_stats<'a>(
         last_commit_age_min: age(last_commit_pushed_date),
         tests_result,
         open_conversations: pr_open_conversations(&pr.review_threads),
-        num_approvals: pr_num_approvals(&pr.reviews),
-        num_reviewers: pr_num_reviewers(&pr.reviews),
+        num_approvals: pr_num_approvals(&reviews),
+        num_reviewers: pr_num_reviewers(&reviews),
         additions: pr.additions,
         deletions: pr.deletions,
         based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
@@ -317,6 +329,15 @@ fn pr_stats<'a>(
         labels: pr_labels(&pr.labels),
         codeowner: is_codeowner(&pr.review_requests, username),
     })
+}
+
+fn author(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> String {
+    match &pr.author {
+        Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestAuthor { login, on: _ }) => {
+            login.to_string()
+        }
+        _ => "".to_string(),
+    }
 }
 
 fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
@@ -425,46 +446,54 @@ fn pr_open_conversations(
         .unwrap_or(0) as i64
 }
 
-fn pr_num_approvals(
-    reviews: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
-) -> i64 {
-    reviews
-        .as_ref()
-        .and_then(|reviews| reviews.nodes.as_ref())
-        .map(|nodes| {
-            nodes
-                .iter()
-                .map(|review| review.as_ref().map(|review| &review.state))
-                .filter(|state| state == &Some(&repo_view::PullRequestReviewState::APPROVED))
-                .count()
-        })
-        .unwrap_or(0) as i64
+fn review_states<'a>(
+    reviews: &'a std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
+    author: &str,
+) -> Vec<&'a repo_view::PullRequestReviewState> {
+    // println!("{:?}", reviews);
+    if let Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews {
+        total_count: _,
+        nodes: Some(nodes),
+    }) = reviews
+    {
+        nodes
+            .iter()
+            .flat_map(|review| {
+                // println!("{:?}", review);
+                match review {
+                    Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodes {
+                        author:
+                            Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodesAuthor {
+                                login,
+                                on: _,
+                            }),
+                        state,
+                    }) => {
+                        // println!("{} {:?}", login, state);
+                        Some((login, state))
+                    }
+                    _ => None,
+                }
+            })
+            .rev() // reverse order: from the newest to the oldest
+            .filter(|review| review.0 != author) // exclude reviews given by the author of the PR
+            .unique_by(|review| review.0) // unique by user
+            .map(|review| review.1) // take only the state
+            .collect()
+    } else {
+        vec![]
+    }
 }
 
-fn pr_num_reviewers(
-    reviews: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
-) -> i64 {
-    let reviewers = reviews
-        .as_ref()
-        .and_then(|reviews| reviews.nodes.as_ref())
-        .map(|nodes| {
-            nodes
-                .iter()
-                .map(|review| {
-                    review
-                        .as_ref()
-                        .and_then(|review| review.author.as_ref())
-                        .map(|author| &author.login)
-                })
-                .flatten()
-        });
+fn pr_num_approvals(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
+    review_states
+        .iter()
+        .filter(|&&state| state == &repo_view::PullRequestReviewState::APPROVED)
+        .count() as i64
+}
 
-    let s: HashSet<&String> = match reviewers {
-        Some(reviewers) => reviewers.collect(),
-        None => HashSet::new(),
-    };
-
-    s.len() as i64
+fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
+    review_states.len() as i64
 }
 
 fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {

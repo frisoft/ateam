@@ -10,7 +10,11 @@ query RepoView($query: String!, $first: Int!, $after: String, $num_checks: Int!)
           additions
           deletions
           baseRefName
-	  mergeable
+          mergeable
+          author {
+            __typename
+            login
+          }
           commits(last: 1) {
             nodes {
               commit {
