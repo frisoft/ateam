@@ -69,7 +69,7 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.7.1
+ateam-pr 0.8.0
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -77,13 +77,13 @@ USAGE:
 FLAGS:
         --blame                     Look if I changed the same files in the past (SLOW)
     -d, --debug                     Add debug information
-        --exclude-tests-success     Exclide pull requests with tests successful
+        --exclude-tests-none        Exclude pull requests without tests
+        --exclude-tests-success     Exclude pull requests with tests successful
     -h, --help                      Prints help information
         --include-drafts            Include draft pull requests
         --include-mine              Include my pull requests
         --include-reviewed-by-me    Include pull requests I have reviewed
         --include-tests-failure     Include pull requests with tests failure
-        --include-tests-none        Include pull requests with no tests executed (usually because of conflicts)
         --include-tests-pending     Include pull requests with pending tests
         --json                      Output in JSON
         --only-mine                 select only my pull requests
@@ -103,7 +103,6 @@ OPTIONS:
         --required-approvals <required-approvals>    Number of required approvals [default: 2]
         --tests-regex <tests-regex>                  Select tests via regexp. The others are ignored
         --user <user>                                Query for another user
-
 ```
 
 ### How does it work?
