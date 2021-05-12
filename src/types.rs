@@ -66,7 +66,7 @@ impl Score {
             TestsState::Success => 0,
             TestsState::Pending => 1,
             TestsState::Failure => 2,
-            TestsState::None => 3,
+            TestsState::None => 0, // a repo without CI is treated as successful
         };
         Score {
             age: pr.last_commit_age_min.unwrap_or(0) as f64 / 60.0 * 2.0,

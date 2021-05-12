@@ -345,7 +345,7 @@ fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
         TestsState::Success => !options.exclude_tests_success,
         TestsState::Failure => options.include_tests_failure,
         TestsState::Pending => options.include_tests_pending,
-        TestsState::None => options.include_tests_none,
+        TestsState::None => !options.exclude_tests_none,
     }
 }
 
