@@ -80,12 +80,8 @@ fn girhub_blame(
         repo_owner: repo_owner.to_string(),
         path: path.to_string(),
     });
-    let client = reqwest::Client::new();
-    let mut res = client
-        .post("https://api.github.com/graphql")
-        .bearer_auth(github_api_token)
-        .json(&q)
-        .send()?;
+
+    let res = super::call(github_api_token, &q)?;
 
     // println!(
     // ">>-----------------------------------\n{}\n-------------------------------\n",

@@ -19,6 +19,23 @@ pub struct RepoView;
 
 type URI = String;
 
+const AGENT: &'static str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
+
+pub fn call<V: serde::Serialize>(
+    github_api_token: &str,
+    q: &QueryBody<V>,
+) -> Result<reqwest::blocking::Response, failure::Error> {
+    let client = reqwest::blocking::Client::builder()
+        .user_agent(AGENT)
+        .build()?;
+    let res = client
+        .post("https://api.github.com/graphql")
+        .json(&q)
+        .bearer_auth(github_api_token)
+        .send()?;
+    Ok(res)
+}
+
 pub fn query(
     github_api_token: &str,
     username: &str,
@@ -39,19 +56,8 @@ pub fn query(
             None => 0,
         },
     });
-    let client = reqwest::Client::new();
-    let mut res = client
-        .post("https://api.github.com/graphql")
-        .bearer_auth(github_api_token)
-        .json(&q)
-        .send()?;
 
-    // println!(
-    // ">>-----------------------------------\n{}\n-------------------------------\n",
-    // res.text()?
-    // );
-    // println!(">> {:?}", res.json()?);
-    // println!("{:?}", res);
+    let res = call(github_api_token, &q)?;
 
     let response_body: Response<repo_view::ResponseData> = res.json()?;
     // println!("{:?}", response_body);

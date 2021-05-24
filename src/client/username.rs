@@ -11,7 +11,7 @@ pub struct Username;
 pub fn username(github_api_token: &str) -> String {
     let response_data: username::ResponseData = match github_username(github_api_token) {
         Ok(data) => data,
-        Err(_) => panic!("Can't get the username"),
+        Err(e) => panic!("Can't get the username: {:?}", e),
     };
 
     response_data.viewer.login
@@ -19,19 +19,7 @@ pub fn username(github_api_token: &str) -> String {
 
 fn github_username(github_api_token: &str) -> Result<username::ResponseData, failure::Error> {
     let q = Username::build_query(username::Variables {});
-    let client = reqwest::Client::new();
-    let mut res = client
-        .post("https://api.github.com/graphql")
-        .bearer_auth(github_api_token)
-        .json(&q)
-        .send()?;
-
-    // println!(
-    // ">>-----------------------------------\n{}\n-------------------------------\n",
-    // res.text()?
-    // );
-    // println!(">> {:?}", res.json()?);
-    // println!("{:?}", res);
+    let res = super::call(github_api_token, &q)?;
 
     let response_body: Response<username::ResponseData> = res.json()?;
     // println!("{:?}", response_body);

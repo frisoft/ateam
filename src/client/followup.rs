@@ -31,12 +31,8 @@ fn girhub_followup(
             login, login
         ),
     });
-    let client = reqwest::Client::new();
-    let mut res = client
-        .post("https://api.github.com/graphql")
-        .bearer_auth(github_api_token)
-        .json(&q)
-        .send()?;
+
+    let res = super::call(github_api_token, &q)?;
 
     let response_body: Response<followup::ResponseData> = res.json()?;
     // println!("{:?}", response_body);
