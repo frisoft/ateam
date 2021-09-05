@@ -53,7 +53,10 @@ pub struct Pr {
     pub include_reviewed_by_me: bool,
     #[structopt(long, help = "Include my pull requests")]
     pub include_mine: bool,
-    #[structopt(long, help = "select only my pull requests")]
+    #[structopt(
+        long,
+        help = "select only my pull requests (enables --include-reviewed-by-me automatically)"
+    )]
     pub only_mine: bool,
     #[structopt(long, help = "Include draft pull requests")]
     pub include_drafts: bool,

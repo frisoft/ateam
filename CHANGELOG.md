@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.2
+
+- Enable --include-reviewed-by-me when using --only-mine.
+
+## v0.8.1
+
+- Upgrade crates.
+
 ## v0.8.0
 
 - Add --exclude-tests-none flag. Exclude pull requests without tests.
@@ -14,4 +22,3 @@
 - Add --include-drafts flag.
 - Fix calculation of number of review and exclude author.
 - Fix calculation of number of approvals
-
