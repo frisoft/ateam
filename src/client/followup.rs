@@ -53,7 +53,7 @@ fn parse(response_data: &followup::ResponseData, login: &str) -> Vec<Review> {
         } => prs
             .iter()
             .flatten()
-            .map(|pr| parse_pr(&pr, login))
+            .map(|pr| parse_pr(pr, login))
             .flatten()
             .collect(),
         _ => vec![],
@@ -78,7 +78,7 @@ fn parse_pr(pr: &followup::FollowupSearchNodes, login: &str) -> Option<Review> {
                 // the PR has conflicts, let's exclude it
                 None
             } else {
-                last_dismissed_or_addressed_review(reviews, &review_threads, login, &title)
+                last_dismissed_or_addressed_review(reviews, review_threads, login, title)
             }
         }
         _ => None,
@@ -95,7 +95,7 @@ fn last_dismissed_or_addressed_review(
     reviews
         .iter()
         .flatten()
-        .map(|review| parse_review(&review, has_unaddressed_review_threads, title))
+        .map(|review| parse_review(review, has_unaddressed_review_threads, title))
         .flatten()
         .next()
 }

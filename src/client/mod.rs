@@ -19,7 +19,7 @@ pub struct RepoView;
 
 type URI = String;
 
-const AGENT: &'static str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
+const AGENT: &str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
 
 pub fn call<V: serde::Serialize>(
     github_api_token: &str,
@@ -102,7 +102,10 @@ fn github_query(username: &str, options: &cli::Pr) -> String {
         "is:pr is:open {}{}{}{}{}{}{}",
         query_drafts(options.include_drafts),
         query_mine(username, options.include_mine, options.only_mine),
-        query_include_reviewed_by_me(username, options.include_reviewed_by_me),
+        query_include_reviewed_by_me(
+            username,
+            options.include_reviewed_by_me || options.only_mine
+        ),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
         query_org(&options.org),
@@ -128,8 +131,11 @@ fn query_mine(username: &str, include_mine: bool, only_mine: bool) -> String {
     }
 }
 
-fn query_include_reviewed_by_me(username: &str, include_reviewed_by_me: bool) -> String {
-    if include_reviewed_by_me {
+fn query_include_reviewed_by_me(
+    username: &str,
+    include_reviewed_by_me_or_only_mine: bool,
+) -> String {
+    if include_reviewed_by_me_or_only_mine {
         "".to_string()
     } else {
         format!("-reviewed-by:{} ", username)
@@ -177,7 +183,7 @@ pub fn ranked_prs<'a>(
         &re,
         &re_not,
         options,
-        &response_data,
+        response_data,
     )
     .into_par_iter()
     .map(|pr| scored_pr(required_approvals, pr))
@@ -196,7 +202,7 @@ fn regex(regex_text: &Option<String>) -> Option<Regex> {
         Some(text) => text,
         None => return None,
     };
-    Some(Regex::new(&text).unwrap())
+    Some(Regex::new(text).unwrap())
 }
 
 fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
@@ -232,7 +238,7 @@ fn prs<'a>(
                 && regex_match(regex, true, i)
                 && !regex_match(regex_not, false, i)
         })
-        .map(move |i| pr_stats(github_api_token, username, options, &i)) // <-- Refactor
+        .map(move |i| pr_stats(github_api_token, username, options, i)) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .collect()
 }
@@ -295,14 +301,14 @@ fn pr_stats<'a>(
     options: &cli::Pr,
     pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Option<Pr<'a>> {
-    let (last_commit_pushed_date, tests_result) = last_commit(&pr, &options.tests_regex);
+    let (last_commit_pushed_date, tests_result) = last_commit(pr, &options.tests_regex);
 
     if !include_by_tests_state(&tests_result, options) {
         return None;
     }
 
     let (files, blame) = if options.blame {
-        let files = pr_files(&pr);
+        let files = pr_files(pr);
         let blame = blame::blame(
             github_api_token,
             &pr.repository.name,
@@ -315,7 +321,7 @@ fn pr_stats<'a>(
         (Files(vec![]), false)
     };
 
-    let author = author(&pr);
+    let author = author(pr);
     let reviews = review_states(&pr.reviews, &author);
 
     Some(Pr {
@@ -359,7 +365,7 @@ fn last_commit(
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
     tests_regex: &Option<String>,
 ) -> (Option<DateTime<Utc>>, TestsState) {
-    let tests_re = regex(&tests_regex);
+    let tests_re = regex(tests_regex);
     if let Some((pushed_date, state)) = pr
         .commits
         .nodes
@@ -371,7 +377,7 @@ fn last_commit(
                 node.commit
                     .status_check_rollup
                     .as_ref()
-                    .map(|status| commit_status_state(&status, &tests_re)),
+                    .map(|status| commit_status_state(status, &tests_re)),
             )
         })
     {
@@ -513,10 +519,7 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
 }
 
 fn age(date_time: Option<DateTime<Utc>>) -> Option<i64> {
-    match date_time {
-        Some(date_time) => Some((Utc::now() - date_time).num_minutes()),
-        None => None,
-    }
+    date_time.map(|date_time| (Utc::now() - date_time).num_minutes())
 }
 
 fn pr_based_on_main_branch(base_branch_name: &str) -> bool {

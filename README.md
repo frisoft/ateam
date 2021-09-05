@@ -40,6 +40,7 @@ To get all the pull requests of your organization (any repo), use the following 
 ```
 
 The previous list also includes your pull requests and all the ones you already reviewed. You probably want to exclude them:
+
 ```
 ❯ ateam pr --org OrgName
 ```
@@ -58,6 +59,7 @@ In the case you want to search for two or more strings, you can use the `--regex
 ```
 ❯ ateam pr --org OrgName --regex 'urgent|bugfix|awesome'
 ```
+
 You can also filter by labels:
 
 ```
@@ -69,7 +71,7 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.8.0
+ateam-pr 0.8.2
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -86,7 +88,7 @@ FLAGS:
         --include-tests-failure     Include pull requests with tests failure
         --include-tests-pending     Include pull requests with pending tests
         --json                      Output in JSON
-        --only-mine                 select only my pull requests
+        --only-mine                 select only my pull requests (enables --include-reviewed-by-me automatically)
     -s, --short                     Short version. No table
     -V, --version                   Prints version information
 
@@ -124,7 +126,7 @@ It assigns a score to the pull requests. Then, it orders them by score. The high
 The ranking algorithm is based on several pieces of information:
 
 ```
- pull request score = 
+ pull request score =
    last_commit_age * 2.0
    - (tests_result-1) * 2000.0
    - open_conversations * 30.0
@@ -141,11 +143,11 @@ where
 
 `last_commit_age` is the number of hours since the last pushed commit. So, older pull requests will appear first.
 
-`tests_result` is 0 for successful tests, 1 for pending tests and 2 for failing tests. Note that this has only effect if 
+`tests_result` is 0 for successful tests, 1 for pending tests and 2 for failing tests. Note that this has only effect if
 the --include-tests-failure and/or --include-tests-pending are used.
 
 `open_conversations` is the number of conversation not resolved and not outdated.
-A pull request with open conversations is already subject to reviews and discussion and, so, needs less attention. 
+A pull request with open conversations is already subject to reviews and discussion and, so, needs less attention.
 
 `approvals` is the number of approvals of the pull requests, and `required_approvals` is the minimum number of approvals required (default = 2).
 Approved pull requests need less attention.
@@ -172,13 +174,14 @@ This second subcommand gives you some information about the reviews you already 
 The list of reviews includes:
 
 - Dismissed reviews: A review is usually dismissed when the branch is rebased. You probably want to re-review or re-approve.
-- Reviews with addressed conversations: The author replied to your questions or the conversations are outdated 
-  by the requested changes. The review is in this list only if all your conversations have been addressed. 
+- Reviews with addressed conversations: The author replied to your questions or the conversations are outdated
+  by the requested changes. The review is in this list only if all your conversations have been addressed.
 
 ## ateam todo
 
 NOT AVAILABLE YET
 
 Your pull requests:
-  - Somebody opened a conversation on your pull request. You need to reply or change the code.
-  - Somebody asked explicit changes to your pull request.
+
+- Somebody opened a conversation on your pull request. You need to reply or change the code.
+- Somebody asked explicit changes to your pull request.

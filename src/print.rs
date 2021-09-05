@@ -5,11 +5,11 @@ use super::types::ScoredPr;
 pub fn prs(sprs: &[ScoredPr], num: Option<usize>, debug: bool, short: bool, json: bool) {
     let limit = num.unwrap_or(10000);
     if json {
-        json_prs(&sprs, limit);
+        json_prs(sprs, limit);
     } else if short {
-        short_prs(&sprs, limit, debug);
+        short_prs(sprs, limit, debug);
     } else {
-        print!("{}", table::from(&sprs, limit, debug));
+        print!("{}", table::from(sprs, limit, debug));
     }
 }
 

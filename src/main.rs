@@ -27,8 +27,7 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
 
     let username = get_username(&options.user, &config.github_api_token);
 
-    let (responses, _) =
-        get_responses(vec![], &config.github_api_token, &username, &options, None)?;
+    let (responses, _) = get_responses(vec![], &config.github_api_token, &username, options, None)?;
     let sprs = responses
         .iter()
         .map(|response_data| {
@@ -36,7 +35,7 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
                 &config.github_api_token,
                 &username,
                 options.required_approvals,
-                &options,
+                options,
                 response_data,
             )
         })
