@@ -53,8 +53,7 @@ fn parse(response_data: &followup::ResponseData, login: &str) -> Vec<Review> {
         } => prs
             .iter()
             .flatten()
-            .map(|pr| parse_pr(pr, login))
-            .flatten()
+            .filter_map(|pr| parse_pr(pr, login))
             .collect(),
         _ => vec![],
     }
@@ -95,8 +94,7 @@ fn last_dismissed_or_addressed_review(
     reviews
         .iter()
         .flatten()
-        .map(|review| parse_review(review, has_unaddressed_review_threads, title))
-        .flatten()
+        .filter_map(|review| parse_review(review, has_unaddressed_review_threads, title))
         .next()
 }
 

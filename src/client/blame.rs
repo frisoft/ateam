@@ -49,19 +49,19 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
     // println!("\n\nRanges: {:?}\n\n", v);
 
     let authors = match v {
-        Some(ranges) => ranges.iter().map(|range|
+        Some(ranges) => ranges.iter().flat_map(|range|
               match &range.commit.authors.nodes {
-                 Some(nodes) => nodes.iter().map(|node|
+                 Some(nodes) => nodes.iter().flat_map(|node|
                      match node {
                         Some(blame::BlameRepositoryDefaultBranchRefTargetOnCommitBlameRangesCommitAuthorsNodes{
                             user: Some(blame::BlameRepositoryDefaultBranchRefTargetOnCommitBlameRangesCommitAuthorsNodesUser {login})
                         }) => Some(login),
                         _ => None
                      }
-                 ).flatten().collect(),
+                 ).collect(),
                  _ => vec!()
               }
-        ).flatten().collect(),
+        ).collect(),
         _ => vec!(),
     };
 

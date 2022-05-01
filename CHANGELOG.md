@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.3
+
+- Upgrade to Rust edition 2021.
+- Add --requested option.
+- Add the Requested (explicitly) score.
+- Simplify request query removing -author: and -reviewed-by: conditions to avoid GH bug to return an empty result.
+- Improve parsing of code owner team members.
+
 ## v0.8.2
 
 - Enable --include-reviewed-by-me when using --only-mine.
