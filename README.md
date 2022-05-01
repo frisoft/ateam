@@ -13,6 +13,8 @@ The tool that helps optimize the code review process.
 
 Create a GitHub API token and store it in the GITHUB_API_TOKEN env variable. You can also use a .env file.
 
+The token needs `repo` and `read:org` selected scopes.
+
 ## Configuration
 
 A-team needs to connect to GitHub's API using your GitHub API token.
@@ -71,7 +73,7 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.8.2
+ateam-pr 0.8.3
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -89,6 +91,7 @@ FLAGS:
         --include-tests-pending     Include pull requests with pending tests
         --json                      Output in JSON
         --only-mine                 select only my pull requests (enables --include-reviewed-by-me automatically)
+        --requested                 Select pull requests I have been requested to review, explicitly or as a code owner
     -s, --short                     Short version. No table
     -V, --version                   Prints version information
 
@@ -136,6 +139,7 @@ The ranking algorithm is based on several pieces of information:
    - deletions * 0.1
    + based_on_main_branch * 200.0
    + blame * 400.0
+   + requested * 800.0
    + codeowner * 400.0
 ```
 
@@ -164,6 +168,8 @@ Deleted lines need to be reviewed as well, but it is usually a quicker job, so t
 It is best reviewing first pull request based on the main branch.
 
 `blame` is 1 if you changed in the past one of the first 5 files changed by the pull requiest.
+
+`requested` is 1 if somebody requested your review explicity, not because you are a code owner.
 
 `codeowner` is 1 if you are one of the [code owners](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/about-code-owners) for this pull request.
 

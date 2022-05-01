@@ -30,7 +30,7 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     let (responses, _) = get_responses(vec![], &config.github_api_token, &username, options, None)?;
     let sprs = responses
         .iter()
-        .map(|response_data| {
+        .flat_map(|response_data| {
             client::ranked_prs(
                 &config.github_api_token,
                 &username,
@@ -39,7 +39,6 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
                 response_data,
             )
         })
-        .flatten()
         .collect::<Vec<types::ScoredPr>>();
 
     eprintln!(".");

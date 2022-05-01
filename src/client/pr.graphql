@@ -76,6 +76,13 @@ query RepoView($query: String!, $first: Int!, $after: String, $num_checks: Int!)
                 ... on User {
                   login
                 }
+                ... on Team {
+                  members(first: 20) {
+                    nodes {
+                      login
+                    }
+                  }
+                }
               }
             }
           }

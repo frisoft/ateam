@@ -101,11 +101,8 @@ fn github_query(username: &str, options: &cli::Pr) -> String {
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open {}{}{}{}{}{}{}",
         query_drafts(options.include_drafts),
-        query_mine(username, options.include_mine, options.only_mine),
-        query_include_reviewed_by_me(
-            username,
-            options.include_reviewed_by_me || options.only_mine
-        ),
+        query_mine(username, options.only_mine),
+        query_requested(username, options.requested),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
         query_org(&options.org),
@@ -121,24 +118,19 @@ fn query_drafts(include_drafts: bool) -> &'static str {
     }
 }
 
-fn query_mine(username: &str, include_mine: bool, only_mine: bool) -> String {
+fn query_mine(username: &str, only_mine: bool) -> String {
     if only_mine {
         format!("author:{} ", username)
-    } else if include_mine {
-        "".to_string()
     } else {
-        format!("-author:{} ", username)
+        "".to_string()
     }
 }
 
-fn query_include_reviewed_by_me(
-    username: &str,
-    include_reviewed_by_me_or_only_mine: bool,
-) -> String {
-    if include_reviewed_by_me_or_only_mine {
-        "".to_string()
+fn query_requested(username: &str, requested: bool) -> String {
+    if requested {
+        format!("review-requested:{} ", username)
     } else {
-        format!("-reviewed-by:{} ", username)
+        "".to_string()
     }
 }
 
@@ -175,19 +167,10 @@ pub fn ranked_prs<'a>(
     options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<ScoredPr<'a>> {
-    let re = regex(&options.regex);
-    let re_not = regex(&options.regex_not);
-    let sprs: Vec<ScoredPr> = prs(
-        github_api_token,
-        username,
-        &re,
-        &re_not,
-        options,
-        response_data,
-    )
-    .into_par_iter()
-    .map(|pr| scored_pr(required_approvals, pr))
-    .collect();
+    let sprs: Vec<ScoredPr> = prs(github_api_token, username, options, response_data)
+        .into_par_iter()
+        .map(|pr| scored_pr(required_approvals, pr))
+        .collect();
     sprs
 }
 
@@ -213,11 +196,11 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
 fn prs<'a>(
     github_api_token: &str,
     username: &str,
-    regex: &Option<Regex>,
-    regex_not: &Option<Regex>,
     options: &cli::Pr,
     response_data: &'a repo_view::ResponseData,
 ) -> Vec<Pr<'a>> {
+    let re = regex(&options.regex);
+    let re_not = regex(&options.regex_not);
     response_data
         .search
         .edges
@@ -232,15 +215,39 @@ fn prs<'a>(
             _ => None,
         }) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
-        .filter(move |i| {
-            !is_empty(i)
-                && !has_conflicts(i)
-                && regex_match(regex, true, i)
-                && !regex_match(regex_not, false, i)
+        .filter(|i| {
+            include_pr(
+                i,
+                &re,
+                &re_not,
+                username,
+                options.include_mine,
+                options.only_mine,
+                options.include_reviewed_by_me,
+            )
         })
         .map(move |i| pr_stats(github_api_token, username, options, i)) // <-- Refactor
         .flatten() // Extract value from Some(value) and remove the Nones
         .collect()
+}
+
+fn include_pr(
+    pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+    regex: &Option<Regex>,
+    regex_not: &Option<Regex>,
+    username: &str,
+    include_mine: bool,
+    only_mine: bool,
+    include_reviewed_by_me: bool,
+) -> bool {
+    !is_empty(pr)
+        && !has_conflicts(pr)
+        && regex_match(regex, true, pr)
+        && !regex_match(regex_not, false, pr)
+        && (include_mine || only_mine || author(pr) != username)
+        && (include_reviewed_by_me
+            || only_mine
+            || review_states(&pr.reviews, username, true).is_empty()) // not reviewed by me
 }
 
 fn regex_match(
@@ -322,7 +329,8 @@ fn pr_stats<'a>(
     };
 
     let author = author(pr);
-    let reviews = review_states(&pr.reviews, &author);
+    let reviews = review_states(&pr.reviews, &author, false);
+    let review_requested = review_requested(&pr.review_requests, username);
 
     Some(Pr {
         title: pr.title.clone(),
@@ -339,7 +347,8 @@ fn pr_stats<'a>(
         files,
         blame,
         labels: pr_labels(&pr.labels),
-        codeowner: is_codeowner(&pr.review_requests, username),
+        requested: matches!(review_requested, ReviewRequested::RequestedNotAsCodeOwner),
+        codeowner: matches!(review_requested, ReviewRequested::RequestedAsCodeOwner),
     })
 }
 
@@ -403,7 +412,7 @@ fn commit_tests_state_from_contexts(
 ) -> TestsState {
     match contexts_nodes {
         Some(nodes) => {
-            let states: Vec<TestsState> = nodes.iter().map(|node|
+            let states: Vec<TestsState> = nodes.iter().filter_map(|node|
                 match node {
                   Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes::StatusContext(status_context)) => {
                       if tests_re.is_match(&status_context.context) {
@@ -413,7 +422,7 @@ fn commit_tests_state_from_contexts(
                       }
                   },
                   _ => None
-              }).flatten().collect();
+              }).collect();
             match states {
                 v if v.iter().any(|state| matches!(state, TestsState::Failure)) => {
                     TestsState::Failure
@@ -461,6 +470,7 @@ fn pr_open_conversations(
 fn review_states<'a>(
     reviews: &'a std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
     author: &str,
+    reviewed_by_author: bool,
 ) -> Vec<&'a repo_view::PullRequestReviewState> {
     // println!("{:?}", reviews);
     if let Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews {
@@ -488,7 +498,13 @@ fn review_states<'a>(
                 }
             })
             .rev() // reverse order: from the newest to the oldest
-            .filter(|review| review.0 != author) // exclude reviews given by the author of the PR
+            .filter(|review| {
+                if reviewed_by_author {
+                    review.0 == author // include only reviews given by the author of the PR
+                } else {
+                    review.0 != author // exclude reviews given by the author of the PR
+                }
+            })
             .unique_by(|review| review.0) // unique by user
             .map(|review| review.1) // take only the state
             .collect()
@@ -526,19 +542,30 @@ fn pr_based_on_main_branch(base_branch_name: &str) -> bool {
     base_branch_name == "main" || base_branch_name == "master"
 }
 
-fn is_codeowner(
+fn review_requested(
     requests: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
     username: &str,
-) -> bool {
+) -> ReviewRequested {
     match requests {
-        Some(requests) => requests.nodes.iter().flatten().flatten().any(|r| {
-            r.as_code_owner
-                && match &r.requested_reviewer {
-                    Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::User(reviewer)) =>
-                        reviewer.login == username,
-                    _ => false,
-                }
-        }),
-        None => false,
+        Some(requests) => {
+            requests.nodes.iter().flatten().flatten().find(|r|
+            match &r.requested_reviewer {
+                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::User(reviewer)) =>
+reviewer.login == username,
+                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Team(team)) =>
+                    team.members.nodes.iter().flatten().flatten().any(|member| member.login == username),
+                _ => false,
+            })
+            .map_or(
+                ReviewRequested::NotRequested,
+                |r|
+                 if r.as_code_owner {
+                       ReviewRequested::RequestedAsCodeOwner
+                 } else {
+                       ReviewRequested::RequestedNotAsCodeOwner
+                 }
+            )
+        },
+        None => ReviewRequested::NotRequested,
     }
 }
