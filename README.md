@@ -73,7 +73,7 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.8.3
+ateam-pr 0.8.4
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -191,3 +191,7 @@ Your pull requests:
 
 - Somebody opened a conversation on your pull request. You need to reply or change the code.
 - Somebody asked explicit changes to your pull request.
+
+## Development notes
+
+Ufficial GitHub GraphQL schema: https://docs.github.com/en/graphql/overview/public-schema

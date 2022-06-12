@@ -32,20 +32,28 @@ pub fn blame(
 fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
     // println!("\n\nData: {:?}\n\n", response_data);
     let v = match response_data {
-      blame::ResponseData {
-          repository: Some(blame::BlameRepository {
-              id: _,
-              name: _,
-              default_branch_ref: Some(blame::BlameRepositoryDefaultBranchRef {
-                  target: Some(blame::BlameRepositoryDefaultBranchRefTarget {
-                      on: blame::BlameRepositoryDefaultBranchRefTargetOn::Commit(
-                         blame::BlameRepositoryDefaultBranchRefTargetOnCommit {
-                       blame: blame::BlameRepositoryDefaultBranchRefTargetOnCommitBlame { ranges }
-                        }
-                      )
-                  }) }) }) } => Some(ranges),
-      _ => None
+        blame::ResponseData {
+            repository:
+                Some(blame::BlameRepository {
+                    id: _,
+                    name: _,
+                    default_branch_ref:
+                        Some(blame::BlameRepositoryDefaultBranchRef {
+                            target:
+                                Some(blame::BlameRepositoryDefaultBranchRefTarget::Commit(
+                                    blame::BlameRepositoryDefaultBranchRefTargetOnCommit {
+                                        blame:
+                                            blame::BlameRepositoryDefaultBranchRefTargetOnCommitBlame {
+                                                ranges,
+                                            },
+                                    },
+                                )),
+                        }),
+                }),
+        } => Some(ranges),
+        _ => None,
     };
+
     // println!("\n\nRanges: {:?}\n\n", v);
 
     let authors = match v {

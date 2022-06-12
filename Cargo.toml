@@ -1,6 +1,6 @@
 [package]
 name = "ateam"
-version = "0.8.3"
+version = "0.8.4"
 authors = ["Andrea Frigido"]
 license = "MIT"
 description = "The tool that helps optimize the code review process."
@@ -14,21 +14,22 @@ keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.dev]
 split-debuginfo = "unpacked"
+incremental = true
 
 [dependencies]
 failure = "^0.1"
-graphql_client = "^0.9"
+graphql_client = "^0.10"
 serde = "^1.0"
 serde_json = "^1.0"
 reqwest = { version = "^0.11", features = ["blocking", "json"] }
 terminal_size = "^0.1"
-comfy-table = "^2.1"
+comfy-table = "^5.0"
 structopt = "^0.3"
 dotenv = "^0.15"
 envy = "^0.4"
 log = "^0.4"
-env_logger = "^0.8"
+env_logger = "^0.9"
 chrono = { version = "0.4", features = ["serde"] }
-regex = "^1.4"
+regex = "^1.5"
 rayon = "^1.5"
 itertools = "^0.10"
