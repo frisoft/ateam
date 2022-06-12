@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8.4
+
+- Report an error when team members are needed but `read:org` scope is not in the GitHub token to get them.
+
 ## v0.8.3
 
 - Upgrade to Rust edition 2021.

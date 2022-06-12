@@ -9,6 +9,7 @@ use graphql_client::*;
 )]
 pub struct Followup;
 
+#[allow(clippy::upper_case_acronyms)]
 type URI = String;
 
 pub fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
@@ -73,7 +74,7 @@ fn parse_pr(pr: &followup::FollowupSearchNodes, login: &str) -> Option<Review> {
                 review_threads,
             },
         ) => {
-            if *mergeable == followup::MergeableState::CONFLICTING {
+            if matches!(*mergeable, followup::MergeableState::CONFLICTING) {
                 // the PR has conflicts, let's exclude it
                 None
             } else {

@@ -8,6 +8,7 @@ pub struct Ateam {
 }
 
 #[derive(StructOpt, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum Command {
     Pr(Pr),
     Followup(Followup),
@@ -58,7 +59,10 @@ pub struct Pr {
         help = "select only my pull requests (enables --include-reviewed-by-me automatically)"
     )]
     pub only_mine: bool,
-    #[structopt(long, help = "Select pull requests I have been requested to review, explicitly or as a code owner")]
+    #[structopt(
+        long,
+        help = "Select pull requests I have been requested to review, explicitly or as a code owner"
+    )]
     pub requested: bool,
     #[structopt(long, help = "Include draft pull requests")]
     pub include_drafts: bool,

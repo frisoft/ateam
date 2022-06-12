@@ -1,6 +1,6 @@
 use super::cli;
 use super::types::*;
-use chrono::prelude::*;
+use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::*;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -17,7 +17,10 @@ pub mod username;
 )]
 pub struct RepoView;
 
+#[allow(clippy::upper_case_acronyms)]
 type URI = String;
+
+type DateTime = String;
 
 const AGENT: &str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
 
@@ -266,7 +269,7 @@ fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
 }
 
 fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
-    pr.mergeable == repo_view::MergeableState::CONFLICTING
+    matches!(pr.mergeable, repo_view::MergeableState::CONFLICTING)
 }
 
 fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
@@ -373,7 +376,7 @@ fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
 fn last_commit(
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
     tests_regex: &Option<String>,
-) -> (Option<DateTime<Utc>>, TestsState) {
+) -> (Option<DT<Utc>>, TestsState) {
     let tests_re = regex(tests_regex);
     if let Some((pushed_date, state)) = pr
         .commits
@@ -516,7 +519,7 @@ fn review_states<'a>(
 fn pr_num_approvals(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
     review_states
         .iter()
-        .filter(|&&state| state == &repo_view::PullRequestReviewState::APPROVED)
+        .filter(|&&state| matches!(state, &repo_view::PullRequestReviewState::APPROVED))
         .count() as i64
 }
 
@@ -524,9 +527,9 @@ fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64
     review_states.len() as i64
 }
 
-fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
+fn parse_date(date: &Option<String>) -> Option<DT<Utc>> {
     match date {
-        Some(s) => match s.parse::<DateTime<Utc>>() {
+        Some(s) => match s.parse::<DT<Utc>>() {
             Ok(date_time) => Some(date_time),
             Err(_) => None,
         },
@@ -534,7 +537,7 @@ fn parse_date(date: &Option<String>) -> Option<DateTime<Utc>> {
     }
 }
 
-fn age(date_time: Option<DateTime<Utc>>) -> Option<i64> {
+fn age(date_time: Option<DT<Utc>>) -> Option<i64> {
     date_time.map(|date_time| (Utc::now() - date_time).num_minutes())
 }
 
@@ -554,7 +557,8 @@ fn review_requested(
 reviewer.login == username,
                 Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Team(team)) =>
                     team.members.nodes.iter().flatten().flatten().any(|member| member.login == username),
-                _ => false,
+                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Mannequin) => false, // Just ignore Mannequins
+                None => panic!("Something is wrong with the GitHub token! Have you added the read:org scope?"),
             })
             .map_or(
                 ReviewRequested::NotRequested,
@@ -565,7 +569,7 @@ reviewer.login == username,
                        ReviewRequested::RequestedNotAsCodeOwner
                  }
             )
-        },
+        }
         None => ReviewRequested::NotRequested,
     }
 }
