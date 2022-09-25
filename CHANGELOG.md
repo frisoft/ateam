@@ -3,6 +3,7 @@
 ## v0.8.5
 
 - --query option can be used multiple times.
+- Replace structopt crate with clap.
 
 ## v0.8.4
 
