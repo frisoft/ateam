@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8.5
+
+- --query option can be used multiple times.
+
 ## v0.8.4
 
 - Report an error when team members are needed but `read:org` scope is not in the GitHub token to get them.

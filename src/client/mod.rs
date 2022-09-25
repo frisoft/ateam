@@ -109,7 +109,7 @@ fn github_query(username: &str, options: &cli::Pr) -> String {
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
         query_org(&options.org),
-        &options.query.as_ref().unwrap_or(&"".to_string())
+        &options.query.join(" ")
     )
 }
 

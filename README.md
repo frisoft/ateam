@@ -73,7 +73,7 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.8.4
+ateam-pr 0.8.5
 
 USAGE:
     ateam pr [FLAGS] [OPTIONS]
@@ -101,7 +101,7 @@ OPTIONS:
         --label <label>...                           Filter by label. Can be used multiple times
     -n, --num <num>                                  Number of pull requests to display
         --org <organization>                         Selest all the repositoris of the organization
-    -q, --query <query>                              GitHub query
+    -q, --query <query>...                           GitHub query. Can be used multiple times
         --regex <regex>                              Regexp filter on titles
         --regex-not <regex-not>                      Regexp filter on titles to exclude pull requests
     -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one
