@@ -1,88 +1,89 @@
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt, Debug)]
-#[structopt(author, about)]
+#[derive(Parser, Debug)]
+#[clap(version, author, about)]
 pub struct Ateam {
-    #[structopt(subcommand)]
+    #[clap(subcommand)]
     pub cmd: Command,
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(clap::Subcommand, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum Command {
     Pr(Pr),
     Followup(Followup),
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
+#[clap(version)]
 pub struct Pr {
-    #[structopt(long, short, help = "Add debug information")]
+    #[clap(long, short, help = "Add debug information")]
     pub debug: bool,
-    #[structopt(
+    #[clap(
         long,
         short,
         name = "repository",
         help = "Repositiy. Can be used multiple times to select more than one"
     )]
     pub repo: Vec<String>,
-    #[structopt(
+    #[clap(
         long,
         name = "organization",
         help = "Selest all the repositoris of the organization"
     )]
     pub org: Option<String>,
-    #[structopt(long, short, help = "Number of pull requests to display")]
+    #[clap(long, short, help = "Number of pull requests to display")]
     pub num: Option<usize>,
-    #[structopt(long, short, help = "Short version. No table")]
+    #[clap(long, short, help = "Short version. No table")]
     pub short: bool,
-    #[structopt(long, help = "Output in JSON")]
+    #[clap(long, help = "Output in JSON")]
     pub json: bool,
-    #[structopt(long, help = "Filter by label. Can be used multiple times")]
+    #[clap(long, help = "Filter by label. Can be used multiple times")]
     pub label: Vec<String>,
-    #[structopt(
+    #[clap(
         long,
         help = "Exclude pull requests with this label. Can be used multiple times"
     )]
     pub exclude_label: Vec<String>,
-    #[structopt(long, short, help = "GitHub query")]
-    pub query: Option<String>,
-    #[structopt(long, help = "Regexp filter on titles")]
+    #[clap(long, short, help = "GitHub query. Can be used multiple times")]
+    pub query: Vec<String>,
+    #[clap(long, help = "Regexp filter on titles")]
     pub regex: Option<String>,
-    #[structopt(long, help = "Regexp filter on titles to exclude pull requests")]
+    #[clap(long, help = "Regexp filter on titles to exclude pull requests")]
     pub regex_not: Option<String>,
-    #[structopt(long, help = "Include pull requests I have reviewed")]
+    #[clap(long, help = "Include pull requests I have reviewed")]
     pub include_reviewed_by_me: bool,
-    #[structopt(long, help = "Include my pull requests")]
+    #[clap(long, help = "Include my pull requests")]
     pub include_mine: bool,
-    #[structopt(
+    #[clap(
         long,
         help = "select only my pull requests (enables --include-reviewed-by-me automatically)"
     )]
     pub only_mine: bool,
-    #[structopt(
+    #[clap(
         long,
         help = "Select pull requests I have been requested to review, explicitly or as a code owner"
     )]
     pub requested: bool,
-    #[structopt(long, help = "Include draft pull requests")]
+    #[clap(long, help = "Include draft pull requests")]
     pub include_drafts: bool,
-    #[structopt(long, help = "Include pull requests with pending tests")]
+    #[clap(long, help = "Include pull requests with pending tests")]
     pub include_tests_pending: bool,
-    #[structopt(long, help = "Include pull requests with tests failure")]
+    #[clap(long, help = "Include pull requests with tests failure")]
     pub include_tests_failure: bool,
-    #[structopt(long, help = "Exclude pull requests without tests")]
+    #[clap(long, help = "Exclude pull requests without tests")]
     pub exclude_tests_none: bool,
-    #[structopt(long, help = "Exclude pull requests with tests successful")]
+    #[clap(long, help = "Exclude pull requests with tests successful")]
     pub exclude_tests_success: bool,
-    #[structopt(long, help = "Select tests via regexp. The others are ignored")]
+    #[clap(long, help = "Select tests via regexp. The others are ignored")]
     pub tests_regex: Option<String>,
-    #[structopt(long, help = "Number of required approvals", default_value = "2")]
+    #[clap(long, help = "Number of required approvals", default_value = "2")]
     pub required_approvals: u8,
-    #[structopt(long, help = "Look if I changed the same files in the past (SLOW)")]
+    #[clap(long, help = "Look if I changed the same files in the past (SLOW)")]
     pub blame: bool,
-    #[structopt(long, help = "Query for another user")]
+    #[clap(long, help = "Query for another user")]
     pub user: Option<String>,
-    #[structopt(
+    #[clap(
         long,
         help = "Mumber of pull requests requested per batch",
         default_value = "30"
@@ -90,11 +91,12 @@ pub struct Pr {
     pub batch_size: u8,
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
+#[clap(version)]
 pub struct Followup {
-    #[structopt(long, help = "Output in JSON")]
+    #[clap(long, help = "Output in JSON")]
     pub json: bool,
-    #[structopt(long, help = "Query for another user")]
+    #[clap(long, help = "Query for another user")]
     pub user: Option<String>,
 }
 

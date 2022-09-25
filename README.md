@@ -73,41 +73,92 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.8.4
+ateam-pr 0.8.5
 
 USAGE:
-    ateam pr [FLAGS] [OPTIONS]
-
-FLAGS:
-        --blame                     Look if I changed the same files in the past (SLOW)
-    -d, --debug                     Add debug information
-        --exclude-tests-none        Exclude pull requests without tests
-        --exclude-tests-success     Exclude pull requests with tests successful
-    -h, --help                      Prints help information
-        --include-drafts            Include draft pull requests
-        --include-mine              Include my pull requests
-        --include-reviewed-by-me    Include pull requests I have reviewed
-        --include-tests-failure     Include pull requests with tests failure
-        --include-tests-pending     Include pull requests with pending tests
-        --json                      Output in JSON
-        --only-mine                 select only my pull requests (enables --include-reviewed-by-me automatically)
-        --requested                 Select pull requests I have been requested to review, explicitly or as a code owner
-    -s, --short                     Short version. No table
-    -V, --version                   Prints version information
+    ateam pr [OPTIONS]
 
 OPTIONS:
-        --batch-size <batch-size>                    Mumber of pull requests requested per batch [default: 30]
-        --exclude-label <exclude-label>...           Exclude pull requests with this label. Can be used multiple times
-        --label <label>...                           Filter by label. Can be used multiple times
-    -n, --num <num>                                  Number of pull requests to display
-        --org <organization>                         Selest all the repositoris of the organization
-    -q, --query <query>                              GitHub query
-        --regex <regex>                              Regexp filter on titles
-        --regex-not <regex-not>                      Regexp filter on titles to exclude pull requests
-    -r, --repo <repository>...                       Repositiy. Can be used multiple times to select more than one
-        --required-approvals <required-approvals>    Number of required approvals [default: 2]
-        --tests-regex <tests-regex>                  Select tests via regexp. The others are ignored
-        --user <user>                                Query for another user
+        --batch-size <BATCH_SIZE>
+            Mumber of pull requests requested per batch [default: 30]
+
+        --blame
+            Look if I changed the same files in the past (SLOW)
+
+    -d, --debug
+            Add debug information
+
+        --exclude-label <EXCLUDE_LABEL>
+            Exclude pull requests with this label. Can be used multiple times
+
+        --exclude-tests-none
+            Exclude pull requests without tests
+
+        --exclude-tests-success
+            Exclude pull requests with tests successful
+
+    -h, --help
+            Print help information
+
+        --include-drafts
+            Include draft pull requests
+
+        --include-mine
+            Include my pull requests
+
+        --include-reviewed-by-me
+            Include pull requests I have reviewed
+
+        --include-tests-failure
+            Include pull requests with tests failure
+
+        --include-tests-pending
+            Include pull requests with pending tests
+
+        --json
+            Output in JSON
+
+        --label <LABEL>
+            Filter by label. Can be used multiple times
+
+    -n, --num <NUM>
+            Number of pull requests to display
+
+        --only-mine
+            select only my pull requests (enables --include-reviewed-by-me automatically)
+
+        --org <organization>
+            Selest all the repositoris of the organization
+
+    -q, --query <QUERY>
+            GitHub query. Can be used multiple times
+
+    -r, --repo <repository>
+            Repositiy. Can be used multiple times to select more than one
+
+        --regex <REGEX>
+            Regexp filter on titles
+
+        --regex-not <REGEX_NOT>
+            Regexp filter on titles to exclude pull requests
+
+        --requested
+            Select pull requests I have been requested to review, explicitly or as a code owner
+
+        --required-approvals <REQUIRED_APPROVALS>
+            Number of required approvals [default: 2]
+
+    -s, --short
+            Short version. No table
+
+        --tests-regex <TESTS_REGEX>
+            Select tests via regexp. The others are ignored
+
+        --user <USER>
+            Query for another user
+
+    -V, --version
+            Print version information
 ```
 
 ### How does it work?
