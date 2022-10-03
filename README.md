@@ -15,6 +15,8 @@ Create a GitHub API token and store it in the GITHUB_API_TOKEN env variable. You
 
 The token needs `repo` and `read:org` selected scopes.
 
+In case your organization has enforced some sort of authorization like SAML, you need to authorize your PAT like this https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on
+
 ## Configuration
 
 A-team needs to connect to GitHub's API using your GitHub API token.
