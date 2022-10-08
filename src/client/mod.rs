@@ -1,9 +1,9 @@
 use super::cli;
 use super::types::*;
 use chrono::prelude::{DateTime as DT, Utc};
+use futures::stream::{self, StreamExt};
 use graphql_client::*;
 use itertools::Itertools;
-use rayon::prelude::*;
 use regex::Regex;
 mod blame;
 pub mod followup;
@@ -24,22 +24,21 @@ type DateTime = String;
 
 const AGENT: &str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
 
-pub fn call<V: serde::Serialize>(
+pub async fn call<V: serde::Serialize>(
     github_api_token: &str,
     q: &QueryBody<V>,
-) -> Result<reqwest::blocking::Response, failure::Error> {
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(AGENT)
-        .build()?;
+) -> Result<reqwest::Response, failure::Error> {
+    let client = reqwest::Client::builder().user_agent(AGENT).build()?;
     let res = client
         .post("https://api.github.com/graphql")
         .json(&q)
         .bearer_auth(github_api_token)
-        .send()?;
+        .send()
+        .await?;
     Ok(res)
 }
 
-pub fn query(
+pub async fn query(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -60,9 +59,9 @@ pub fn query(
         },
     });
 
-    let res = call(github_api_token, &q)?;
+    let res = call(github_api_token, &q).await?;
 
-    let response_body: Response<repo_view::ResponseData> = res.json()?;
+    let response_body: Response<repo_view::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
 
     if let Some(errors) = response_body.errors {
@@ -163,15 +162,31 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub fn ranked_prs<'a>(
+// pub fn ranked_prs<'a>(
+//     github_api_token: &str,
+//     username: &str,
+//     required_approvals: u8,
+//     options: &cli::Pr,
+//     response_data: &'a repo_view::ResponseData,
+// ) -> Vec<ScoredPr<'a>> {
+//     let sprs: Vec<ScoredPr> = prs(github_api_token, username, options, response_data)
+//         .into_par_iter()
+//         .map(|pr| scored_pr(required_approvals, pr))
+//         .collect();
+//     sprs
+// }
+
+pub async fn ranked_prs(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
     options: &cli::Pr,
-    response_data: &'a repo_view::ResponseData,
-) -> Vec<ScoredPr<'a>> {
+    response_data: repo_view::ResponseData,
+) -> Vec<ScoredPr<'static>> {
     let sprs: Vec<ScoredPr> = prs(github_api_token, username, options, response_data)
-        .into_par_iter()
+        .await
+        //.into_par_iter()
+        .into_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect();
     sprs
@@ -196,18 +211,18 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
     ScoredPr { pr, score: s }
 }
 
-fn prs<'a>(
-    github_api_token: &str,
-    username: &str,
-    options: &cli::Pr,
-    response_data: &'a repo_view::ResponseData,
-) -> Vec<Pr<'a>> {
+async fn prs<'a>(
+    github_api_token: &'a str,
+    username: &'a str,
+    options: &'a cli::Pr,
+    response_data: repo_view::ResponseData,
+) -> Vec<Pr> {
     let re = regex(&options.regex);
     let re_not = regex(&options.regex_not);
-    response_data
+    let prs = response_data
         .search
-        .edges
-        .par_iter()
+        .edges // .par_iter()
+        .iter()
         .flatten()
         .flatten()
         .map(|i| i.node.as_ref()) // <-- Refactor
@@ -228,10 +243,18 @@ fn prs<'a>(
                 options.only_mine,
                 options.include_reviewed_by_me,
             )
-        })
-        .map(move |i| pr_stats(github_api_token, username, options, i)) // <-- Refactor
-        .flatten() // Extract value from Some(value) and remove the Nones
+        });
+
+    let s: String = prs;
+
+    stream::iter(prs)
+        .map(|i| async move { pr_stats(github_api_token, username, options, i) })
+        .collect::<Vec<Option<_>>>()
+        .await
+        .into_iter()
         .collect()
+    // <-- Refactor
+    // .collect::<Vec<Pr>>()
 }
 
 fn include_pr(
@@ -305,7 +328,7 @@ fn pr_labels(
     }
 }
 
-fn pr_stats<'a>(
+async fn pr_stats<'a>(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -325,7 +348,8 @@ fn pr_stats<'a>(
             &pr.repository.owner.login,
             &files,
             username,
-        );
+        )
+        .await;
         (Files(files), blame)
     } else {
         (Files(vec![]), false)
