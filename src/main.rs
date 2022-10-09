@@ -28,7 +28,7 @@ async fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
 
     let username = get_username(&options.user, &config.github_api_token).await;
 
-    let (responses, _) = get_responses(vec![], &config.github_api_token, &username, options, None)?;
+    let responses = get_responses(&config.github_api_token, &username, options).await?;
     let sprs = responses
         .iter()
         .flat_map(|response_data| {
@@ -73,21 +73,37 @@ async fn get_username(user: &Option<String>, github_api_token: &str) -> String {
     }
 }
 
-pub fn get_responses(
-    mut list: Vec<repo_view::ResponseData>,
+pub async fn get_responses(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
-    after: Option<String>,
-) -> Result<(Vec<repo_view::ResponseData>, Option<String>), failure::Error> {
-    eprint!(".");
-    let (response_data, cursor) = client::query(github_api_token, username, options, after)?;
-    list.push(response_data);
-    if cursor == None {
-        Ok((list, cursor))
-    } else {
-        get_responses(list, github_api_token, username, options, cursor)
+) -> Result<Vec<repo_view::ResponseData>, failure::Error> {
+    // let (response_data, cursor) = client::query(github_api_token, username, options, after)?;
+    // list.push(response_data);
+    // if cursor == None {
+    //     Ok((list, cursor))
+    // } else {
+    //     get_responses(list, github_api_token, username, options, cursor)
+    // }
+    let mut list: Vec<repo_view::ResponseData> = vec![];
+    let mut cursor = Some("".to_string());
+    while let Some(cursor_value) = cursor {
+        eprint!(".");
+        let (response_data, newcursor) = client::query(
+            github_api_token,
+            username,
+            options,
+            if cursor_value.is_empty() {
+                None
+            } else {
+                Some(cursor_value)
+            },
+        )
+        .await?;
+        list.push(response_data);
+        cursor = newcursor;
     }
+    Ok(list)
 }
 
 // #[cfg(test)]

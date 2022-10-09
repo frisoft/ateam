@@ -53,7 +53,7 @@ pub async fn call2<V: serde::Serialize>(
     Ok(res)
 }
 
-pub fn query(
+pub async fn query(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -74,9 +74,9 @@ pub fn query(
         },
     });
 
-    let res = call(github_api_token, &q)?;
+    let res = call2(github_api_token, &q).await?;
 
-    let response_body: Response<repo_view::ResponseData> = res.json()?;
+    let response_body: Response<repo_view::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
 
     if let Some(errors) = response_body.errors {
