@@ -39,6 +39,20 @@ pub fn call<V: serde::Serialize>(
     Ok(res)
 }
 
+pub async fn call2<V: serde::Serialize>(
+    github_api_token: &str,
+    q: &QueryBody<V>,
+) -> Result<reqwest::Response, failure::Error> {
+    let client = reqwest::Client::builder().user_agent(AGENT).build()?;
+    let res = client
+        .post("https://api.github.com/graphql")
+        .json(&q)
+        .bearer_auth(github_api_token)
+        .send()
+        .await?;
+    Ok(res)
+}
+
 pub fn query(
     github_api_token: &str,
     username: &str,

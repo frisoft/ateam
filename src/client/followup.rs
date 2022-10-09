@@ -12,8 +12,9 @@ pub struct Followup;
 #[allow(clippy::upper_case_acronyms)]
 type URI = String;
 
-pub fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
-    let response_data: followup::ResponseData = match girhub_followup(github_api_token, login) {
+pub async fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
+    let response_data: followup::ResponseData = match girhub_followup(github_api_token, login).await
+    {
         Ok(data) => data,
         Err(_) => panic!("Can't get the follow up actions"),
     };
@@ -21,7 +22,7 @@ pub fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
     parse(&response_data, login)
 }
 
-fn girhub_followup(
+async fn girhub_followup(
     github_api_token: &str,
     login: &str,
 ) -> Result<followup::ResponseData, failure::Error> {
@@ -33,9 +34,9 @@ fn girhub_followup(
         ),
     });
 
-    let res = super::call(github_api_token, &q)?;
+    let res = super::call2(github_api_token, &q).await?;
 
-    let response_body: Response<followup::ResponseData> = res.json()?;
+    let response_body: Response<followup::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
 
     if let Some(errors) = response_body.errors {

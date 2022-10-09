@@ -9,23 +9,24 @@ mod print;
 mod table;
 mod types;
 
-fn main() -> Result<(), failure::Error> {
+#[tokio::main]
+async fn main() -> Result<(), failure::Error> {
     let cmd = cli::command();
 
     match cmd {
         cli::Ateam {
             cmd: cli::Command::Pr(pr),
-        } => pr_cmd(&pr),
+        } => pr_cmd(&pr).await,
         cli::Ateam {
             cmd: cli::Command::Followup(followup),
-        } => followup_cmd(&followup),
+        } => followup_cmd(&followup).await,
     }
 }
 
-fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
+async fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let username = get_username(&options.user, &config.github_api_token);
+    let username = get_username(&options.user, &config.github_api_token).await;
 
     let (responses, _) = get_responses(vec![], &config.github_api_token, &username, options, None)?;
     let sprs = responses
@@ -53,22 +54,22 @@ fn pr_cmd(options: &cli::Pr) -> Result<(), failure::Error> {
     Ok(())
 }
 
-fn followup_cmd(options: &cli::Followup) -> Result<(), failure::Error> {
+async fn followup_cmd(options: &cli::Followup) -> Result<(), failure::Error> {
     let config = config::get_config().context("while reading from environment")?;
 
-    let username = get_username(&options.user, &config.github_api_token);
+    let username = get_username(&options.user, &config.github_api_token).await;
 
-    let reviews = client::followup::followup(&config.github_api_token, &username);
+    let reviews = client::followup::followup(&config.github_api_token, &username).await;
 
     print::reviews(&reviews, options.json);
 
     Ok(())
 }
 
-fn get_username(user: &Option<String>, github_api_token: &str) -> String {
+async fn get_username(user: &Option<String>, github_api_token: &str) -> String {
     match user {
         Some(username) => username.to_string(),
-        None => client::username::username(github_api_token),
+        None => client::username::username(github_api_token).await,
     }
 }
 
