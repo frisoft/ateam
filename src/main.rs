@@ -101,15 +101,13 @@ pub async fn fetch_scored_prs(
 
         let o_get_ranked_prs = if !first {
             match list_data.pop() {
-                Some(data) => Some(async {
-                    ranked_prs(
-                        github_api_token,
-                        username,
-                        options.required_approvals,
-                        options,
-                        data,
-                    )
-                }),
+                Some(data) => Some(ranked_prs(
+                    github_api_token,
+                    username,
+                    options.required_approvals,
+                    options,
+                    data,
+                )),
                 None => None,
             }
         } else {

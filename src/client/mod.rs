@@ -8,6 +8,7 @@ use regex::Regex;
 mod blame;
 pub mod followup;
 pub mod username;
+use futures::stream::{self, StreamExt};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -177,7 +178,7 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub fn ranked_prs(
+pub async fn ranked_prs(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
@@ -185,6 +186,7 @@ pub fn ranked_prs(
     response_data: repo_view::ResponseData,
 ) -> Vec<ScoredPr> {
     prs(github_api_token, username, options, response_data)
+        .await
         .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect::<Vec<ScoredPr>>()
@@ -209,7 +211,7 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
     ScoredPr { pr, score: s }
 }
 
-fn prs(
+async fn prs(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -217,10 +219,11 @@ fn prs(
 ) -> Vec<Pr> {
     let re = regex(&options.regex);
     let re_not = regex(&options.regex_not);
-    response_data
+    let prs: Vec<_> = response_data
         .search
         .edges
-        .into_par_iter()
+        //.into_par_iter()
+        .into_iter()
         .flatten()
         .flatten()
         .map(|i| i.node)
@@ -242,9 +245,12 @@ fn prs(
                 options.include_reviewed_by_me,
             )
         })
-        .map(move |i| pr_stats(github_api_token, username, options, i)) // <-- Refactor
-        .flatten() // Extract value from Some(value) and remove the Nones
-        .collect()
+        .collect();
+
+    stream::iter(prs)
+        .filter_map(|i| async move { pr_stats(github_api_token, username, options, i).await }) // <-- Refactor
+        .collect::<Vec<Pr>>()
+        .await
 }
 
 fn include_pr(
@@ -318,7 +324,7 @@ fn pr_labels(
     }
 }
 
-fn pr_stats(
+async fn pr_stats(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -338,7 +344,8 @@ fn pr_stats(
             &pr.repository.owner.login,
             &files,
             username,
-        );
+        )
+        .await;
         (Files(files), blame)
     } else {
         (Files(vec![]), false)
