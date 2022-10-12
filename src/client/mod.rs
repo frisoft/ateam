@@ -177,18 +177,17 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub fn ranked_prs<'a>(
+pub fn ranked_prs(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
     options: &cli::Pr,
-    response_data: &'a repo_view::ResponseData,
-) -> Vec<ScoredPr<'a>> {
-    let sprs: Vec<ScoredPr> = prs(github_api_token, username, options, response_data)
+    response_data: repo_view::ResponseData,
+) -> Vec<ScoredPr> {
+    prs(github_api_token, username, options, response_data)
         .into_par_iter()
         .map(|pr| scored_pr(required_approvals, pr))
-        .collect();
-    sprs
+        .collect::<Vec<ScoredPr>>()
 }
 
 pub fn sorted_ranked_prs(mut sprs: Vec<ScoredPr>) -> Vec<ScoredPr> {
@@ -210,21 +209,21 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
     ScoredPr { pr, score: s }
 }
 
-fn prs<'a>(
+fn prs(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
-    response_data: &'a repo_view::ResponseData,
-) -> Vec<Pr<'a>> {
+    response_data: repo_view::ResponseData,
+) -> Vec<Pr> {
     let re = regex(&options.regex);
     let re_not = regex(&options.regex_not);
     response_data
         .search
         .edges
-        .par_iter()
+        .into_par_iter()
         .flatten()
         .flatten()
-        .map(|i| i.node.as_ref()) // <-- Refactor
+        .map(|i| i.node)
         .map(|n| match n {
             Some(repo_view::RepoViewSearchEdgesNode::PullRequest(pull_request)) => {
                 Some(pull_request)
@@ -286,14 +285,14 @@ fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     matches!(pr.mergeable, repo_view::MergeableState::CONFLICTING)
 }
 
-fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
+fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<String> {
     match &pr.files {
         Some(files) => files
             .nodes
             .iter()
             .flatten()
             .flatten()
-            .map(|f| f.path.as_ref())
+            .map(|f| f.path.clone())
             .collect(),
         None => vec![],
     }
@@ -310,8 +309,8 @@ fn pr_labels(
                 .flatten()
                 .flatten()
                 .map(|l| Label {
-                    name: l.name.as_ref(),
-                    color: l.color.as_ref(),
+                    name: l.name.clone(),
+                    color: l.color.clone(),
                 })
                 .collect(),
         ),
@@ -319,20 +318,20 @@ fn pr_labels(
     }
 }
 
-fn pr_stats<'a>(
+fn pr_stats(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
-    pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
-) -> Option<Pr<'a>> {
-    let (last_commit_pushed_date, tests_result) = last_commit(pr, &options.tests_regex);
+    pr: repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+) -> Option<Pr> {
+    let (last_commit_pushed_date, tests_result) = last_commit(&pr, &options.tests_regex);
 
     if !include_by_tests_state(&tests_result, options) {
         return None;
     }
 
     let (files, blame) = if options.blame {
-        let files = pr_files(pr);
+        let files = pr_files(&pr);
         let blame = blame::blame(
             github_api_token,
             &pr.repository.name,
@@ -345,7 +344,7 @@ fn pr_stats<'a>(
         (Files(vec![]), false)
     };
 
-    let author = author(pr);
+    let author = author(&pr);
     let reviews = review_states(&pr.reviews, &author, false);
     let review_requested = review_requested(&pr.review_requests, username);
 

@@ -2,7 +2,7 @@ use chrono::prelude::{DateTime, Utc};
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct Pr<'a> {
+pub struct Pr {
     pub title: String,
     pub url: String,
     pub last_commit_pushed_date: Option<DateTime<Utc>>,
@@ -14,9 +14,9 @@ pub struct Pr<'a> {
     pub additions: i64,
     pub deletions: i64,
     pub based_on_main_branch: bool,
-    pub files: Files<'a>,
+    pub files: Files,
     pub blame: bool,
-    pub labels: Labels<'a>,
+    pub labels: Labels,
     pub requested: bool,
     pub codeowner: bool,
 }
@@ -37,20 +37,20 @@ pub enum ReviewRequested {
 }
 
 #[derive(Serialize)]
-pub struct Files<'a>(pub Vec<&'a str>);
+pub struct Files(pub Vec<String>);
 
 #[derive(Serialize)]
-pub struct Labels<'a>(pub Vec<Label<'a>>);
+pub struct Labels(pub Vec<Label>);
 
 #[derive(Serialize)]
-pub struct Label<'a> {
-    pub name: &'a str,
-    pub color: &'a str,
+pub struct Label {
+    pub name: String,
+    pub color: String,
 }
 
 #[derive(Serialize)]
-pub struct ScoredPr<'a> {
-    pub pr: Pr<'a>,
+pub struct ScoredPr {
+    pub pr: Pr,
     pub score: Score,
 }
 
@@ -107,13 +107,13 @@ impl Score {
     }
 }
 
-impl std::fmt::Display for Pr<'_> {
+impl std::fmt::Display for Pr {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{} - {} {}", self.url, self.title, self.labels,)
     }
 }
 
-impl std::fmt::Display for Labels<'_> {
+impl std::fmt::Display for Labels {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -127,7 +127,7 @@ impl std::fmt::Display for Labels<'_> {
     }
 }
 
-impl std::fmt::Display for Label<'_> {
+impl std::fmt::Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "({})", self.name,)
     }

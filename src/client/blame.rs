@@ -13,7 +13,7 @@ pub fn blame(
     github_api_token: &str,
     repo_name: &str,
     repo_owner: &str,
-    files: &[&str],
+    files: &Vec<String>,
     login: &str,
 ) -> bool {
     // println!(">> {:?}", files);
