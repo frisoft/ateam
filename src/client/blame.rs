@@ -1,5 +1,5 @@
+use futures::stream::{FuturesUnordered, StreamExt};
 use graphql_client::*;
-use rayon::prelude::*;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -9,24 +9,34 @@ use rayon::prelude::*;
 )]
 pub struct Blame;
 
-pub fn blame(
+pub async fn blame(
     github_api_token: &str,
     repo_name: &str,
     repo_owner: &str,
-    files: &[&str],
+    files: &[String],
     login: &str,
 ) -> bool {
-    // println!(">> {:?}", files);
-    files.par_iter().any(|file| {
-        eprint!(".");
+    let blame_checks: FuturesUnordered<_> = files
+        .iter()
+        .map(|file| async move {
+            eprint!(".");
 
-        let response_data: blame::ResponseData =
-            match girhub_blame(github_api_token, repo_name, repo_owner, file) {
-                Ok(data) => data,
-                Err(_) => panic!("Can't get the authors for {}", file),
-            };
-        is_file_author(&response_data, login)
-    })
+            let response_data: blame::ResponseData =
+                match girhub_blame(github_api_token, repo_name, repo_owner, file).await {
+                    Ok(data) => data,
+                    Err(_) => panic!("Can't get the authors for {}", file),
+                };
+            is_file_author(&response_data, login)
+        })
+        .collect();
+
+    // The following execute the futures in parallel before apply .any(). Could be optimised by not
+    // waiting for all the futures to complete.
+    blame_checks
+        .collect::<Vec<bool>>()
+        .await
+        .into_iter()
+        .any(|b| b)
 }
 
 fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
@@ -77,7 +87,7 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
     authors.contains(&&login.to_string())
 }
 
-fn girhub_blame(
+async fn girhub_blame(
     github_api_token: &str,
     repo_name: &str,
     repo_owner: &str,
@@ -89,7 +99,7 @@ fn girhub_blame(
         path: path.to_string(),
     });
 
-    let res = super::call(github_api_token, &q)?;
+    let res = super::call(github_api_token, &q).await?;
 
     // println!(
     // ">>-----------------------------------\n{}\n-------------------------------\n",
@@ -98,7 +108,7 @@ fn girhub_blame(
     // println!(">> {:?}", res.json()?);
     // println!("{:?}", res);
 
-    let response_body: Response<blame::ResponseData> = res.json()?;
+    let response_body: Response<blame::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
 
     if let Some(errors) = response_body.errors {

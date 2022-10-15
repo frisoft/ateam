@@ -3,11 +3,11 @@ use super::types::*;
 use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::*;
 use itertools::Itertools;
-use rayon::prelude::*;
 use regex::Regex;
 mod blame;
 pub mod followup;
 pub mod username;
+use futures::stream::{FuturesUnordered, StreamExt};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -24,22 +24,82 @@ type DateTime = String;
 
 const AGENT: &str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
 
-pub fn call<V: serde::Serialize>(
+pub async fn fetch_scored_prs(
+    github_api_token: &str,
+    username: &str,
+    options: &cli::Pr,
+) -> Result<Vec<ScoredPr>, failure::Error> {
+    let mut list_prs: Vec<Vec<ScoredPr>> = vec![];
+    let mut list_data: Vec<repo_view::ResponseData> = vec![];
+    let mut cursor = None;
+    let mut first = true;
+    loop {
+        eprint!(".");
+
+        let o_get_ranked_prs = if !first {
+            list_data.pop().map(|data| {
+                ranked_prs(
+                    github_api_token,
+                    username,
+                    options.required_approvals,
+                    options,
+                    data,
+                )
+            })
+        } else {
+            None
+        };
+
+        let o_get_next_response_data_and_cursor = if first || cursor != None {
+            Some(query(github_api_token, username, options, cursor.clone()))
+        } else {
+            None
+        };
+
+        if o_get_ranked_prs.is_some() && o_get_next_response_data_and_cursor.is_some() {
+            // Bot future are present, I can do them in parallel
+            let (prs, response_and_cursor) = futures::join!(
+                o_get_ranked_prs.unwrap(),
+                o_get_next_response_data_and_cursor.unwrap()
+            );
+            list_prs.push(prs);
+            let (new_response_data, new_cursor) = response_and_cursor?;
+            cursor = new_cursor;
+            list_data.push(new_response_data);
+        } else if o_get_ranked_prs.is_some() {
+            // Only one future to await
+            list_prs.push(o_get_ranked_prs.unwrap().await);
+        } else if o_get_next_response_data_and_cursor.is_some() {
+            // Only one future to await
+            let (new_response_data, new_cursor) =
+                o_get_next_response_data_and_cursor.unwrap().await?;
+            list_data.push(new_response_data);
+            cursor = new_cursor;
+        } else {
+            break;
+        }
+
+        first = false;
+    }
+
+    Ok(list_prs.into_iter().flatten().collect::<Vec<ScoredPr>>())
+}
+
+pub async fn call<V: serde::Serialize>(
     github_api_token: &str,
     q: &QueryBody<V>,
-) -> Result<reqwest::blocking::Response, failure::Error> {
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(AGENT)
-        .build()?;
+) -> Result<reqwest::Response, failure::Error> {
+    let client = reqwest::Client::builder().user_agent(AGENT).build()?;
     let res = client
         .post("https://api.github.com/graphql")
         .json(&q)
         .bearer_auth(github_api_token)
-        .send()?;
+        .send()
+        .await?;
     Ok(res)
 }
 
-pub fn query(
+async fn query(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -60,9 +120,9 @@ pub fn query(
         },
     });
 
-    let res = call(github_api_token, &q)?;
+    let res = call(github_api_token, &q).await?;
 
-    let response_body: Response<repo_view::ResponseData> = res.json()?;
+    let response_body: Response<repo_view::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
 
     if let Some(errors) = response_body.errors {
@@ -163,18 +223,18 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub fn ranked_prs<'a>(
+async fn ranked_prs(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
     options: &cli::Pr,
-    response_data: &'a repo_view::ResponseData,
-) -> Vec<ScoredPr<'a>> {
-    let sprs: Vec<ScoredPr> = prs(github_api_token, username, options, response_data)
-        .into_par_iter()
+    response_data: repo_view::ResponseData,
+) -> Vec<ScoredPr> {
+    prs(github_api_token, username, options, response_data)
+        .await
+        .into_iter()
         .map(|pr| scored_pr(required_approvals, pr))
-        .collect();
-    sprs
+        .collect::<Vec<ScoredPr>>()
 }
 
 pub fn sorted_ranked_prs(mut sprs: Vec<ScoredPr>) -> Vec<ScoredPr> {
@@ -196,28 +256,28 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
     ScoredPr { pr, score: s }
 }
 
-fn prs<'a>(
+async fn prs(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
-    response_data: &'a repo_view::ResponseData,
-) -> Vec<Pr<'a>> {
+    response_data: repo_view::ResponseData,
+) -> Vec<Pr> {
     let re = regex(&options.regex);
     let re_not = regex(&options.regex_not);
-    response_data
+    let prs: FuturesUnordered<_> = response_data
         .search
         .edges
-        .par_iter()
+        //.into_par_iter()
+        .into_iter()
         .flatten()
         .flatten()
-        .map(|i| i.node.as_ref()) // <-- Refactor
-        .map(|n| match n {
+        .map(|i| i.node)
+        .filter_map(|n| match n {
             Some(repo_view::RepoViewSearchEdgesNode::PullRequest(pull_request)) => {
                 Some(pull_request)
             }
             _ => None,
-        }) // <-- Refactor
-        .flatten() // Extract value from Some(value) and remove the Nones
+        })
         .filter(|i| {
             include_pr(
                 i,
@@ -229,8 +289,13 @@ fn prs<'a>(
                 options.include_reviewed_by_me,
             )
         })
-        .map(move |i| pr_stats(github_api_token, username, options, i)) // <-- Refactor
-        .flatten() // Extract value from Some(value) and remove the Nones
+        .map(|i| async move { pr_stats(github_api_token, username, options, i).await })
+        .collect();
+
+    prs.collect::<Vec<Option<Pr>>>()
+        .await
+        .into_iter()
+        .flatten()
         .collect()
 }
 
@@ -272,14 +337,14 @@ fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     matches!(pr.mergeable, repo_view::MergeableState::CONFLICTING)
 }
 
-fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<&str> {
+fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<String> {
     match &pr.files {
         Some(files) => files
             .nodes
             .iter()
             .flatten()
             .flatten()
-            .map(|f| f.path.as_ref())
+            .map(|f| f.path.clone())
             .collect(),
         None => vec![],
     }
@@ -296,8 +361,8 @@ fn pr_labels(
                 .flatten()
                 .flatten()
                 .map(|l| Label {
-                    name: l.name.as_ref(),
-                    color: l.color.as_ref(),
+                    name: l.name.clone(),
+                    color: l.color.clone(),
                 })
                 .collect(),
         ),
@@ -305,33 +370,34 @@ fn pr_labels(
     }
 }
 
-fn pr_stats<'a>(
+async fn pr_stats(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
-    pr: &'a repo_view::RepoViewSearchEdgesNodeOnPullRequest,
-) -> Option<Pr<'a>> {
-    let (last_commit_pushed_date, tests_result) = last_commit(pr, &options.tests_regex);
+    pr: repo_view::RepoViewSearchEdgesNodeOnPullRequest,
+) -> Option<Pr> {
+    let (last_commit_pushed_date, tests_result) = last_commit(&pr, &options.tests_regex);
 
     if !include_by_tests_state(&tests_result, options) {
         return None;
     }
 
     let (files, blame) = if options.blame {
-        let files = pr_files(pr);
+        let files = pr_files(&pr);
         let blame = blame::blame(
             github_api_token,
             &pr.repository.name,
             &pr.repository.owner.login,
             &files,
             username,
-        );
+        )
+        .await;
         (Files(files), blame)
     } else {
         (Files(vec![]), false)
     };
 
-    let author = author(pr);
+    let author = author(&pr);
     let reviews = review_states(&pr.reviews, &author, false);
     let review_requested = review_requested(&pr.review_requests, username);
 

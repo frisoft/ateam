@@ -73,92 +73,61 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
-ateam-pr 0.8.5
+Usage: ateam pr [OPTIONS]
 
-USAGE:
-    ateam pr [OPTIONS]
-
-OPTIONS:
-        --batch-size <BATCH_SIZE>
-            Mumber of pull requests requested per batch [default: 30]
-
-        --blame
-            Look if I changed the same files in the past (SLOW)
-
-    -d, --debug
-            Add debug information
-
-        --exclude-label <EXCLUDE_LABEL>
-            Exclude pull requests with this label. Can be used multiple times
-
-        --exclude-tests-none
-            Exclude pull requests without tests
-
-        --exclude-tests-success
-            Exclude pull requests with tests successful
-
-    -h, --help
-            Print help information
-
-        --include-drafts
-            Include draft pull requests
-
-        --include-mine
-            Include my pull requests
-
-        --include-reviewed-by-me
-            Include pull requests I have reviewed
-
-        --include-tests-failure
-            Include pull requests with tests failure
-
-        --include-tests-pending
-            Include pull requests with pending tests
-
-        --json
-            Output in JSON
-
-        --label <LABEL>
-            Filter by label. Can be used multiple times
-
-    -n, --num <NUM>
-            Number of pull requests to display
-
-        --only-mine
-            select only my pull requests (enables --include-reviewed-by-me automatically)
-
-        --org <organization>
-            Selest all the repositoris of the organization
-
-    -q, --query <QUERY>
-            GitHub query. Can be used multiple times
-
-    -r, --repo <repository>
-            Repositiy. Can be used multiple times to select more than one
-
-        --regex <REGEX>
-            Regexp filter on titles
-
-        --regex-not <REGEX_NOT>
-            Regexp filter on titles to exclude pull requests
-
-        --requested
-            Select pull requests I have been requested to review, explicitly or as a code owner
-
-        --required-approvals <REQUIRED_APPROVALS>
-            Number of required approvals [default: 2]
-
-    -s, --short
-            Short version. No table
-
-        --tests-regex <TESTS_REGEX>
-            Select tests via regexp. The others are ignored
-
-        --user <USER>
-            Query for another user
-
-    -V, --version
-            Print version information
+Options:
+  -r, --repo <repository>
+          Repositiy. Can be used multiple times to select more than one
+      --org <organization>
+          Selest all the repositoris of the organization
+  -q, --query <QUERY>
+          GitHub query. Can be used multiple times
+  -n, --num <NUM>
+          Number of pull requests to display
+  -s, --short
+          Short version. No table
+      --json
+          Output in JSON
+      --label <LABEL>
+          Filter by label. Can be used multiple times
+      --exclude-label <EXCLUDE_LABEL>
+          Exclude pull requests with this label. Can be used multiple times
+      --regex <REGEX>
+          Regexp filter on titles
+      --regex-not <REGEX_NOT>
+          Regexp filter on titles to exclude pull requests
+      --include-reviewed-by-me
+          Include pull requests I have reviewed
+      --include-mine
+          Include my pull requests
+      --only-mine
+          select only my pull requests (enables --include-reviewed-by-me automatically)
+      --requested
+          Select pull requests I have been requested to review, explicitly or as a code owner
+      --include-drafts
+          Include draft pull requests
+      --include-tests-pending
+          Include pull requests with pending tests
+      --include-tests-failure
+          Include pull requests with tests failure
+      --exclude-tests-none
+          Exclude pull requests without tests
+      --exclude-tests-success
+          Exclude pull requests with tests successful
+      --tests-regex <TESTS_REGEX>
+          Select tests via regexp. The others are ignored
+      --required-approvals <REQUIRED_APPROVALS>
+          Number of required approvals [default: 2]
+      --blame
+          Look if I changed the same files in the past (SLOW)
+      --user <USER>
+          Query for another user
+      --batch-size <BATCH_SIZE>
+          Mumber of pull requests requested per batch [default: 30]
+  -d, --debug
+          Add debug information
+  -h, --help
+          Print help information
 ```
 
 ### How does it work?
