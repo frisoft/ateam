@@ -34,7 +34,7 @@ async fn girhub_followup(
         ),
     });
 
-    let res = super::call2(github_api_token, &q).await?;
+    let res = super::call(github_api_token, &q).await?;
 
     let response_body: Response<followup::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);

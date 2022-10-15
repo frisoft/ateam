@@ -3,12 +3,11 @@ use super::types::*;
 use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::*;
 use itertools::Itertools;
-use rayon::prelude::*;
 use regex::Regex;
 mod blame;
 pub mod followup;
 pub mod username;
-use futures::stream::{self, StreamExt};
+use futures::stream::{FuturesUnordered, StreamExt};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -25,22 +24,68 @@ type DateTime = String;
 
 const AGENT: &str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
 
-pub fn call<V: serde::Serialize>(
+pub async fn fetch_scored_prs(
     github_api_token: &str,
-    q: &QueryBody<V>,
-) -> Result<reqwest::blocking::Response, failure::Error> {
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(AGENT)
-        .build()?;
-    let res = client
-        .post("https://api.github.com/graphql")
-        .json(&q)
-        .bearer_auth(github_api_token)
-        .send()?;
-    Ok(res)
+    username: &str,
+    options: &cli::Pr,
+) -> Result<Vec<ScoredPr>, failure::Error> {
+    let mut list_prs: Vec<Vec<ScoredPr>> = vec![];
+    let mut list_data: Vec<repo_view::ResponseData> = vec![];
+    let mut cursor = None;
+    let mut first = true;
+    loop {
+        eprint!(".");
+
+        let o_get_ranked_prs = if !first {
+            list_data.pop().map(|data| {
+                ranked_prs(
+                    github_api_token,
+                    username,
+                    options.required_approvals,
+                    options,
+                    data,
+                )
+            })
+        } else {
+            None
+        };
+
+        let o_get_next_response_data_and_cursor = if first || cursor != None {
+            Some(query(github_api_token, username, options, cursor.clone()))
+        } else {
+            None
+        };
+
+        if o_get_ranked_prs.is_some() && o_get_next_response_data_and_cursor.is_some() {
+            // Bot future are present, I can do them in parallel
+            let (prs, response_and_cursor) = futures::join!(
+                o_get_ranked_prs.unwrap(),
+                o_get_next_response_data_and_cursor.unwrap()
+            );
+            list_prs.push(prs);
+            let (new_response_data, new_cursor) = response_and_cursor?;
+            cursor = new_cursor;
+            list_data.push(new_response_data);
+        } else if o_get_ranked_prs.is_some() {
+            // Only one future to await
+            list_prs.push(o_get_ranked_prs.unwrap().await);
+        } else if o_get_next_response_data_and_cursor.is_some() {
+            // Only one future to await
+            let (new_response_data, new_cursor) =
+                o_get_next_response_data_and_cursor.unwrap().await?;
+            list_data.push(new_response_data);
+            cursor = new_cursor;
+        } else {
+            break;
+        }
+
+        first = false;
+    }
+
+    Ok(list_prs.into_iter().flatten().collect::<Vec<ScoredPr>>())
 }
 
-pub async fn call2<V: serde::Serialize>(
+pub async fn call<V: serde::Serialize>(
     github_api_token: &str,
     q: &QueryBody<V>,
 ) -> Result<reqwest::Response, failure::Error> {
@@ -54,7 +99,7 @@ pub async fn call2<V: serde::Serialize>(
     Ok(res)
 }
 
-pub async fn query(
+async fn query(
     github_api_token: &str,
     username: &str,
     options: &cli::Pr,
@@ -75,7 +120,7 @@ pub async fn query(
         },
     });
 
-    let res = call2(github_api_token, &q).await?;
+    let res = call(github_api_token, &q).await?;
 
     let response_body: Response<repo_view::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
@@ -178,7 +223,7 @@ fn query_org(org: &Option<String>) -> String {
     }
 }
 
-pub async fn ranked_prs(
+async fn ranked_prs(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
@@ -187,7 +232,7 @@ pub async fn ranked_prs(
 ) -> Vec<ScoredPr> {
     prs(github_api_token, username, options, response_data)
         .await
-        .into_par_iter()
+        .into_iter()
         .map(|pr| scored_pr(required_approvals, pr))
         .collect::<Vec<ScoredPr>>()
 }
@@ -219,7 +264,7 @@ async fn prs(
 ) -> Vec<Pr> {
     let re = regex(&options.regex);
     let re_not = regex(&options.regex_not);
-    let prs: Vec<_> = response_data
+    let prs: FuturesUnordered<_> = response_data
         .search
         .edges
         //.into_par_iter()
@@ -227,13 +272,12 @@ async fn prs(
         .flatten()
         .flatten()
         .map(|i| i.node)
-        .map(|n| match n {
+        .filter_map(|n| match n {
             Some(repo_view::RepoViewSearchEdgesNode::PullRequest(pull_request)) => {
                 Some(pull_request)
             }
             _ => None,
-        }) // <-- Refactor
-        .flatten() // Extract value from Some(value) and remove the Nones
+        })
         .filter(|i| {
             include_pr(
                 i,
@@ -245,12 +289,14 @@ async fn prs(
                 options.include_reviewed_by_me,
             )
         })
+        .map(|i| async move { pr_stats(github_api_token, username, options, i).await })
         .collect();
 
-    stream::iter(prs)
-        .filter_map(|i| async move { pr_stats(github_api_token, username, options, i).await }) // <-- Refactor
-        .collect::<Vec<Pr>>()
+    prs.collect::<Vec<Option<Pr>>>()
         .await
+        .into_iter()
+        .flatten()
+        .collect()
 }
 
 fn include_pr(

@@ -19,7 +19,7 @@ pub async fn username(github_api_token: &str) -> String {
 
 async fn github_username(github_api_token: &str) -> Result<username::ResponseData, failure::Error> {
     let q = Username::build_query(username::Variables {});
-    let res = super::call2(github_api_token, &q).await?;
+    let res = super::call(github_api_token, &q).await?;
 
     let response_body: Response<username::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);

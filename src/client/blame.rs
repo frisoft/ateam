@@ -1,6 +1,5 @@
-use futures::stream::{self, StreamExt};
+use futures::stream::{FuturesUnordered, StreamExt};
 use graphql_client::*;
-use rayon::prelude::*;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -14,12 +13,12 @@ pub async fn blame(
     github_api_token: &str,
     repo_name: &str,
     repo_owner: &str,
-    files: &Vec<String>,
+    files: &[String],
     login: &str,
 ) -> bool {
-    // println!(">> {:?}", files);
-    stream::iter(files)
-        .any(|file| async move {
+    let blame_checks: FuturesUnordered<_> = files
+        .iter()
+        .map(|file| async move {
             eprint!(".");
 
             let response_data: blame::ResponseData =
@@ -29,7 +28,15 @@ pub async fn blame(
                 };
             is_file_author(&response_data, login)
         })
+        .collect();
+
+    // The following execute the futures in parallel before apply .any(). Could be optimised by not
+    // waiting for all the futures to complete.
+    blame_checks
+        .collect::<Vec<bool>>()
         .await
+        .into_iter()
+        .any(|b| b)
 }
 
 fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
@@ -92,7 +99,7 @@ async fn girhub_blame(
         path: path.to_string(),
     });
 
-    let res = super::call2(github_api_token, &q).await?;
+    let res = super::call(github_api_token, &q).await?;
 
     // println!(
     // ">>-----------------------------------\n{}\n-------------------------------\n",

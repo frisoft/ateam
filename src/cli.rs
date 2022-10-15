@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[clap(version, author, about)]
+#[clap(about)]
 pub struct Ateam {
     #[clap(subcommand)]
     pub cmd: Command,
@@ -15,10 +15,8 @@ pub enum Command {
 }
 
 #[derive(Parser, Debug)]
-#[clap(version)]
+#[clap()]
 pub struct Pr {
-    #[clap(long, short, help = "Add debug information")]
-    pub debug: bool,
     #[clap(
         long,
         short,
@@ -32,6 +30,8 @@ pub struct Pr {
         help = "Selest all the repositoris of the organization"
     )]
     pub org: Option<String>,
+    #[clap(long, short, help = "GitHub query. Can be used multiple times")]
+    pub query: Vec<String>,
     #[clap(long, short, help = "Number of pull requests to display")]
     pub num: Option<usize>,
     #[clap(long, short, help = "Short version. No table")]
@@ -45,8 +45,6 @@ pub struct Pr {
         help = "Exclude pull requests with this label. Can be used multiple times"
     )]
     pub exclude_label: Vec<String>,
-    #[clap(long, short, help = "GitHub query. Can be used multiple times")]
-    pub query: Vec<String>,
     #[clap(long, help = "Regexp filter on titles")]
     pub regex: Option<String>,
     #[clap(long, help = "Regexp filter on titles to exclude pull requests")]
@@ -89,6 +87,8 @@ pub struct Pr {
         default_value = "30"
     )]
     pub batch_size: u8,
+    #[clap(long, short, help = "Add debug information")]
+    pub debug: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -101,5 +101,5 @@ pub struct Followup {
 }
 
 pub fn command() -> Ateam {
-    Ateam::from_args()
+    Ateam::parse()
 }

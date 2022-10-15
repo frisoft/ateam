@@ -22,7 +22,7 @@ pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> Table {
 
     for c in 1..8 {
         table
-            .get_column_mut(c)
+            .column_mut(c)
             .expect("a column")
             .set_constraint(ColumnConstraint::ContentWidth);
     }
@@ -139,7 +139,7 @@ fn build_table() -> Table {
         .set_content_arrangement(ContentArrangement::Dynamic);
 
     if let Some((Width(w), Height(_h))) = terminal_size() {
-        table.set_table_width(w);
+        table.set_width(w);
     }
 
     table
