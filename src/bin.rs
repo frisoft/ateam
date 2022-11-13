@@ -1,6 +1,4 @@
 use anyhow::{Context, Result};
-// use log::*;
-
 mod config;
 use ateam::{cli, followup_render, pr_render};
 

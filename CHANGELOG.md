@@ -3,6 +3,8 @@
 ## v1.0.1
 
 - Replace failure crate with anyhow.
+- Make it a library.
+- Upgrade crates.
 
 ## v1.0.0
 

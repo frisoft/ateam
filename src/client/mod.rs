@@ -82,6 +82,7 @@ pub async fn fetch_scored_prs(
 
         first = false;
     }
+    eprint!("\n");
 
     Ok(list_prs.into_iter().flatten().collect::<Vec<ScoredPr>>())
 }
