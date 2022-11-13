@@ -1,3 +1,4 @@
+use anyhow::Result;
 use graphql_client::*;
 
 #[derive(GraphQLQuery)]
@@ -17,7 +18,7 @@ pub async fn username(github_api_token: &str) -> String {
     response_data.viewer.login
 }
 
-async fn github_username(github_api_token: &str) -> Result<username::ResponseData, failure::Error> {
+async fn github_username(github_api_token: &str) -> Result<username::ResponseData> {
     let q = Username::build_query(username::Variables {});
     let res = super::call(github_api_token, &q).await?;
 

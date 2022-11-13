@@ -1,6 +1,6 @@
 [package]
 name = "ateam"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Andrea Frigido"]
 license = "MIT"
 description = "The tool that helps optimize the code review process."
@@ -11,13 +11,22 @@ readme = "README.md"
 edition = "2021"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 
+[lib]
+name = "ateam"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ateam"
+path = "src/bin.rs"
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.dev]
 split-debuginfo = "unpacked"
 incremental = true
 
 [dependencies]
-failure = "^0.1"
+anyhow = "^1.0.65"
 graphql_client = "^0.11"
 serde = "^1.0"
 serde_json = "^1.0"
