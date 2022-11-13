@@ -10,13 +10,13 @@ pub struct Ateam {
 #[derive(clap::Subcommand, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum Command {
-    Pr(Pr),
-    Followup(Followup),
+    Pr(PrArgs),
+    Followup(FollowupArgs),
 }
 
 #[derive(Parser, Debug)]
 #[clap()]
-pub struct Pr {
+pub struct PrArgs {
     #[clap(
         long,
         short,
@@ -93,7 +93,7 @@ pub struct Pr {
 
 #[derive(Parser, Debug)]
 #[clap(version)]
-pub struct Followup {
+pub struct FollowupArgs {
     #[clap(long, help = "Output in JSON")]
     pub json: bool,
     #[clap(long, help = "Query for another user")]

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.1
+
+- Replace failure crate with anyhow.
+
 ## v1.0.0
 
 - User async/await with tokio instead of rayon. Improved performance when using --blame.

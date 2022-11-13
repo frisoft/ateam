@@ -1,5 +1,6 @@
-use super::cli;
+use super::cli::PrArgs;
 use super::types::*;
+use anyhow::Result;
 use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::*;
 use itertools::Itertools;
@@ -27,8 +28,8 @@ const AGENT: &str = concat!("ateam/", env!("CARGO_PKG_VERSION"));
 pub async fn fetch_scored_prs(
     github_api_token: &str,
     username: &str,
-    options: &cli::Pr,
-) -> Result<Vec<ScoredPr>, failure::Error> {
+    options: &PrArgs,
+) -> Result<Vec<ScoredPr>> {
     let mut list_prs: Vec<Vec<ScoredPr>> = vec![];
     let mut list_data: Vec<repo_view::ResponseData> = vec![];
     let mut cursor = None;
@@ -88,7 +89,7 @@ pub async fn fetch_scored_prs(
 pub async fn call<V: serde::Serialize>(
     github_api_token: &str,
     q: &QueryBody<V>,
-) -> Result<reqwest::Response, failure::Error> {
+) -> Result<reqwest::Response> {
     let client = reqwest::Client::builder().user_agent(AGENT).build()?;
     let res = client
         .post("https://api.github.com/graphql")
@@ -102,9 +103,9 @@ pub async fn call<V: serde::Serialize>(
 async fn query(
     github_api_token: &str,
     username: &str,
-    options: &cli::Pr,
+    options: &PrArgs,
     after: Option<String>,
-) -> Result<(repo_view::ResponseData, Option<String>), failure::Error> {
+) -> Result<(repo_view::ResponseData, Option<String>)> {
     let query_argument = github_query(username, options);
     if options.debug {
         println!(">> GitHub query: {:?}", query_argument);
@@ -159,7 +160,7 @@ fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) ->
     }
 }
 
-fn github_query(username: &str, options: &cli::Pr) -> String {
+fn github_query(username: &str, options: &PrArgs) -> String {
     format!(
         // "is:pr is:open draft:false -status:progess -status:failure {}{}{}{}",
         "is:pr is:open {}{}{}{}{}{}{}",
@@ -227,7 +228,7 @@ async fn ranked_prs(
     github_api_token: &str,
     username: &str,
     required_approvals: u8,
-    options: &cli::Pr,
+    options: &PrArgs,
     response_data: repo_view::ResponseData,
 ) -> Vec<ScoredPr> {
     prs(github_api_token, username, options, response_data)
@@ -259,7 +260,7 @@ fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
 async fn prs(
     github_api_token: &str,
     username: &str,
-    options: &cli::Pr,
+    options: &PrArgs,
     response_data: repo_view::ResponseData,
 ) -> Vec<Pr> {
     let re = regex(&options.regex);
@@ -373,7 +374,7 @@ fn pr_labels(
 async fn pr_stats(
     github_api_token: &str,
     username: &str,
-    options: &cli::Pr,
+    options: &PrArgs,
     pr: repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Option<Pr> {
     let (last_commit_pushed_date, tests_result) = last_commit(&pr, &options.tests_regex);
@@ -430,7 +431,7 @@ fn author(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> String {
     }
 }
 
-fn include_by_tests_state(state: &TestsState, options: &cli::Pr) -> bool {
+fn include_by_tests_state(state: &TestsState, options: &PrArgs) -> bool {
     match state {
         TestsState::Success => !options.exclude_tests_success,
         TestsState::Failure => options.include_tests_failure,

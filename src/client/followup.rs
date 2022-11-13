@@ -1,4 +1,5 @@
 use super::super::types::{Review, ReviewState};
+use anyhow::Result;
 use graphql_client::*;
 
 #[derive(GraphQLQuery)]
@@ -22,10 +23,7 @@ pub async fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
     parse(&response_data, login)
 }
 
-async fn girhub_followup(
-    github_api_token: &str,
-    login: &str,
-) -> Result<followup::ResponseData, failure::Error> {
+async fn girhub_followup(github_api_token: &str, login: &str) -> Result<followup::ResponseData> {
     let q = Followup::build_query(followup::Variables {
         login: login.to_string(),
         query: format!(

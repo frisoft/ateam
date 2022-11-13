@@ -1,3 +1,4 @@
+use anyhow::Result;
 use futures::stream::{FuturesUnordered, StreamExt};
 use graphql_client::*;
 
@@ -92,7 +93,7 @@ async fn girhub_blame(
     repo_name: &str,
     repo_owner: &str,
     path: &str,
-) -> Result<blame::ResponseData, failure::Error> {
+) -> Result<blame::ResponseData> {
     let q = Blame::build_query(blame::Variables {
         repo_name: repo_name.to_string(),
         repo_owner: repo_owner.to_string(),
