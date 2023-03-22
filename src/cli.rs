@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[clap(about)]
+#[clap(about, version)]
 pub struct Ateam {
     #[clap(subcommand)]
     pub cmd: Command,
