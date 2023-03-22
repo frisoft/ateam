@@ -152,7 +152,7 @@ impl std::fmt::Display for ReviewState {
             ReviewState::Dismissed => "Dismissed",
             ReviewState::WithAddressedConversations => "With addressed conversations",
         };
-        write!(f, "{}", text)
+        write!(f, "{text}")
     }
 }
 

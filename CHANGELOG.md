@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.2
+
+- Fix new line missing in reports.
+- Upgrade crates.
+- Start using cargo-dist to distribute a-team.
+
 ## v1.0.1
 
 - Replace failure crate with anyhow.

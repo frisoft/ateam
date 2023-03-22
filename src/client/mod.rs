@@ -51,7 +51,7 @@ pub async fn fetch_scored_prs(
             None
         };
 
-        let o_get_next_response_data_and_cursor = if first || cursor != None {
+        let o_get_next_response_data_and_cursor = if first || cursor.is_some() {
             Some(query(github_api_token, username, options, cursor.clone()))
         } else {
             None
@@ -82,7 +82,7 @@ pub async fn fetch_scored_prs(
 
         first = false;
     }
-    eprint!("\n");
+    eprintln!();
 
     Ok(list_prs.into_iter().flatten().collect::<Vec<ScoredPr>>())
 }
@@ -109,7 +109,7 @@ async fn query(
 ) -> Result<(repo_view::ResponseData, Option<String>)> {
     let query_argument = github_query(username, options);
     if options.debug {
-        println!(">> GitHub query: {:?}", query_argument);
+        println!(">> GitHub query: {query_argument:?}");
     }
     let batch_size = limited_batch_size(options.batch_size);
     let q = RepoView::build_query(repo_view::Variables {
@@ -130,7 +130,7 @@ async fn query(
     if let Some(errors) = response_body.errors {
         println!("there are errors:");
         for error in &errors {
-            println!("{:?}", error);
+            println!("{error:?}");
         }
     }
     // println!("{:?}", response_body.data);
@@ -185,7 +185,7 @@ fn query_drafts(include_drafts: bool) -> &'static str {
 
 fn query_mine(username: &str, only_mine: bool) -> String {
     if only_mine {
-        format!("author:{} ", username)
+        format!("author:{username} ")
     } else {
         "".to_string()
     }
@@ -193,7 +193,7 @@ fn query_mine(username: &str, only_mine: bool) -> String {
 
 fn query_requested(username: &str, requested: bool) -> String {
     if requested {
-        format!("review-requested:{} ", username)
+        format!("review-requested:{username} ")
     } else {
         "".to_string()
     }
@@ -204,22 +204,22 @@ fn query_labels(labels: &[String], exclude_label: &[String]) -> String {
         "{}{}",
         labels
             .iter()
-            .map(|label| format!("label:\"{}\" ", label))
+            .map(|label| format!("label:\"{label}\" "))
             .collect::<String>(),
         exclude_label
             .iter()
-            .map(|label| format!("-label:\"{}\" ", label))
+            .map(|label| format!("-label:\"{label}\" "))
             .collect::<String>()
     )
 }
 
 fn query_repos(repos: &[String]) -> String {
-    repos.iter().map(|repo| format!("repo:{} ", repo)).collect()
+    repos.iter().map(|repo| format!("repo:{repo} ")).collect()
 }
 
 fn query_org(org: &Option<String>) -> String {
     if let Some(org) = org {
-        format!("org:{} ", org)
+        format!("org:{org} ")
     } else {
         "".to_string()
     }
