@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.3
+
+- Add --version option.
+
 ## v1.0.2
 
 - Fix new line missing in reports.
