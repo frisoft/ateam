@@ -109,18 +109,18 @@ fn show_duration(minutes: Option<i64>) -> String {
             format!(
                 "{}{}{}",
                 if d > 0 {
-                    format!("{}d ", d)
+                    format!("{d}d ")
                 } else {
                     "".to_string()
                 },
                 if h > 0 {
-                    format!("{}h ", h)
+                    format!("{h}h ")
                 } else {
                     "".to_string()
                 },
                 // Display minutes only if days is 0
                 if d == 0 && m > 0 {
-                    format!("{}m ", m)
+                    format!("{m}m ")
                 } else {
                     "".to_string()
                 }

@@ -12,7 +12,7 @@ pub struct Username;
 pub async fn username(github_api_token: &str) -> String {
     let response_data: username::ResponseData = match github_username(github_api_token).await {
         Ok(data) => data,
-        Err(e) => panic!("Can't get the username: {:?}", e),
+        Err(e) => panic!("Can't get the username: {e:?}"),
     };
 
     response_data.viewer.login
@@ -28,7 +28,7 @@ async fn github_username(github_api_token: &str) -> Result<username::ResponseDat
     if let Some(errors) = response_body.errors {
         println!("there are errors:");
         for error in &errors {
-            println!("{:?}", error);
+            println!("{error:?}");
         }
     }
     // println!("{:?}", response_body.data);

@@ -26,10 +26,7 @@ pub async fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
 async fn girhub_followup(github_api_token: &str, login: &str) -> Result<followup::ResponseData> {
     let q = Followup::build_query(followup::Variables {
         login: login.to_string(),
-        query: format!(
-            "is:pr is:open draft:false reviewed-by:{} -author:{}",
-            login, login
-        ),
+        query: format!("is:pr is:open draft:false reviewed-by:{login} -author:{login}"),
     });
 
     let res = super::call(github_api_token, &q).await?;
@@ -40,7 +37,7 @@ async fn girhub_followup(github_api_token: &str, login: &str) -> Result<followup
     if let Some(errors) = response_body.errors {
         println!("there are errors:");
         for error in &errors {
-            println!("{:?}", error);
+            println!("{error:?}");
         }
     }
     Ok(response_body.data.expect("missing response data"))

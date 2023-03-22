@@ -25,7 +25,7 @@ pub async fn blame(
             let response_data: blame::ResponseData =
                 match girhub_blame(github_api_token, repo_name, repo_owner, file).await {
                     Ok(data) => data,
-                    Err(_) => panic!("Can't get the authors for {}", file),
+                    Err(_) => panic!("Can't get the authors for {file}"),
                 };
             is_file_author(&response_data, login)
         })
@@ -115,7 +115,7 @@ async fn girhub_blame(
     if let Some(errors) = response_body.errors {
         println!("there are errors:");
         for error in &errors {
-            println!("{:?}", error);
+            println!("{error:?}");
         }
     }
     // println!("{:?}", response_body.data);

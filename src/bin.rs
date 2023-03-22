@@ -12,13 +12,13 @@ async fn main() -> Result<()> {
         cli::Ateam {
             cmd: cli::Command::Pr(pr),
         } => {
-            print!("{}", pr_render(&pr, &config.github_api_token).await?);
+            println!("{}", pr_render(&pr, &config.github_api_token).await?);
             Ok(())
         }
         cli::Ateam {
             cmd: cli::Command::Followup(followup),
         } => {
-            print!(
+            println!(
                 "{}",
                 followup_render(&followup, &config.github_api_token).await
             );
