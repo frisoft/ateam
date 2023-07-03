@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use futures::stream::{FuturesUnordered, StreamExt};
 use graphql_client::*;
 
@@ -25,7 +25,7 @@ pub async fn blame(
             let response_data: blame::ResponseData =
                 match girhub_blame(github_api_token, repo_name, repo_owner, file).await {
                     Ok(data) => data,
-                    Err(_) => panic!("Can't get the authors for {file}"),
+                    Err(error) => panic!("Can't get the authors for {file}: {}", error),
                 };
             is_file_author(&response_data, login)
         })
@@ -110,14 +110,24 @@ async fn girhub_blame(
     // println!("{:?}", res);
 
     let response_body: Response<blame::ResponseData> = res.json().await?;
-    // println!("{:?}", response_body);
+
+    // println!("\n\n\n\n{:?}", response_body);
 
     if let Some(errors) = response_body.errors {
-        println!("there are errors:");
-        for error in &errors {
-            println!("{error:?}");
+        Err(anyhow!(
+            "Errors fetching the authors of {} {}",
+            path,
+            errors
+                .iter()
+                .map(|error| format!("{:?}", error))
+                .collect::<String>()
+        ))
+    } else {
+        match response_body.data {
+            Some(data) => Ok(data),
+            None => Err(anyhow!(
+                "Missing response data fetching the authors of {path}"
+            )),
         }
     }
-    // println!("{:?}", response_body.data);
-    Ok(response_body.data.expect("missing response data"))
 }

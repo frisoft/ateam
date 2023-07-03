@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.4
+
+- Improve error messages.
+- Improve help messages.
+- Upgrade crates.
+
 ## v1.0.3
 
 - Add --version option.
