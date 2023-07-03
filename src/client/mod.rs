@@ -1,6 +1,6 @@
 use super::cli::PrArgs;
 use super::types::*;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::*;
 use itertools::Itertools;
@@ -127,18 +127,38 @@ async fn query(
     let response_body: Response<repo_view::ResponseData> = res.json().await?;
     // println!("{:?}", response_body);
 
-    if let Some(errors) = response_body.errors {
-        println!("there are errors:");
-        for error in &errors {
-            println!("{error:?}");
-        }
-    }
+    // if let Some(errors) = response_body.errors {
+    //     println!("there are errors:");
+    //     for error in &errors {
+    //         println!("{error:?}");
+    //     }
+    // }
     // println!("{:?}", response_body.data);
 
-    let response_data = response_body.data.expect("missing response data");
+    // let response_data = response_body.data.expect("missing response data");
+    let response_data = get_response_data(response_body)?;
     let cursor = last_item_cursor(&response_data, batch_size);
 
     Ok((response_data, cursor))
+}
+
+fn get_response_data(
+    response_body: Response<repo_view::ResponseData>,
+) -> Result<repo_view::ResponseData> {
+    if let Some(errors) = response_body.errors {
+        Err(anyhow!(
+            "Errors executing the query {}",
+            errors
+                .iter()
+                .map(|error| format!("{:?}", error))
+                .collect::<String>()
+        ))
+    } else {
+        match response_body.data {
+            Some(data) => Ok(data),
+            None => Err(anyhow!("Missing response data executing the query")),
+        }
+    }
 }
 
 fn limited_batch_size(batch_size: u8) -> i64 {
@@ -639,5 +659,27 @@ reviewer.login == username,
             )
         }
         None => ReviewRequested::NotRequested,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    // test limited_batch_size
+    #[test]
+    fn test_limited_batch_size() {
+        assert_eq!(limited_batch_size(1), 1);
+        assert_eq!(limited_batch_size(100), 100);
+        assert_eq!(limited_batch_size(101), 100);
+    }
+
+    // test pr_based_on_main_branch
+    #[test]
+    fn test_pr_based_on_main_branch() {
+        assert_eq!(pr_based_on_main_branch("main"), true);
+        assert_eq!(pr_based_on_main_branch("master"), true);
+        assert_eq!(pr_based_on_main_branch("develop"), false);
     }
 }

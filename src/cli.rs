@@ -1,102 +1,108 @@
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[clap(about, version)]
+#[command(version = "1.0")]
+#[command(propagate_version = true)]
 pub struct Ateam {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub cmd: Command,
 }
 
-#[derive(clap::Subcommand, Debug)]
+#[derive(Subcommand, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum Command {
+    /// It shows which pull requests should be reviewed next.
     Pr(PrArgs),
+    /// It gives you some information about the reviews you already submitted and need your attention.
     Followup(FollowupArgs),
 }
 
-#[derive(Parser, Debug)]
-#[clap()]
+#[derive(Args, Debug)]
 pub struct PrArgs {
-    #[clap(
-        long,
-        short,
-        name = "repository",
-        help = "Repositiy. Can be used multiple times to select more than one"
-    )]
+    /// Repositiy. Can be used multiple times to select more than one
+    #[arg(long, short, name = "repository")]
     pub repo: Vec<String>,
-    #[clap(
-        long,
-        name = "organization",
-        help = "Selest all the repositoris of the organization"
-    )]
+    /// Select all the repositories of the organization
+    #[arg(long, name = "organization")]
     pub org: Option<String>,
-    #[clap(long, short, help = "GitHub query. Can be used multiple times")]
+    /// GitHub query. Can be used multiple times
+    #[arg(long, short)]
     pub query: Vec<String>,
-    #[clap(long, short, help = "Number of pull requests to display")]
+    /// Number of pull requests to display
+    #[arg(long, short)]
     pub num: Option<usize>,
-    #[clap(long, short, help = "Short version. No table")]
+    /// Short version. No table
+    #[arg(long, short)]
     pub short: bool,
-    #[clap(long, help = "Output in JSON")]
+    /// Output in JSON
+    #[arg(long)]
     pub json: bool,
-    #[clap(long, help = "Filter by label. Can be used multiple times")]
+    /// Filter by label. Can be used multiple times
+    #[arg(long)]
     pub label: Vec<String>,
-    #[clap(
-        long,
-        help = "Exclude pull requests with this label. Can be used multiple times"
-    )]
+    /// Exclude pull requests with this label. Can be used multiple times
+    #[arg(long)]
     pub exclude_label: Vec<String>,
-    #[clap(long, help = "Regexp filter on titles")]
+    /// Regexp filter on titles
+    #[arg(long)]
     pub regex: Option<String>,
-    #[clap(long, help = "Regexp filter on titles to exclude pull requests")]
+    /// Regexp filter on titles to exclude pull requests
+    #[arg(long)]
     pub regex_not: Option<String>,
-    #[clap(long, help = "Include pull requests I have reviewed")]
+    /// Include pull requests I have reviewed
+    #[arg(long)]
     pub include_reviewed_by_me: bool,
-    #[clap(long, help = "Include my pull requests")]
+    /// Include my pull requests
+    #[arg(long)]
     pub include_mine: bool,
-    #[clap(
-        long,
-        help = "select only my pull requests (enables --include-reviewed-by-me automatically)"
-    )]
+    /// select only my pull requests (enables --include-reviewed-by-me automatically)
+    #[arg(long)]
     pub only_mine: bool,
-    #[clap(
-        long,
-        help = "Select pull requests I have been requested to review, explicitly or as a code owner"
-    )]
+    /// Select pull requests I have been requested to review, explicitly or as a code owner
+    #[arg(long)]
     pub requested: bool,
-    #[clap(long, help = "Include draft pull requests")]
+    /// Include draft pull requests
+    #[arg(long)]
     pub include_drafts: bool,
-    #[clap(long, help = "Include pull requests with pending tests")]
+    /// Include pull requests with pending tests
+    #[arg(long)]
     pub include_tests_pending: bool,
-    #[clap(long, help = "Include pull requests with tests failure")]
+    /// Include pull requests with tests failure
+    #[arg(long)]
     pub include_tests_failure: bool,
-    #[clap(long, help = "Exclude pull requests without tests")]
+    /// Exclude pull requests without tests
+    #[arg(long)]
     pub exclude_tests_none: bool,
-    #[clap(long, help = "Exclude pull requests with tests successful")]
+    /// Exclude pull requests with tests pending
+    #[arg(long)]
     pub exclude_tests_success: bool,
-    #[clap(long, help = "Select tests via regexp. The others are ignored")]
+    /// Select tests via regexp. The others are ignored
+    #[arg(long)]
     pub tests_regex: Option<String>,
-    #[clap(long, help = "Number of required approvals", default_value = "2")]
+    /// Number of required approvals
+    #[arg(long, default_value = "2")]
     pub required_approvals: u8,
-    #[clap(long, help = "Look if I changed the same files in the past (SLOW)")]
+    /// Look if I changed the same files in the past (slower)
+    #[arg(long)]
     pub blame: bool,
-    #[clap(long, help = "Query for another user")]
+    /// Query for another user
+    #[arg(long)]
     pub user: Option<String>,
-    #[clap(
-        long,
-        help = "Mumber of pull requests requested per batch",
-        default_value = "30"
-    )]
+    /// Mumber of pull requests requested per batch
+    #[arg(long, default_value = "30")]
     pub batch_size: u8,
-    #[clap(long, short, help = "Add debug information")]
+    /// Add debug information
+    #[arg(long, short)]
     pub debug: bool,
 }
 
-#[derive(Parser, Debug)]
-#[clap(version)]
+#[derive(Args, Debug)]
 pub struct FollowupArgs {
-    #[clap(long, help = "Output in JSON")]
+    /// Output in JSON
+    #[arg(long)]
     pub json: bool,
-    #[clap(long, help = "Query for another user")]
+    /// Query for another user
+    #[arg(long)]
     pub user: Option<String>,
 }
 
