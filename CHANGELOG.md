@@ -4,6 +4,7 @@
 
 - Replace unmaintained crate dotenv with dotenvy.
 - Upgrade crates.
+- Add Audit.
 
 ## v1.0.4
 
