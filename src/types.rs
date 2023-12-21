@@ -1,7 +1,7 @@
 use chrono::prelude::{DateTime, Utc};
 use serde::Serialize;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Pr {
     pub title: String,
     pub url: String,
@@ -21,7 +21,7 @@ pub struct Pr {
     pub codeowner: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub enum TestsState {
     Pending,
     Success,
@@ -36,19 +36,19 @@ pub enum ReviewRequested {
     NotRequested,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Files(pub Vec<String>);
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Labels(pub Vec<Label>);
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Label {
     pub name: String,
     pub color: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ScoredPr {
     pub pr: Pr,
     pub score: Score,

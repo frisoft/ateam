@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[command(propagate_version = true)]
+#[command(version, propagate_version = true)]
 pub struct Ateam {
     #[command(subcommand)]
     pub cmd: Command,

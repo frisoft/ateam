@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.5-alpha.1
+
+- Replace unmaintained crate dotenv with dotenvy.
+- Upgrade crates.
+
 ## v1.0.4
 
 - Improve error messages.

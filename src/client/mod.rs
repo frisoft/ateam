@@ -57,6 +57,7 @@ pub async fn fetch_scored_prs(
             None
         };
 
+
         if o_get_ranked_prs.is_some() && o_get_next_response_data_and_cursor.is_some() {
             // Bot future are present, I can do them in parallel
             let (prs, response_and_cursor) = futures::join!(
