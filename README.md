@@ -216,4 +216,10 @@ Your pull requests:
 
 ## Development notes
 
+Use the Nix to setup the development environment:
+
+```bash
+nix develop
+```
+
 Ufficial GitHub GraphQL schema: https://docs.github.com/en/graphql/overview/public-schema
