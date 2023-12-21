@@ -5,9 +5,8 @@
 set -euo pipefail
 
 ver=$1
-targetdir="target/x86_64-apple-darwin/release"
-rm -rf $targetdir
-cargo build --release --target x86_64-apple-darwin
-strip $targetdir/ateam
-tar czf $targetdir/ateam-$ver-x86_64-apple-darwin.tar.gz -C $targetdir ateam
-echo $(sha256sum $targetdir/ateam-$ver-x86_64-apple-darwin.tar.gz)
+url="https://github.com/frisoft/ateam/releases/download/v$ver/ateam-v$ver-x86_64-apple-darwin.tar.xz"
+output="/tmp/ateam-v$ver-x86_64-apple-darwin.tar.xz"
+curl -fLo "$output" "$url"
+echo $(sha256sum $output)
+echo "Use the hash in the Homebrew formula."
