@@ -1,6 +1,6 @@
 # Release
 
-Insall cargo-dist and cargo-release:
+If not using nix, install cargo-dist and cargo-release:
 
 `cargo install cargo-dist`
 `cargo install cargo-release`

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.6
+
+- Upgrade crates.
+
 ## v1.0.5
 
 - Replace unmaintained crate dotenv with dotenvy.

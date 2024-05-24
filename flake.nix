@@ -5,7 +5,7 @@
 
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/master"; # very latest packages
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -17,17 +17,20 @@
           mkShell {
             buildInputs = with pkgs;
               [
-                rustup
+                # rustup
                 cargo
                 rustc
                 libiconv
                 pkg-config
                 openssl
+                # rust-analyzer <-- This does not work. You need to run `rustup component add rust-analyzer`
                 # tools for ./maintenance.sh
                 cargo-udeps
                 cargo-outdated
                 cargo-audit
-              ] ++ lib.optionals pkgs.hostPlatform.isDarwin [
+                cargo-dist
+                cargo-release
+              ] ++ lib.optionals hostPlatform.isDarwin [
                 darwin.apple_sdk.frameworks.SystemConfiguration
                 darwin.apple_sdk.frameworks.CoreServices
                 darwin.apple_sdk.frameworks.Security
