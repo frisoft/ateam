@@ -77,8 +77,12 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
-      - name: Install Rust
+      - name: Install Rust for Intel
+        if: matrix.target == 'x86_64-unknown-linux-gnu' || matrix.target == 'x86_64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc'
         run: rustup update stable && rustup default stable
+      - name: Install Rust for ARM64
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: rustup set profile minimal && rustup target add aarch64-apple-darwin && rustup toolchain install stable-aarch64-apple-darwin
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}
       - name: Run cargo-dist
