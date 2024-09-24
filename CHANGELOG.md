@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.8
+
+- Upgrade crates.
+
 ## v1.0.7
 
 - Release binary for aarch64-apple-darwin as well.
