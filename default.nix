@@ -30,7 +30,7 @@
 #   };
 # }
 
-{ lib, rustPlatform, pkg-config, openssl, libiconv, darwin }:
+{ lib, rustPlatform, pkg-config, darwin }:
 
 rustPlatform.buildRustPackage rec {
   pname = "ateam";
@@ -41,12 +41,11 @@ rustPlatform.buildRustPackage rec {
   cargoLock = { lockFile = ./Cargo.lock; };
 
   nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ openssl libiconv ]
-    ++ lib.optionals darwin.apple_sdk.stdenv.isDarwin [
-      darwin.apple_sdk.frameworks.SystemConfiguration
-      darwin.apple_sdk.frameworks.CoreServices
-      darwin.apple_sdk.frameworks.Security
-    ];
+  buildInputs = [ ] ++ lib.optionals darwin.apple_sdk.stdenv.isDarwin [
+    darwin.apple_sdk.frameworks.SystemConfiguration
+    darwin.apple_sdk.frameworks.CoreServices
+    darwin.apple_sdk.frameworks.Security
+  ];
 
   meta = with lib; {
     description = "ateam: The tool that helps optimize the code review process";
