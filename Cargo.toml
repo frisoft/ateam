@@ -1,12 +1,10 @@
 [package]
 name = "ateam"
-version = "1.0.8"
+version = "1.0.9"
 authors = ["Andrea Frigido"]
 license = "MIT"
 description = "The tool that helps optimize the code review process."
 documentation = "https://github.com/frisoft/ateam"
-homepage = "https://github.com/frisoft/ateam"
-repository = "https://github.com/frisoft/ateam"
 readme = "README.md"
 edition = "2021"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
