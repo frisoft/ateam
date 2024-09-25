@@ -42,7 +42,7 @@ rustPlatform.buildRustPackage rec {
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ openssl libiconv ]
-    ++ lib.optionals darwin.apple-sdk.stdenv.isDarwin [
+    ++ lib.optionals darwin.apple_sdk.stdenv.isDarwin [
       darwin.apple_sdk.frameworks.SystemConfiguration
       darwin.apple_sdk.frameworks.CoreServices
       darwin.apple_sdk.frameworks.Security
