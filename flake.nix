@@ -22,13 +22,14 @@
         devShell = pkgs.mkShell {
           buildInputs = with pkgs;
             [
-              # rustup
               # rustc
               # libiconv
               # pkg-config
               # openssl
               # rust-analyzer <-- This does not work. You need to run `rustup component add rust-analyzer`
               # tools for ./maintenance.sh
+              rustc
+              rustup # for cargo-dist
               cargo
               cargo-udeps
               cargo-outdated

@@ -8,6 +8,7 @@ documentation = "https://github.com/frisoft/ateam"
 readme = "README.md"
 edition = "2021"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
+repository = "https://github.com/frisoft/ateam"
 
 [lib]
 name = "ateam"
@@ -47,4 +48,19 @@ itertools = "^0.12"
 clap = { version = "^4.0", features = ["derive"] }
 tokio = { version = "^1.21", features = ["full"] }
 futures = "^0.3"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.22.1"
+# The installers to generate for each app
+installers = ["shell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+# CI backends to support
+ci = "github"
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = true
 
