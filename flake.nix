@@ -36,6 +36,7 @@
               cargo-dist
               cargo-release
               clippy
+              rust-analyzer
             ] ++ ateam.buildInputs;
         };
       });
