@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.10
+
+- Upgrade crates and nix package.
+
 ## v1.0.9
 
 - Make it a regular nix package.
