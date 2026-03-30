@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.11
+
+- Remove OpenSSL dependency by switching to rustls-tls.
+- Upgrade crates.
+
 ## v1.0.10
 
 - Upgrade crates and nix package.
