@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.12
+
+- Optimize tokio features from "full" to ["rt-multi-thread", "macros"] for faster compilation.
+- Remove caret (^) version constraints from dependencies.
+- Remove signal-hook-registry dependency (unused).
+- Upgrade crates.
+
 ## v1.0.11
 
 - Remove OpenSSL dependency by switching to rustls-tls.
