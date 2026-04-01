@@ -2,6 +2,11 @@
 set -euo pipefail
 
 echo "======================================"
+echo "Update Cargo.lock"
+cargo update
+
+echo
+echo "======================================"
 echo "Find unused dependencies in Cargo.toml"
 cargo machete .
 
