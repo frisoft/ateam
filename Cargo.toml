@@ -1,6 +1,6 @@
 [package]
 name = "ateam"
-version = "1.0.11"
+version = "1.0.12"
 authors = ["Andrea Frigido"]
 license = "MIT"
 description = "The tool that helps optimize the code review process."
@@ -31,21 +31,21 @@ debug = true
 split-debuginfo = "packed"
 
 [dependencies]
-anyhow = "^1.0.102"
-graphql_client = "^0.14"
-serde = "^1.0"
-serde_json = "^1.0"
-reqwest = { version = "^0.12", default-features = false, features = ["json", "rustls-tls"] }
-terminal_size = "^0.4"
-comfy-table = "^7.2.2"
-dotenvy = "^0.15"
-envy = "^0.4"
-log = "^0.4"
-env_logger = "^0.11.10"
-chrono = { version = "^0.4.44", default-features = false, features = ["clock", "serde"] }
-regex = "^1.12.3"
-itertools = "^0.14"
-clap = { version = "^4.6.0", features = ["derive"] }
-tokio = { version = "^1.50.0", features = ["full"] }
-futures = "^0.3.32"
+anyhow = "1"
+graphql_client = "0.14"
+serde = "1"
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+terminal_size = "0.4"
+comfy-table = "7"
+dotenvy = "0.15"
+envy = "0.4"
+log = "0.4"
+env_logger = "0.11"
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+regex = "1"
+itertools = "0.14"
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+futures = "0.3"
 
