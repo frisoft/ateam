@@ -30,7 +30,7 @@
               # rust-analyzer <-- This does not work. You need to run `rustup component add rust-analyzer`
               # tools for ./maintenance.sh
               cargo
-              cargo-udeps
+              cargo-machete
               cargo-outdated
               cargo-audit
               cargo-dist
