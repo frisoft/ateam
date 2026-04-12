@@ -2,7 +2,7 @@ use super::types::ScoredPr;
 use regex::Regex;
 
 #[allow(dead_code)]
-pub fn filter_prs(regex_text: &Option<String>, prs: Vec<ScoredPr>) -> Vec<ScoredPr> {
+pub fn filter_prs(regex_text: Option<&String>, prs: Vec<ScoredPr>) -> Vec<ScoredPr> {
     if let Some(regex_text) = regex_text {
         let re = Regex::new(regex_text).unwrap();
         prs.into_iter()
@@ -48,7 +48,7 @@ mod tests {
             make_scored_pr("Fix bug", "https://example.com/2"),
         ];
         let regex_text: Option<String> = None;
-        let result = filter_prs(&regex_text, prs);
+        let result = filter_prs(regex_text.as_ref(), prs);
         assert_eq!(result.len(), 2);
     }
 
@@ -60,7 +60,7 @@ mod tests {
             make_scored_pr("Add tests", "https://example.com/3"),
         ];
         let regex_text = Some("Add".to_string());
-        let result = filter_prs(&regex_text, prs);
+        let result = filter_prs(regex_text.as_ref(), prs);
         assert_eq!(result.len(), 2);
         assert!(result.iter().any(|pr| pr.pr.url == "https://example.com/1"));
         assert!(result.iter().any(|pr| pr.pr.url == "https://example.com/3"));
@@ -73,7 +73,7 @@ mod tests {
             make_scored_pr("Fix bug", "https://example.com/2"),
         ];
         let regex_text = Some("delete".to_string());
-        let result = filter_prs(&regex_text, prs);
+        let result = filter_prs(regex_text.as_ref(), prs);
         assert_eq!(result.len(), 0);
     }
 
@@ -84,7 +84,7 @@ mod tests {
             make_scored_pr("add feature", "https://example.com/2"),
         ];
         let regex_text = Some("Add".to_string());
-        let result = filter_prs(&regex_text, prs);
+        let result = filter_prs(regex_text.as_ref(), prs);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].pr.url, "https://example.com/1");
     }
@@ -93,7 +93,7 @@ mod tests {
     fn test_regex_empty_result() {
         let prs: Vec<ScoredPr> = vec![];
         let regex_text = Some("feature".to_string());
-        let result = filter_prs(&regex_text, prs);
+        let result = filter_prs(regex_text.as_ref(), prs);
         assert_eq!(result.len(), 0);
     }
 
@@ -105,7 +105,7 @@ mod tests {
             make_scored_pr("Update docs", "https://example.com/3"),
         ];
         let regex_text = Some("(FIX|FEAT)".to_string());
-        let result = filter_prs(&regex_text, prs);
+        let result = filter_prs(regex_text.as_ref(), prs);
         assert_eq!(result.len(), 2);
     }
 }

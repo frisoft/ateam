@@ -1,8 +1,11 @@
-use super::types::*;
+use super::types::{Files, Review, ScoredPr, TestsState};
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
-use comfy_table::*;
+use comfy_table::{Table, ColumnConstraint, ContentArrangement};
 use terminal_size::{terminal_size, Height, Width};
+
+#[cfg(test)]
+use super::types::{Labels, Pr, ReviewState, Score};
 
 pub fn from(sprs: &[ScoredPr], limit: usize, debug: bool) -> Table {
     let mut table = build_table();
@@ -53,7 +56,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
             show_files(&spr.pr.files)
         )
     } else {
-        "".to_string()
+        String::new()
     };
     vec![
         format!(
@@ -94,7 +97,7 @@ fn tests_result_label(tests_result: &TestsState) -> &'static str {
 
 fn show_files(files: &Files) -> String {
     if files.0.is_empty() {
-        "".to_string()
+        String::new()
     } else {
         format!("\n{}\n", files.0.join("\n"))
     }
@@ -111,18 +114,17 @@ fn show_duration(minutes: Option<i64>) -> String {
                 if d > 0 {
                     format!("{d}d ")
                 } else {
-                    "".to_string()
+                    String::new()
                 },
                 if h > 0 {
                     format!("{h}h ")
                 } else {
-                    "".to_string()
+                    String::new()
                 },
-                // Display minutes only if days is 0
                 if d == 0 && m > 0 {
                     format!("{m}m ")
                 } else {
-                    "".to_string()
+                    String::new()
                 }
             )
         }
@@ -149,18 +151,18 @@ pub fn from_reviews(reviews: &[Review]) -> Table {
     let mut table = build_table();
     table.set_header(vec!["Review", "State", "Pull request"]);
 
-    reviews.iter().for_each(|review| {
+    for review in reviews {
         table.add_row(review_row(review));
-    });
+    }
 
     table
 }
 
 fn review_row(review: &Review) -> Vec<String> {
     vec![
-        review.url.to_string(),
+        review.url.clone(),
         review.state.to_string(),
-        review.pr_title.to_string(),
+        review.pr_title.clone(),
     ]
 }
 
@@ -168,6 +170,7 @@ fn review_row(review: &Review) -> Vec<String> {
 mod tests {
     use super::*;
 
+    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
     fn make_scored_pr(title: &str, url: &str, age_min: Option<i64>, approvals: i64, reviewers: i64, additions: i64, deletions: i64, on_main: bool, blame: bool, requested: bool, codeowner: bool) -> ScoredPr {
         let pr = Pr {
             title: title.to_string(),

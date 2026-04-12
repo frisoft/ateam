@@ -1,5 +1,5 @@
 use anyhow::Result;
-use graphql_client::*;
+use graphql_client::{GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
 #[graphql(

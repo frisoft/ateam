@@ -1,13 +1,16 @@
+use std::fmt::Write;
+
 use super::cli::PrArgs;
-use super::types::*;
+use super::types::{Files, Labels, Label, Pr, ReviewRequested, Score, ScoredPr, TestsState};
 use anyhow::{anyhow, Result};
 use chrono::prelude::{DateTime as DT, Utc};
-use graphql_client::*;
+use graphql_client::{GraphQLQuery, QueryBody, Response};
 use itertools::Itertools;
 use regex::Regex;
 mod blame;
 pub mod followup;
 pub mod username;
+use futures::join;
 use futures::stream::{FuturesUnordered, StreamExt};
 
 #[derive(GraphQLQuery)]
@@ -37,7 +40,9 @@ pub async fn fetch_scored_prs(
     loop {
         eprint!(".");
 
-        let o_get_ranked_prs = if !first {
+        let o_get_ranked_prs = if first {
+            None
+        } else {
             list_data.pop().map(|data| {
                 ranked_prs(
                     github_api_token,
@@ -47,8 +52,6 @@ pub async fn fetch_scored_prs(
                     data,
                 )
             })
-        } else {
-            None
         };
 
         let o_get_next_response_data_and_cursor = if first || cursor.is_some() {
@@ -61,7 +64,7 @@ pub async fn fetch_scored_prs(
         #[allow(clippy::unnecessary_unwrap)]
         if o_get_ranked_prs.is_some() && o_get_next_response_data_and_cursor.is_some() {
             // Bot future are present, I can do them in parallel
-            let (prs, response_and_cursor) = futures::join!(
+            let (prs, response_and_cursor) = join!(
                 o_get_ranked_prs.unwrap(),
                 o_get_next_response_data_and_cursor.unwrap()
             );
@@ -149,13 +152,11 @@ fn get_response_data(
     response_body: Response<repo_view::ResponseData>,
 ) -> Result<repo_view::ResponseData> {
     if let Some(errors) = response_body.errors {
-        Err(anyhow!(
-            "Errors executing the query {}",
-            errors
-                .iter()
-                .map(|error| format!("{:?}", error))
-                .collect::<String>()
-        ))
+        let mut error_str = String::new();
+        for error in &errors {
+            write!(error_str, "{error:?}").unwrap();
+        }
+        Err(anyhow!("Errors executing the query {error_str}"))
     } else {
         match response_body.data {
             Some(data) => Ok(data),
@@ -165,13 +166,14 @@ fn get_response_data(
 }
 
 fn limited_batch_size(batch_size: u8) -> i64 {
-    (if batch_size <= 100 { batch_size } else { 100 }) as i64
+    i64::from(if batch_size <= 100 { batch_size } else { 100 })
 }
 
 fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) -> Option<String> {
     match &response_data.search.edges {
         Some(items) => {
-            if items.len() < batch_size as usize {
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            if items.len() < usize::try_from(batch_size).unwrap_or(usize::MAX) {
                 None
             } else {
                 match items.last() {
@@ -193,7 +195,7 @@ fn github_query(username: &str, options: &PrArgs) -> String {
         query_requested(username, options.requested),
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
-        query_org(&options.org),
+        query_org(options.org.as_ref()),
         &options.query.join(" ")
     )
 }
@@ -210,7 +212,7 @@ fn query_mine(username: &str, only_mine: bool) -> String {
     if only_mine {
         format!("author:{username} ")
     } else {
-        "".to_string()
+        String::new()
     }
 }
 
@@ -218,33 +220,34 @@ fn query_requested(username: &str, requested: bool) -> String {
     if requested {
         format!("review-requested:{username} ")
     } else {
-        "".to_string()
+        String::new()
     }
 }
 
 fn query_labels(labels: &[String], exclude_label: &[String]) -> String {
-    format!(
-        "{}{}",
-        labels
-            .iter()
-            .map(|label| format!("label:\"{label}\" "))
-            .collect::<String>(),
-        exclude_label
-            .iter()
-            .map(|label| format!("-label:\"{label}\" "))
-            .collect::<String>()
-    )
+    let mut result = String::new();
+    for label in labels {
+        write!(result, "label:\"{label}\" ").unwrap();
+    }
+    for label in exclude_label {
+        write!(result, "-label:\"{label}\" ").unwrap();
+    }
+    result
 }
 
 fn query_repos(repos: &[String]) -> String {
-    repos.iter().map(|repo| format!("repo:{repo} ")).collect()
+    let mut result = String::new();
+    for repo in repos {
+        write!(result, "repo:{repo} ").unwrap();
+    }
+    result
 }
 
-fn query_org(org: &Option<String>) -> String {
+fn query_org(org: Option<&String>) -> String {
     if let Some(org) = org {
         format!("org:{org} ")
     } else {
-        "".to_string()
+        String::new()
     }
 }
 
@@ -263,17 +266,14 @@ async fn ranked_prs(
 }
 
 pub fn sorted_ranked_prs(mut sprs: Vec<ScoredPr>) -> Vec<ScoredPr> {
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
     sprs.sort_by_key(|scored_pr| (scored_pr.score.total() * 1000.0) as i64);
     sprs.reverse();
     sprs
 }
 
-fn regex(regex_text: &Option<String>) -> Option<Regex> {
-    let text = match regex_text {
-        Some(text) => text,
-        None => return None,
-    };
-    Some(Regex::new(text).unwrap())
+fn regex(regex_text: Option<&String>) -> Option<Regex> {
+    regex_text.and_then(|text| Regex::new(text).ok())
 }
 
 fn scored_pr(required_approvals: u8, pr: Pr) -> ScoredPr {
@@ -287,8 +287,8 @@ async fn prs(
     options: &PrArgs,
     response_data: repo_view::ResponseData,
 ) -> Vec<Pr> {
-    let re = regex(&options.regex);
-    let re_not = regex(&options.regex_not);
+    let re = regex(options.regex.as_ref());
+    let re_not = regex(options.regex_not.as_ref());
     let prs: FuturesUnordered<_> = response_data
         .search
         .edges
@@ -306,8 +306,8 @@ async fn prs(
         .filter(|i| {
             include_pr(
                 i,
-                &re,
-                &re_not,
+                re.as_ref(),
+                re_not.as_ref(),
                 username,
                 options.include_mine,
                 options.only_mine,
@@ -326,8 +326,8 @@ async fn prs(
 
 fn include_pr(
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
-    regex: &Option<Regex>,
-    regex_not: &Option<Regex>,
+    regex: Option<&Regex>,
+    regex_not: Option<&Regex>,
     username: &str,
     include_mine: bool,
     only_mine: bool,
@@ -340,11 +340,11 @@ fn include_pr(
         && (include_mine || only_mine || author(pr) != username)
         && (include_reviewed_by_me
             || only_mine
-            || review_states(&pr.reviews, username, true).is_empty()) // not reviewed by me
+            || review_states(pr.reviews.as_ref(), username, true).is_empty())
 }
 
 fn regex_match(
-    regex: &Option<Regex>,
+    regex: Option<&Regex>,
     or: bool,
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> bool {
@@ -376,7 +376,7 @@ fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<String>
 }
 
 fn pr_labels(
-    labels: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>,
+    labels: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>,
 ) -> Labels {
     match labels {
         Some(labels) => Labels(
@@ -401,7 +401,7 @@ async fn pr_stats(
     options: &PrArgs,
     pr: repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> Option<Pr> {
-    let (last_commit_pushed_date, tests_result) = last_commit(&pr, &options.tests_regex);
+    let (last_commit_pushed_date, tests_result) = last_commit(&pr, options.tests_regex.as_ref());
 
     if !include_by_tests_state(&tests_result, options) {
         return None;
@@ -423,8 +423,8 @@ async fn pr_stats(
     };
 
     let author = author(&pr);
-    let reviews = review_states(&pr.reviews, &author, false);
-    let review_requested = review_requested(&pr.review_requests, username);
+    let reviews = review_states(pr.reviews.as_ref(), &author, false);
+    let review_requested = review_requested(pr.review_requests.as_ref(), username);
 
     Some(Pr {
         title: pr.title.clone(),
@@ -440,7 +440,7 @@ async fn pr_stats(
         based_on_main_branch: pr_based_on_main_branch(&pr.base_ref_name),
         files,
         blame,
-        labels: pr_labels(&pr.labels),
+        labels: pr_labels(pr.labels.as_ref()),
         requested: matches!(review_requested, ReviewRequested::RequestedNotAsCodeOwner),
         codeowner: matches!(review_requested, ReviewRequested::RequestedAsCodeOwner),
     })
@@ -449,9 +449,9 @@ async fn pr_stats(
 fn author(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> String {
     match &pr.author {
         Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestAuthor { login, on: _ }) => {
-            login.to_string()
+            login.clone()
         }
-        _ => "".to_string(),
+        _ => String::new(),
     }
 }
 
@@ -466,7 +466,7 @@ fn include_by_tests_state(state: &TestsState, options: &PrArgs) -> bool {
 
 fn last_commit(
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
-    tests_regex: &Option<String>,
+    tests_regex: Option<&String>,
 ) -> (Option<DT<Utc>>, TestsState) {
     let tests_re = regex(tests_regex);
     if let Some((pushed_date, state)) = pr
@@ -480,11 +480,11 @@ fn last_commit(
                 node.commit
                     .status_check_rollup
                     .as_ref()
-                    .map(|status| commit_status_state(status, &tests_re)),
+                    .map(|status| commit_status_state(status, tests_re.as_ref())),
             )
         })
     {
-        (parse_date(pushed_date), state.unwrap_or(TestsState::None))
+        (parse_date(pushed_date.as_ref()), state.unwrap_or(TestsState::None))
     } else {
         (None, TestsState::None)
     }
@@ -492,16 +492,16 @@ fn last_commit(
 
 fn commit_status_state(
     status: &repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
-    tests_re: &Option<Regex>,
+    tests_re: Option<&Regex>,
 ) -> TestsState {
     match tests_re {
-        Some(tests_re) => commit_tests_state_from_contexts(&status.contexts.nodes, tests_re),
+        Some(tests_re) => commit_tests_state_from_contexts(status.contexts.nodes.as_ref(), tests_re),
         None => tests_state(&status.state),
     }
 }
 
 fn commit_tests_state_from_contexts(
-    contexts_nodes: &Option<Vec<Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes>>>,
+    contexts_nodes: Option<&Vec<Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes>>>,
     tests_re: &Regex,
 ) -> TestsState {
     match contexts_nodes {
@@ -546,27 +546,27 @@ fn tests_state(state: &repo_view::StatusState) -> TestsState {
 fn pr_open_conversations(
     review_threads: &repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewThreads,
 ) -> i64 {
+    #[allow(clippy::cast_possible_wrap, clippy::map_unwrap_or)]
     review_threads
         .nodes
         .as_ref()
-        .map(|nodes| {
-            nodes.iter().filter(|review_thread| {
-                review_thread
-                    .as_ref()
-                    .map(|review_thread| !review_thread.is_resolved && !review_thread.is_outdated)
-                    .unwrap_or(false)
-            })
+        .map_or(0, |nodes| {
+            nodes
+                .iter()
+                .filter(|review_thread| {
+                    review_thread
+                        .as_ref()
+                        .is_some_and(|review_thread| !review_thread.is_resolved && !review_thread.is_outdated)
+                })
+                .count() as i64
         })
-        .map(|list| list.count())
-        .unwrap_or(0) as i64
 }
 
 fn review_states<'a>(
-    reviews: &'a std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
+    reviews: Option<&'a repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews>,
     author: &str,
     reviewed_by_author: bool,
 ) -> Vec<&'a repo_view::PullRequestReviewState> {
-    // println!("{:?}", reviews);
     if let Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviews {
         total_count: _,
         nodes: Some(nodes),
@@ -574,8 +574,7 @@ fn review_states<'a>(
     {
         nodes
             .iter()
-            .flat_map(|review| {
-                // println!("{:?}", review);
+            .filter_map(|review| {
                 match review {
                     Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodes {
                         author:
@@ -584,10 +583,7 @@ fn review_states<'a>(
                                 on: _,
                             }),
                         state,
-                    }) => {
-                        // println!("{} {:?}", login, state);
-                        Some((login, state))
-                    }
+                    }) => Some((login, state)),
                     _ => None,
                 }
             })
@@ -607,6 +603,7 @@ fn review_states<'a>(
     }
 }
 
+#[allow(clippy::cast_possible_wrap)]
 fn pr_num_approvals(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
     review_states
         .iter()
@@ -614,15 +611,13 @@ fn pr_num_approvals(review_states: &[&repo_view::PullRequestReviewState]) -> i64
         .count() as i64
 }
 
+#[allow(clippy::cast_possible_wrap)]
 fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
     review_states.len() as i64
 }
 
-fn parse_date(date: &Option<String>) -> Option<DT<Utc>> {
-    match date {
-        Some(s) => s.parse::<DT<Utc>>().ok(),
-        None => None,
-    }
+fn parse_date(date: Option<&String>) -> Option<DT<Utc>> {
+    date.and_then(|s| s.parse::<DT<Utc>>().ok())
 }
 
 fn age(date_time: Option<DT<Utc>>) -> Option<i64> {
@@ -634,7 +629,7 @@ fn pr_based_on_main_branch(base_branch_name: &str) -> bool {
 }
 
 fn review_requested(
-    requests: &std::option::Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
+    requests: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
     username: &str,
 ) -> ReviewRequested {
     match requests {
@@ -678,9 +673,9 @@ mod tests {
     // test pr_based_on_main_branch
     #[test]
     fn test_pr_based_on_main_branch() {
-        assert_eq!(pr_based_on_main_branch("main"), true);
-        assert_eq!(pr_based_on_main_branch("master"), true);
-        assert_eq!(pr_based_on_main_branch("develop"), false);
+        assert!(pr_based_on_main_branch("main"));
+        assert!(pr_based_on_main_branch("master"));
+        assert!(!pr_based_on_main_branch("develop"));
     }
 
     // test sorted_ranked_prs
@@ -923,17 +918,17 @@ mod tests {
     // Tests for pr_based_on_main_branch - extended
     #[test]
     fn test_pr_based_on_main_branch_feature_branch() {
-        assert_eq!(pr_based_on_main_branch("feature/new-feature"), false);
+        assert!(!pr_based_on_main_branch("feature/new-feature"));
     }
 
     #[test]
     fn test_pr_based_on_main_branch_release_branch() {
-        assert_eq!(pr_based_on_main_branch("release/v1.0"), false);
+        assert!(!pr_based_on_main_branch("release/v1.0"));
     }
 
     #[test]
-    fn test_pr_based_on_main_branch_hotfix() {
-        assert_eq!(pr_based_on_main_branch("hotfix/fix-bug"), false);
+    fn test_pr_based_on_main_branch_hotfix_branch() {
+        assert!(!pr_based_on_main_branch("hotfix/fix-bug"));
     }
 
     // Tests for limited_batch_size - extended
