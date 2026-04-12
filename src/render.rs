@@ -150,4 +150,52 @@ mod tests {
         let result = prs(&prs_data, None, false, false, false);
         assert!(result.contains("Add feature"));
     }
+
+    // Tests for render::reviews function
+    fn make_review(state: ReviewState, url: &str, title: &str) -> Review {
+        Review {
+            state,
+            url: url.to_string(),
+            pr_title: title.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_reviews_json_format() {
+        let reviews_data = vec![
+            make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug"),
+            make_review(ReviewState::WithAddressedConversations, "https://example.com/2", "Add feature"),
+        ];
+        let result = reviews(&reviews_data, true);
+        assert!(result.contains("Dismissed"));
+        assert!(result.contains("Add feature"));
+    }
+
+    #[test]
+    fn test_reviews_table_format() {
+        let reviews_data = vec![
+            make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug"),
+        ];
+        let result = reviews(&reviews_data, false);
+        assert!(result.contains("Fix bug"));
+    }
+
+    #[test]
+    fn test_reviews_empty() {
+        let reviews_data: Vec<Review> = vec![];
+        let result = reviews(&reviews_data, true);
+        assert!(result.starts_with('['));
+        assert!(result.ends_with(']'));
+        assert_eq!(result, "[]");
+    }
+
+    #[test]
+    fn test_reviews_single() {
+        let reviews_data = vec![
+            make_review(ReviewState::Dismissed, "https://example.com/pr/123", "Update code"),
+        ];
+        let result = reviews(&reviews_data, false);
+        assert!(result.contains("https://example.com/pr/123"));
+        assert!(result.contains("Update code"));
+    }
 }

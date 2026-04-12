@@ -133,14 +133,14 @@ impl std::fmt::Display for Label {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Review {
     pub state: ReviewState,
     pub url: String,
     pub pr_title: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum ReviewState {
     Dismissed,
     WithAddressedConversations,
