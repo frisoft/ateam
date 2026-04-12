@@ -163,3 +163,116 @@ fn review_row(review: &Review) -> Vec<String> {
         review.pr_title.to_string(),
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::types::*;
+
+    fn make_scored_pr(title: &str, url: &str, age_min: Option<i64>, approvals: i64, reviewers: i64, additions: i64, deletions: i64, on_main: bool, blame: bool, requested: bool, codeowner: bool) -> ScoredPr {
+        let pr = Pr {
+            title: title.to_string(),
+            url: url.to_string(),
+            last_commit_pushed_date: None,
+            last_commit_age_min: age_min,
+            tests_result: TestsState::Success,
+            open_conversations: 0,
+            num_approvals: approvals,
+            num_reviewers: reviewers,
+            additions,
+            deletions,
+            based_on_main_branch: on_main,
+            files: Files(vec![]),
+            blame,
+            labels: Labels(vec![]),
+            requested,
+            codeowner,
+        };
+        let score = Score::from_pr(1, &pr);
+        ScoredPr { pr, score }
+    }
+
+    #[test]
+    fn test_table_from_empty() {
+        let prs: &[ScoredPr] = &[];
+        let result = from(prs, 10, false);
+        assert_eq!(result.row_count(), 0);
+    }
+
+    #[test]
+    fn test_table_from_single() {
+        let prs = vec![make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false)];
+        let result = from(&prs, 10, false);
+        assert_eq!(result.row_count(), 1);
+    }
+
+    #[test]
+    fn test_table_from_multiple() {
+        let prs = vec![
+            make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false),
+            make_scored_pr("Add feature", "https://example.com/2", Some(120), 1, 2, 200, 100, false, true, false, false),
+        ];
+        let result = from(&prs, 10, false);
+        assert_eq!(result.row_count(), 2);
+    }
+
+    #[test]
+    fn test_table_from_limit() {
+        let prs = vec![
+            make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false),
+            make_scored_pr("Add feature", "https://example.com/2", Some(120), 1, 2, 200, 100, false, true, false, false),
+            make_scored_pr("Update docs", "https://example.com/3", Some(180), 0, 0, 50, 10, false, false, false, false),
+        ];
+        let result = from(&prs, 2, false);
+        assert_eq!(result.row_count(), 2);
+    }
+
+    #[test]
+    fn test_table_from_limit_higher() {
+        let prs = vec![
+            make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false),
+        ];
+        let result = from(&prs, 10, false);
+        assert_eq!(result.row_count(), 1);
+    }
+
+    #[test]
+    fn test_table_from_debug() {
+        let prs = vec![make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false)];
+        let result = from(&prs, 10, true);
+        assert_eq!(result.row_count(), 1);
+    }
+
+    // Tests for from_reviews
+    fn make_review(state: ReviewState, url: &str, title: &str) -> Review {
+        Review {
+            state,
+            url: url.to_string(),
+            pr_title: title.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_table_from_reviews_empty() {
+        let reviews: &[Review] = &[];
+        let result = from_reviews(reviews);
+        assert_eq!(result.row_count(), 0);
+    }
+
+    #[test]
+    fn test_table_from_reviews_single() {
+        let reviews = vec![make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug")];
+        let result = from_reviews(&reviews);
+        assert_eq!(result.row_count(), 1);
+    }
+
+    #[test]
+    fn test_table_from_reviews_multiple() {
+        let reviews = vec![
+            make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug"),
+            make_review(ReviewState::WithAddressedConversations, "https://example.com/2", "Add feature"),
+        ];
+        let result = from_reviews(&reviews);
+        assert_eq!(result.row_count(), 2);
+    }
+}
