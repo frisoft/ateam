@@ -58,6 +58,7 @@ pub async fn fetch_scored_prs(
         };
 
 
+        #[allow(clippy::unnecessary_unwrap)]
         if o_get_ranked_prs.is_some() && o_get_next_response_data_and_cursor.is_some() {
             // Bot future are present, I can do them in parallel
             let (prs, response_and_cursor) = futures::join!(
@@ -73,6 +74,7 @@ pub async fn fetch_scored_prs(
             list_prs.push(o_get_ranked_prs.unwrap().await);
         } else if o_get_next_response_data_and_cursor.is_some() {
             // Only one future to await
+            #[allow(clippy::unnecessary_unwrap)]
             let (new_response_data, new_cursor) =
                 o_get_next_response_data_and_cursor.unwrap().await?;
             list_data.push(new_response_data);
@@ -618,10 +620,7 @@ fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64
 
 fn parse_date(date: &Option<String>) -> Option<DT<Utc>> {
     match date {
-        Some(s) => match s.parse::<DT<Utc>>() {
-            Ok(date_time) => Some(date_time),
-            Err(_) => None,
-        },
+        Some(s) => s.parse::<DT<Utc>>().ok(),
         None => None,
     }
 }

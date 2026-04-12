@@ -1,6 +1,7 @@
 use super::types::ScoredPr;
 use regex::Regex;
 
+#[allow(dead_code)]
 pub fn filter_prs(regex_text: &Option<String>, prs: Vec<ScoredPr>) -> Vec<ScoredPr> {
     if let Some(regex_text) = regex_text {
         let re = Regex::new(regex_text).unwrap();
