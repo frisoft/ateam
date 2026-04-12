@@ -167,7 +167,6 @@ fn review_row(review: &Review) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::types::*;
 
     fn make_scored_pr(title: &str, url: &str, age_min: Option<i64>, approvals: i64, reviewers: i64, additions: i64, deletions: i64, on_main: bool, blame: bool, requested: bool, codeowner: bool) -> ScoredPr {
         let pr = Pr {
