@@ -5,6 +5,7 @@ mod client;
 use client::*;
 pub mod cli;
 use cli::{FollowupArgs, PrArgs};
+mod filter;
 mod render;
 mod table;
 mod types;
