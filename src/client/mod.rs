@@ -920,4 +920,32 @@ mod tests {
         assert_ne!(second_url, third_url);
         assert_ne!(first_url, third_url);
     }
+
+    // Tests for pr_based_on_main_branch - extended
+    #[test]
+    fn test_pr_based_on_main_branch_feature_branch() {
+        assert_eq!(pr_based_on_main_branch("feature/new-feature"), false);
+    }
+
+    #[test]
+    fn test_pr_based_on_main_branch_release_branch() {
+        assert_eq!(pr_based_on_main_branch("release/v1.0"), false);
+    }
+
+    #[test]
+    fn test_pr_based_on_main_branch_hotfix() {
+        assert_eq!(pr_based_on_main_branch("hotfix/fix-bug"), false);
+    }
+
+    // Tests for limited_batch_size - extended
+    #[test]
+    fn test_limited_batch_size_zero() {
+        assert_eq!(limited_batch_size(0), 0);
+    }
+
+    #[test]
+    fn test_limited_batch_size_boundary() {
+        assert_eq!(limited_batch_size(99), 99);
+        assert_eq!(limited_batch_size(100), 100);
+    }
 }
