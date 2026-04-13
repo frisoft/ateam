@@ -17,6 +17,7 @@ pub enum Command {
 }
 
 #[derive(Args, Debug)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct PrArgs {
     /// Repositiy. Can be used multiple times to select more than one
     #[arg(long, short, name = "repository")]
@@ -105,6 +106,7 @@ pub struct FollowupArgs {
     pub user: Option<String>,
 }
 
+#[must_use]
 pub fn command() -> Ateam {
     Ateam::parse()
 }

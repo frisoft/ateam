@@ -1,6 +1,8 @@
+use std::fmt::Write;
+
 use anyhow::{anyhow, Result};
 use futures::stream::{FuturesUnordered, StreamExt};
-use graphql_client::*;
+use graphql_client::{GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -25,7 +27,7 @@ pub async fn blame(
             let response_data: blame::ResponseData =
                 match girhub_blame(github_api_token, repo_name, repo_owner, file).await {
                     Ok(data) => data,
-                    Err(error) => panic!("Can't get the authors for {file}: {}", error),
+                    Err(error) => panic!("Can't get the authors for {file}: {error}"),
                 };
             is_file_author(&response_data, login)
         })
@@ -68,24 +70,21 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
     // println!("\n\nRanges: {:?}\n\n", v);
 
     let authors = match v {
-        Some(ranges) => ranges.iter().flat_map(|range|
-              match &range.commit.authors.nodes {
-                 Some(nodes) => nodes.iter().flat_map(|node|
-                     match node {
-                        Some(blame::BlameRepositoryDefaultBranchRefTargetOnCommitBlameRangesCommitAuthorsNodes{
-                            user: Some(blame::BlameRepositoryDefaultBranchRefTargetOnCommitBlameRangesCommitAuthorsNodesUser {login})
-                        }) => Some(login),
-                        _ => None
-                     }
-                 ).collect(),
-                 _ => vec!()
-              }
-        ).collect(),
-        _ => vec!(),
+        Some(ranges) => ranges
+            .iter()
+            .filter_map(|range| range.commit.authors.nodes.as_ref())
+            .flatten()
+            .filter_map(|node| {
+                node.as_ref()
+                    .and_then(|n| n.user.as_ref().map(|user| user.login.as_str()))
+            })
+            .collect(),
+        _ => vec![],
     };
 
     // println!("\n\n Authors: {:?}\n\n", authors);
-    authors.contains(&&login.to_string())
+    let login_str: String = login.to_string();
+    authors.iter().any(|s| *s == login_str)
 }
 
 async fn girhub_blame(
@@ -114,14 +113,11 @@ async fn girhub_blame(
     // println!("\n\n\n\n{:?}", response_body);
 
     if let Some(errors) = response_body.errors {
-        Err(anyhow!(
-            "Errors fetching the authors of {} {}",
-            path,
-            errors
-                .iter()
-                .map(|error| format!("{:?}", error))
-                .collect::<String>()
-        ))
+        let mut error_str = String::new();
+        for error in &errors {
+            write!(error_str, "{error:?}").unwrap();
+        }
+        Err(anyhow!("Errors fetching the authors of {path} {error_str}",))
     } else {
         match response_body.data {
             Some(data) => Ok(data),

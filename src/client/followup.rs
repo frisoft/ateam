@@ -1,6 +1,6 @@
 use super::super::types::{Review, ReviewState};
 use anyhow::Result;
-use graphql_client::*;
+use graphql_client::{GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -17,7 +17,7 @@ pub async fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
     let response_data: followup::ResponseData = match girhub_followup(github_api_token, login).await
     {
         Ok(data) => data,
-        Err(_) => panic!("Can't get the follow up actions"),
+        Err(e) => panic!("Can't get the follow up actions: {e:?}"),
     };
 
     parse(&response_data, login)
@@ -91,8 +91,7 @@ fn last_dismissed_or_addressed_review(
     reviews
         .iter()
         .flatten()
-        .filter_map(|review| parse_review(review, has_unaddressed_review_threads, title))
-        .next()
+        .find_map(|review| parse_review(review, has_unaddressed_review_threads, title))
 }
 
 fn parse_review(
@@ -105,18 +104,18 @@ fn parse_review(
     match state {
         followup::PullRequestReviewState::DISMISSED => Some(Review {
             state: ReviewState::Dismissed,
-            url: url.to_string(),
+            url: url.clone(),
             pr_title: pr_title.to_string(),
         }),
         followup::PullRequestReviewState::COMMENTED => {
-            if !has_unaddressed_review_threads {
+            if has_unaddressed_review_threads {
+                None
+            } else {
                 Some(Review {
                     state: ReviewState::WithAddressedConversations,
-                    url: url.to_string(),
+                    url: url.clone(),
                     pr_title: pr_title.to_string(),
                 })
-            } else {
-                None
             }
         }
         _ => None,
@@ -174,7 +173,7 @@ fn comment_author(
                     login,
                     on: _,
                 }),
-        })) => login.to_string(),
-        _ => "".to_string(),
+        })) => login.clone(),
+        _ => String::new(),
     }
 }
