@@ -14,7 +14,8 @@ pub struct Followup;
 type URI = String;
 
 pub async fn followup(github_api_token: &str, login: &str) -> Vec<Review> {
-    let response_data: followup::ResponseData = match girhub_followup(github_api_token, login).await {
+    let response_data: followup::ResponseData = match girhub_followup(github_api_token, login).await
+    {
         Ok(data) => data,
         Err(e) => panic!("Can't get the follow up actions: {e:?}"),
     };

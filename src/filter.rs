@@ -15,8 +15,8 @@ pub fn filter_prs(regex_text: Option<&String>, prs: Vec<ScoredPr>) -> Vec<Scored
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::types::*;
+    use super::*;
 
     fn make_scored_pr(title: &str, url: &str) -> ScoredPr {
         let pr = Pr {

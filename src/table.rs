@@ -1,7 +1,7 @@
 use super::types::{Files, Review, ScoredPr, TestsState};
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
-use comfy_table::{Table, ColumnConstraint, ContentArrangement};
+use comfy_table::{ColumnConstraint, ContentArrangement, Table};
 use terminal_size::{terminal_size, Height, Width};
 
 #[cfg(test)]
@@ -171,7 +171,19 @@ mod tests {
     use super::*;
 
     #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
-    fn make_scored_pr(title: &str, url: &str, age_min: Option<i64>, approvals: i64, reviewers: i64, additions: i64, deletions: i64, on_main: bool, blame: bool, requested: bool, codeowner: bool) -> ScoredPr {
+    fn make_scored_pr(
+        title: &str,
+        url: &str,
+        age_min: Option<i64>,
+        approvals: i64,
+        reviewers: i64,
+        additions: i64,
+        deletions: i64,
+        on_main: bool,
+        blame: bool,
+        requested: bool,
+        codeowner: bool,
+    ) -> ScoredPr {
         let pr = Pr {
             title: title.to_string(),
             url: url.to_string(),
@@ -203,7 +215,19 @@ mod tests {
 
     #[test]
     fn test_table_from_single() {
-        let prs = vec![make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false)];
+        let prs = vec![make_scored_pr(
+            "Fix bug",
+            "https://example.com/1",
+            Some(60),
+            2,
+            1,
+            100,
+            50,
+            true,
+            false,
+            false,
+            false,
+        )];
         let result = from(&prs, 10, false);
         assert_eq!(result.row_count(), 1);
     }
@@ -211,8 +235,32 @@ mod tests {
     #[test]
     fn test_table_from_multiple() {
         let prs = vec![
-            make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false),
-            make_scored_pr("Add feature", "https://example.com/2", Some(120), 1, 2, 200, 100, false, true, false, false),
+            make_scored_pr(
+                "Fix bug",
+                "https://example.com/1",
+                Some(60),
+                2,
+                1,
+                100,
+                50,
+                true,
+                false,
+                false,
+                false,
+            ),
+            make_scored_pr(
+                "Add feature",
+                "https://example.com/2",
+                Some(120),
+                1,
+                2,
+                200,
+                100,
+                false,
+                true,
+                false,
+                false,
+            ),
         ];
         let result = from(&prs, 10, false);
         assert_eq!(result.row_count(), 2);
@@ -221,9 +269,45 @@ mod tests {
     #[test]
     fn test_table_from_limit() {
         let prs = vec![
-            make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false),
-            make_scored_pr("Add feature", "https://example.com/2", Some(120), 1, 2, 200, 100, false, true, false, false),
-            make_scored_pr("Update docs", "https://example.com/3", Some(180), 0, 0, 50, 10, false, false, false, false),
+            make_scored_pr(
+                "Fix bug",
+                "https://example.com/1",
+                Some(60),
+                2,
+                1,
+                100,
+                50,
+                true,
+                false,
+                false,
+                false,
+            ),
+            make_scored_pr(
+                "Add feature",
+                "https://example.com/2",
+                Some(120),
+                1,
+                2,
+                200,
+                100,
+                false,
+                true,
+                false,
+                false,
+            ),
+            make_scored_pr(
+                "Update docs",
+                "https://example.com/3",
+                Some(180),
+                0,
+                0,
+                50,
+                10,
+                false,
+                false,
+                false,
+                false,
+            ),
         ];
         let result = from(&prs, 2, false);
         assert_eq!(result.row_count(), 2);
@@ -231,16 +315,38 @@ mod tests {
 
     #[test]
     fn test_table_from_limit_higher() {
-        let prs = vec![
-            make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false),
-        ];
+        let prs = vec![make_scored_pr(
+            "Fix bug",
+            "https://example.com/1",
+            Some(60),
+            2,
+            1,
+            100,
+            50,
+            true,
+            false,
+            false,
+            false,
+        )];
         let result = from(&prs, 10, false);
         assert_eq!(result.row_count(), 1);
     }
 
     #[test]
     fn test_table_from_debug() {
-        let prs = vec![make_scored_pr("Fix bug", "https://example.com/1", Some(60), 2, 1, 100, 50, true, false, false, false)];
+        let prs = vec![make_scored_pr(
+            "Fix bug",
+            "https://example.com/1",
+            Some(60),
+            2,
+            1,
+            100,
+            50,
+            true,
+            false,
+            false,
+            false,
+        )];
         let result = from(&prs, 10, true);
         assert_eq!(result.row_count(), 1);
     }
@@ -263,7 +369,11 @@ mod tests {
 
     #[test]
     fn test_table_from_reviews_single() {
-        let reviews = vec![make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug")];
+        let reviews = vec![make_review(
+            ReviewState::Dismissed,
+            "https://example.com/1",
+            "Fix bug",
+        )];
         let result = from_reviews(&reviews);
         assert_eq!(result.row_count(), 1);
     }
@@ -272,7 +382,11 @@ mod tests {
     fn test_table_from_reviews_multiple() {
         let reviews = vec![
             make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug"),
-            make_review(ReviewState::WithAddressedConversations, "https://example.com/2", "Add feature"),
+            make_review(
+                ReviewState::WithAddressedConversations,
+                "https://example.com/2",
+                "Add feature",
+            ),
         ];
         let result = from_reviews(&reviews);
         assert_eq!(result.row_count(), 2);

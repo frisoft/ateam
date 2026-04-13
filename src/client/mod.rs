@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use super::cli::PrArgs;
-use super::types::{Files, Labels, Label, Pr, ReviewRequested, Score, ScoredPr, TestsState};
+use super::types::{Files, Label, Labels, Pr, ReviewRequested, Score, ScoredPr, TestsState};
 use anyhow::{anyhow, Result};
 use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::{GraphQLQuery, QueryBody, Response};
@@ -59,7 +59,6 @@ pub async fn fetch_scored_prs(
         } else {
             None
         };
-
 
         #[allow(clippy::unnecessary_unwrap)]
         if o_get_ranked_prs.is_some() && o_get_next_response_data_and_cursor.is_some() {
@@ -171,7 +170,8 @@ fn limited_batch_size(batch_size: u8) -> i64 {
 
 fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) -> Option<String> {
     match &response_data.search.edges {
-        Some(items) => {
+        Some(items) =>
+        {
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             if items.len() < usize::try_from(batch_size).unwrap_or(usize::MAX) {
                 None
@@ -375,9 +375,7 @@ fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<String>
     }
 }
 
-fn pr_labels(
-    labels: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>,
-) -> Labels {
+fn pr_labels(labels: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>) -> Labels {
     match labels {
         Some(labels) => Labels(
             labels
@@ -484,7 +482,10 @@ fn last_commit(
             )
         })
     {
-        (parse_date(pushed_date.as_ref()), state.unwrap_or(TestsState::None))
+        (
+            parse_date(pushed_date.as_ref()),
+            state.unwrap_or(TestsState::None),
+        )
     } else {
         (None, TestsState::None)
     }
@@ -495,7 +496,9 @@ fn commit_status_state(
     tests_re: Option<&Regex>,
 ) -> TestsState {
     match tests_re {
-        Some(tests_re) => commit_tests_state_from_contexts(status.contexts.nodes.as_ref(), tests_re),
+        Some(tests_re) => {
+            commit_tests_state_from_contexts(status.contexts.nodes.as_ref(), tests_re)
+        }
         None => tests_state(&status.state),
     }
 }
@@ -547,19 +550,16 @@ fn pr_open_conversations(
     review_threads: &repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewThreads,
 ) -> i64 {
     #[allow(clippy::cast_possible_wrap, clippy::map_unwrap_or)]
-    review_threads
-        .nodes
-        .as_ref()
-        .map_or(0, |nodes| {
-            nodes
-                .iter()
-                .filter(|review_thread| {
-                    review_thread
-                        .as_ref()
-                        .is_some_and(|review_thread| !review_thread.is_resolved && !review_thread.is_outdated)
+    review_threads.nodes.as_ref().map_or(0, |nodes| {
+        nodes
+            .iter()
+            .filter(|review_thread| {
+                review_thread.as_ref().is_some_and(|review_thread| {
+                    !review_thread.is_resolved && !review_thread.is_outdated
                 })
-                .count() as i64
-        })
+            })
+            .count() as i64
+    })
 }
 
 fn review_states<'a>(
@@ -574,18 +574,16 @@ fn review_states<'a>(
     {
         nodes
             .iter()
-            .filter_map(|review| {
-                match review {
-                    Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodes {
-                        author:
-                            Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodesAuthor {
-                                login,
-                                on: _,
-                            }),
-                        state,
-                    }) => Some((login, state)),
-                    _ => None,
-                }
+            .filter_map(|review| match review {
+                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodes {
+                    author:
+                        Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewsNodesAuthor {
+                            login,
+                            on: _,
+                        }),
+                    state,
+                }) => Some((login, state)),
+                _ => None,
             })
             .rev() // reverse order: from the newest to the oldest
             .filter(|review| {
@@ -706,7 +704,10 @@ mod tests {
             requested: false,
             codeowner: false,
         };
-        let scored_pr = ScoredPr { pr: pr.clone(), score: Score::from_pr(1, &pr) };
+        let scored_pr = ScoredPr {
+            pr: pr.clone(),
+            score: Score::from_pr(1, &pr),
+        };
         let input = vec![scored_pr];
         let result = sorted_ranked_prs(input);
         assert_eq!(result.len(), 1);
@@ -735,7 +736,10 @@ mod tests {
             codeowner: false,
         };
         let score_high = Score::from_pr(1, &pr_high);
-        let scored_pr_high = ScoredPr { pr: pr_high, score: score_high };
+        let scored_pr_high = ScoredPr {
+            pr: pr_high,
+            score: score_high,
+        };
 
         // Create PR with lower score (fewer approvals)
         let pr_low = Pr {
@@ -757,7 +761,10 @@ mod tests {
             codeowner: false,
         };
         let score_low = Score::from_pr(1, &pr_low);
-        let scored_pr_low = ScoredPr { pr: pr_low, score: score_low };
+        let scored_pr_low = ScoredPr {
+            pr: pr_low,
+            score: score_low,
+        };
 
         let input = vec![scored_pr_low, scored_pr_high];
         let result = sorted_ranked_prs(input);
@@ -794,7 +801,10 @@ mod tests {
             codeowner: false,
         };
         let score1 = Score::from_pr(1, &pr1);
-        let scored_pr1 = ScoredPr { pr: pr1, score: score1 };
+        let scored_pr1 = ScoredPr {
+            pr: pr1,
+            score: score1,
+        };
 
         let pr2 = Pr {
             title: "Second PR".to_string(),
@@ -815,7 +825,10 @@ mod tests {
             codeowner: false,
         };
         let score2 = Score::from_pr(1, &pr2);
-        let scored_pr2 = ScoredPr { pr: pr2, score: score2 };
+        let scored_pr2 = ScoredPr {
+            pr: pr2,
+            score: score2,
+        };
 
         let input = vec![scored_pr1, scored_pr2];
         let result = sorted_ranked_prs(input);
@@ -851,7 +864,10 @@ mod tests {
             codeowner: false,
         };
         let score1 = Score::from_pr(1, &pr1);
-        prs.push(ScoredPr { pr: pr1, score: score1 });
+        prs.push(ScoredPr {
+            pr: pr1,
+            score: score1,
+        });
 
         // PR 2: Low additions, high age (older)
         let pr2 = Pr {
@@ -873,7 +889,10 @@ mod tests {
             codeowner: false,
         };
         let score2 = Score::from_pr(1, &pr2);
-        prs.push(ScoredPr { pr: pr2, score: score2 });
+        prs.push(ScoredPr {
+            pr: pr2,
+            score: score2,
+        });
 
         // PR 3: Based on main branch (bonus)
         let pr3 = Pr {
@@ -895,7 +914,10 @@ mod tests {
             codeowner: false,
         };
         let score3 = Score::from_pr(1, &pr3);
-        prs.push(ScoredPr { pr: pr3, score: score3 });
+        prs.push(ScoredPr {
+            pr: pr3,
+            score: score3,
+        });
 
         let result = sorted_ranked_prs(prs);
 
@@ -908,7 +930,7 @@ mod tests {
         let first_url = &result[0].pr.url;
         let second_url = &result[1].pr.url;
         let third_url = &result[2].pr.url;
-        
+
         // All should be different URLs
         assert_ne!(first_url, second_url);
         assert_ne!(second_url, third_url);

@@ -29,10 +29,10 @@ mod tests {
     fn test_config_missing_token() {
         // First ensure any leftover token from other tests is removed
         env::remove_var("GITHUB_API_TOKEN");
-        
+
         // Also unset any dotenv override
         std::env::remove_var("GITHUB_TOKEN");
-        
+
         let result: Result<Config, _> = envy::from_env();
         // This test might be flaky if .env file exists in test environment
         // Just verify it doesn't panic

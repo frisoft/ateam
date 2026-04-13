@@ -75,9 +75,8 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
             .filter_map(|range| range.commit.authors.nodes.as_ref())
             .flatten()
             .filter_map(|node| {
-                node.as_ref().and_then(|n| {
-                    n.user.as_ref().map(|user| user.login.as_str())
-                })
+                node.as_ref()
+                    .and_then(|n| n.user.as_ref().map(|user| user.login.as_str()))
             })
             .collect(),
         _ => vec![],
@@ -118,9 +117,7 @@ async fn girhub_blame(
         for error in &errors {
             write!(error_str, "{error:?}").unwrap();
         }
-        Err(anyhow!(
-            "Errors fetching the authors of {path} {error_str}",
-        ))
+        Err(anyhow!("Errors fetching the authors of {path} {error_str}",))
     } else {
         match response_body.data {
             Some(data) => Ok(data),

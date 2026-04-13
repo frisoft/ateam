@@ -51,8 +51,8 @@ fn json_reviews(reviews: &[Review]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::types::*;
+    use super::*;
 
     fn make_scored_pr(title: &str, url: &str) -> ScoredPr {
         let pr = Pr {
@@ -144,9 +144,7 @@ mod tests {
 
     #[test]
     fn test_prs_default_format() {
-        let prs_data = vec![
-            make_scored_pr("Add feature", "https://example.com/1"),
-        ];
+        let prs_data = vec![make_scored_pr("Add feature", "https://example.com/1")];
         let result = prs(&prs_data, None, false, false, false);
         assert!(result.contains("Add feature"));
     }
@@ -164,7 +162,11 @@ mod tests {
     fn test_reviews_json_format() {
         let reviews_data = vec![
             make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug"),
-            make_review(ReviewState::WithAddressedConversations, "https://example.com/2", "Add feature"),
+            make_review(
+                ReviewState::WithAddressedConversations,
+                "https://example.com/2",
+                "Add feature",
+            ),
         ];
         let result = reviews(&reviews_data, true);
         assert!(result.contains("Dismissed"));
@@ -173,9 +175,11 @@ mod tests {
 
     #[test]
     fn test_reviews_table_format() {
-        let reviews_data = vec![
-            make_review(ReviewState::Dismissed, "https://example.com/1", "Fix bug"),
-        ];
+        let reviews_data = vec![make_review(
+            ReviewState::Dismissed,
+            "https://example.com/1",
+            "Fix bug",
+        )];
         let result = reviews(&reviews_data, false);
         assert!(result.contains("Fix bug"));
     }
@@ -191,9 +195,11 @@ mod tests {
 
     #[test]
     fn test_reviews_single() {
-        let reviews_data = vec![
-            make_review(ReviewState::Dismissed, "https://example.com/pr/123", "Update code"),
-        ];
+        let reviews_data = vec![make_review(
+            ReviewState::Dismissed,
+            "https://example.com/pr/123",
+            "Update code",
+        )];
         let result = reviews(&reviews_data, false);
         assert!(result.contains("https://example.com/pr/123"));
         assert!(result.contains("Update code"));
