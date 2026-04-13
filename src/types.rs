@@ -71,14 +71,14 @@ pub struct Score {
 }
 
 impl Score {
-    pub fn from_pr(required_approvals: u8, pr: &Pr) -> Score {
+    pub fn from_pr(required_approvals: u8, pr: &Pr) -> Self {
         let tests_result_i = match pr.tests_result {
             TestsState::Pending => 1,
             TestsState::Failure => 2,
-            TestsState::Success | TestsState::None => 0, // a repo without CI is treated as successful
+            TestsState::Success | TestsState::None => 0,
         };
         #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
-        Score {
+        Self {
             age: pr.last_commit_age_min.unwrap_or(0) as f64 / 60.0 * 2.0,
             tests_result: f64::from(tests_result_i - 1) * -200.0,
             open_conversations: pr.open_conversations as f64 * -30.0,
@@ -150,8 +150,8 @@ pub enum ReviewState {
 impl std::fmt::Display for ReviewState {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let text = match self {
-            ReviewState::Dismissed => "Dismissed",
-            ReviewState::WithAddressedConversations => "With addressed conversations",
+            Self::Dismissed => "Dismissed",
+            Self::WithAddressedConversations => "With addressed conversations",
         };
         write!(f, "{text}")
     }

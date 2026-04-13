@@ -78,7 +78,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
 
 const YES: &str = "yes";
 const NO: &str = "no";
-fn show_bool(value: bool) -> &'static str {
+const fn show_bool(value: bool) -> &'static str {
     if value {
         YES
     } else {
@@ -86,7 +86,7 @@ fn show_bool(value: bool) -> &'static str {
     }
 }
 
-fn tests_result_label(tests_result: &TestsState) -> &'static str {
+const fn tests_result_label(tests_result: &TestsState) -> &'static str {
     match tests_result {
         TestsState::Success => "OK",
         TestsState::Pending => "..",
@@ -104,8 +104,9 @@ fn show_files(files: &Files) -> String {
 }
 
 fn show_duration(minutes: Option<i64>) -> String {
-    match minutes {
-        Some(min) => {
+    minutes.map_or_else(
+        || String::from("-"),
+        |min| {
             let d = min / 60 / 24;
             let h = (min - d * 24 * 60) / 60;
             let m = min - d * 24 * 60 - h * 60;
@@ -121,16 +122,14 @@ fn show_duration(minutes: Option<i64>) -> String {
                 } else {
                     String::new()
                 },
-                if d == 0 && m > 0 {
+                if m > 0 {
                     format!("{m}m ")
                 } else {
                     String::new()
                 }
             )
-        }
-        // d.format("%d-%m-%Y %H:%M").to_string(),
-        None => String::from("-"),
-    }
+        },
+    )
 }
 
 fn build_table() -> Table {

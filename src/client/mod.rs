@@ -92,18 +92,23 @@ pub async fn fetch_scored_prs(
     Ok(list_prs.into_iter().flatten().collect::<Vec<ScoredPr>>())
 }
 
+#[allow(clippy::future_not_send)]
 pub async fn call<V: serde::Serialize>(
     github_api_token: &str,
     q: &QueryBody<V>,
 ) -> Result<reqwest::Response> {
-    let client = reqwest::Client::builder().user_agent(AGENT).build()?;
-    let res = client
-        .post("https://api.github.com/graphql")
-        .json(&q)
-        .bearer_auth(github_api_token)
-        .send()
-        .await?;
-    Ok(res)
+    #[allow(clippy::future_not_send)]
+    async {
+        let client = reqwest::Client::builder().user_agent(AGENT).build()?;
+        let res = client
+            .post("https://api.github.com/graphql")
+            .json(&q)
+            .bearer_auth(github_api_token)
+            .send()
+            .await?;
+        Ok(res)
+    }
+    .await
 }
 
 async fn query(
@@ -157,10 +162,9 @@ fn get_response_data(
         }
         Err(anyhow!("Errors executing the query {error_str}"))
     } else {
-        match response_body.data {
-            Some(data) => Ok(data),
-            None => Err(anyhow!("Missing response data executing the query")),
-        }
+        response_body
+            .data
+            .map_or_else(|| Err(anyhow!("Missing response data executing the query")), Ok)
     }
 }
 
@@ -169,21 +173,17 @@ fn limited_batch_size(batch_size: u8) -> i64 {
 }
 
 fn last_item_cursor(response_data: &repo_view::ResponseData, batch_size: i64) -> Option<String> {
-    match &response_data.search.edges {
-        Some(items) =>
-        {
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-            if items.len() < usize::try_from(batch_size).unwrap_or(usize::MAX) {
-                None
-            } else {
-                match items.last() {
-                    Some(Some(item)) => Some(item.cursor.clone()),
-                    _ => None,
-                }
+    response_data.search.edges.as_ref().and_then(|items| {
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        if items.len() < usize::try_from(batch_size).unwrap_or(usize::MAX) {
+            None
+        } else {
+            match items.last() {
+                Some(Some(item)) => Some(item.cursor.clone()),
+                _ => None,
             }
         }
-        None => None,
-    }
+    })
 }
 
 fn github_query(username: &str, options: &PrArgs) -> String {
@@ -200,7 +200,7 @@ fn github_query(username: &str, options: &PrArgs) -> String {
     )
 }
 
-fn query_drafts(include_drafts: bool) -> &'static str {
+const fn query_drafts(include_drafts: bool) -> &'static str {
     if include_drafts {
         ""
     } else {
@@ -244,11 +244,7 @@ fn query_repos(repos: &[String]) -> String {
 }
 
 fn query_org(org: Option<&String>) -> String {
-    if let Some(org) = org {
-        format!("org:{org} ")
-    } else {
-        String::new()
-    }
+    org.map_or_else(String::new, |org| format!("org:{org} "))
 }
 
 async fn ranked_prs(
@@ -348,49 +344,50 @@ fn regex_match(
     or: bool,
     pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest,
 ) -> bool {
-    match regex {
-        Some(re) => re.is_match(&pr.title),
-        None => or,
-    }
+    regex.map_or(or, |re| re.is_match(&pr.title))
 }
 
-fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+const fn is_empty(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     pr.additions == 0 && pr.deletions == 0
 }
 
-fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
+const fn has_conflicts(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> bool {
     matches!(pr.mergeable, repo_view::MergeableState::CONFLICTING)
 }
 
 fn pr_files(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> Vec<String> {
-    match &pr.files {
-        Some(files) => files
-            .nodes
-            .iter()
-            .flatten()
-            .flatten()
-            .map(|f| f.path.clone())
-            .collect(),
-        None => vec![],
-    }
-}
-
-fn pr_labels(labels: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>) -> Labels {
-    match labels {
-        Some(labels) => Labels(
-            labels
+    pr.files
+        .as_ref()
+        .map_or_else(Vec::new, |files| {
+            files
                 .nodes
                 .iter()
                 .flatten()
                 .flatten()
-                .map(|l| Label {
-                    name: l.name.clone(),
-                    color: l.color.clone(),
-                })
-                .collect(),
-        ),
-        None => Labels(vec![]),
-    }
+                .map(|f| f.path.clone())
+                .collect()
+        })
+}
+
+fn pr_labels(labels: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestLabels>) -> Labels {
+    labels
+        .map_or_else(
+            || Labels(vec![]),
+            |labels| {
+                Labels(
+                    labels
+                        .nodes
+                        .iter()
+                        .flatten()
+                        .flatten()
+                        .map(|l| Label {
+                            name: l.name.clone(),
+                            color: l.color.clone(),
+                        })
+                        .collect(),
+                )
+            },
+        )
 }
 
 async fn pr_stats(
@@ -445,15 +442,12 @@ async fn pr_stats(
 }
 
 fn author(pr: &repo_view::RepoViewSearchEdgesNodeOnPullRequest) -> String {
-    match &pr.author {
-        Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestAuthor { login, on: _ }) => {
-            login.clone()
-        }
-        _ => String::new(),
-    }
+    pr.author
+        .as_ref()
+        .map_or_else(String::new, |repo_view::RepoViewSearchEdgesNodeOnPullRequestAuthor { login, on: _ }| login.clone())
 }
 
-fn include_by_tests_state(state: &TestsState, options: &PrArgs) -> bool {
+const fn include_by_tests_state(state: &TestsState, options: &PrArgs) -> bool {
     match state {
         TestsState::Success => !options.exclude_tests_success,
         TestsState::Failure => options.include_tests_failure,
@@ -495,49 +489,41 @@ fn commit_status_state(
     status: &repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollup,
     tests_re: Option<&Regex>,
 ) -> TestsState {
-    match tests_re {
-        Some(tests_re) => {
+    tests_re
+        .map_or_else(|| tests_state(&status.state), |tests_re| {
             commit_tests_state_from_contexts(status.contexts.nodes.as_ref(), tests_re)
-        }
-        None => tests_state(&status.state),
-    }
+        })
 }
 
 fn commit_tests_state_from_contexts(
     contexts_nodes: Option<&Vec<Option<repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes>>>,
     tests_re: &Regex,
 ) -> TestsState {
-    match contexts_nodes {
-        Some(nodes) => {
-            let states: Vec<TestsState> = nodes.iter().filter_map(|node|
-                match node {
-                  Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes::StatusContext(status_context)) => {
-                      if tests_re.is_match(&status_context.context) {
-                          Some(tests_state(&status_context.state))
-                      } else {
-                          None
-                      }
-                  },
-                  _ => None
-              }).collect();
-            match states {
-                v if v.iter().any(|state| matches!(state, TestsState::Failure)) => {
-                    TestsState::Failure
-                }
-                v if v.iter().any(|state| matches!(state, TestsState::Pending)) => {
-                    TestsState::Pending
-                }
-                v if v.iter().all(|state| matches!(state, TestsState::Success)) => {
-                    TestsState::Success
-                }
-                _ => TestsState::None,
-            }
+    contexts_nodes.map_or(TestsState::None, |nodes| {
+        let states: Vec<TestsState> = nodes.iter().filter_map(|node|
+            match node {
+              Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestCommitsNodesCommitStatusCheckRollupContextsNodes::StatusContext(status_context)) => {
+                  if tests_re.is_match(&status_context.context) {
+                      Some(tests_state(&status_context.state))
+                  } else {
+                      None
+                  }
+              },
+              _ => None
+          }).collect();
+        if states.iter().any(|state| matches!(state, TestsState::Failure)) {
+            TestsState::Failure
+        } else if states.iter().any(|state| matches!(state, TestsState::Pending)) {
+            TestsState::Pending
+        } else if states.iter().all(|state| matches!(state, TestsState::Success)) {
+            TestsState::Success
+        } else {
+            TestsState::None
         }
-        None => TestsState::None,
-    }
+    })
 }
 
-fn tests_state(state: &repo_view::StatusState) -> TestsState {
+const fn tests_state(state: &repo_view::StatusState) -> TestsState {
     match state {
         repo_view::StatusState::SUCCESS => TestsState::Success,
         repo_view::StatusState::PENDING | repo_view::StatusState::EXPECTED => TestsState::Pending,
@@ -610,7 +596,7 @@ fn pr_num_approvals(review_states: &[&repo_view::PullRequestReviewState]) -> i64
 }
 
 #[allow(clippy::cast_possible_wrap)]
-fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
+const fn pr_num_reviewers(review_states: &[&repo_view::PullRequestReviewState]) -> i64 {
     review_states.len() as i64
 }
 
@@ -618,8 +604,9 @@ fn parse_date(date: Option<&String>) -> Option<DT<Utc>> {
     date.and_then(|s| s.parse::<DT<Utc>>().ok())
 }
 
+#[allow(clippy::missing_const_for_fn, clippy::single_option_map)]
 fn age(date_time: Option<DT<Utc>>) -> Option<i64> {
-    date_time.map(|date_time| (Utc::now() - date_time).num_minutes())
+    date_time.map(|dt| (Utc::now() - dt).num_minutes())
 }
 
 fn pr_based_on_main_branch(base_branch_name: &str) -> bool {
@@ -630,29 +617,31 @@ fn review_requested(
     requests: Option<&repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequests>,
     username: &str,
 ) -> ReviewRequested {
-    match requests {
-        Some(requests) => {
-            requests.nodes.iter().flatten().flatten().find(|r|
-            match &r.requested_reviewer {
-                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::User(reviewer)) =>
-reviewer.login == username,
-                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Team(team)) =>
-                    team.members.nodes.iter().flatten().flatten().any(|member| member.login == username),
-                Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Mannequin) => false, // Just ignore Mannequins
-                None => panic!("Something is wrong with the GitHub token! Have you added the read:org scope?"),
-            })
-            .map_or(
-                ReviewRequested::NotRequested,
-                |r|
-                 if r.as_code_owner {
-                       ReviewRequested::RequestedAsCodeOwner
-                 } else {
-                       ReviewRequested::RequestedNotAsCodeOwner
-                 }
-            )
-        }
-        None => ReviewRequested::NotRequested,
-    }
+    requests
+        .map_or(ReviewRequested::NotRequested, |r| {
+            r.nodes
+                .as_ref()
+                .map_or(ReviewRequested::NotRequested, |nodes| {
+                    nodes
+                        .iter()
+                        .flatten()
+                        .find(|r| match &r.requested_reviewer {
+                            Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::User(reviewer)) => reviewer.login == username,
+                            Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Team(team)) => {
+                                team.members.nodes.iter().flatten().flatten().any(|member| member.login == username)
+                            }
+                            Some(repo_view::RepoViewSearchEdgesNodeOnPullRequestReviewRequestsNodesRequestedReviewer::Mannequin) => false,
+                            None => panic!("Something is wrong with the GitHub token! Have you added the read:org scope?"),
+                        })
+                        .map_or(ReviewRequested::NotRequested, |r| {
+                            if r.as_code_owner {
+                                ReviewRequested::RequestedAsCodeOwner
+                            } else {
+                                ReviewRequested::RequestedNotAsCodeOwner
+                            }
+                        })
+                })
+        })
 }
 
 #[cfg(test)]

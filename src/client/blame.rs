@@ -69,18 +69,20 @@ fn is_file_author(response_data: &blame::ResponseData, login: &str) -> bool {
 
     // println!("\n\nRanges: {:?}\n\n", v);
 
-    let authors = match v {
-        Some(ranges) => ranges
-            .iter()
-            .filter_map(|range| range.commit.authors.nodes.as_ref())
-            .flatten()
-            .filter_map(|node| {
-                node.as_ref()
-                    .and_then(|n| n.user.as_ref().map(|user| user.login.as_str()))
-            })
-            .collect(),
-        _ => vec![],
-    };
+    let authors = v.map_or_else(
+        Vec::new,
+        |ranges| {
+            ranges
+                .iter()
+                .filter_map(|range| range.commit.authors.nodes.as_ref())
+                .flatten()
+                .filter_map(|node| {
+                    node.as_ref()
+                        .and_then(|n| n.user.as_ref().map(|user| user.login.as_str()))
+                })
+                .collect()
+        },
+    );
 
     // println!("\n\n Authors: {:?}\n\n", authors);
     let login_str: String = login.to_string();
@@ -119,11 +121,8 @@ async fn girhub_blame(
         }
         Err(anyhow!("Errors fetching the authors of {path} {error_str}",))
     } else {
-        match response_body.data {
-            Some(data) => Ok(data),
-            None => Err(anyhow!(
-                "Missing response data fetching the authors of {path}"
-            )),
-        }
+        response_body
+            .data
+            .map_or_else(|| Err(anyhow!("Missing response data fetching the authors of {path}")), Ok)
     }
 }
