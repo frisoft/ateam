@@ -21,6 +21,6 @@ jobs:
       - name: Check formatting
         run: cargo fmt --check
       - name: Run clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings -A pedantic
+        run: cargo clippy --all-targets --all-features -- -D warnings -A clippy::pedantic
       - name: Run audit
         run: cargo install cargo-audit && cargo audit
