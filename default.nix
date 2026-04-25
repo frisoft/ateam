@@ -2,7 +2,7 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "ateam";
-  version = "1.0.10";
+  version = "1.0.13";
 
   src = ./.;
 

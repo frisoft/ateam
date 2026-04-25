@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.13
+
+- Upgrade crates.
+
 ## v1.0.12
 
 - Optimize tokio features from "full" to ["rt-multi-thread", "macros"] for faster compilation.
