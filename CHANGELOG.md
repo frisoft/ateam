@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.14
+
+- Upgrade crates and system dependencies.
+
 ## v1.0.13
 
 - Upgrade crates.
@@ -106,5 +110,5 @@
 - Add --user option.
 - Add --batch-size option.
 - Add --include-drafts flag.
-- Fix calculation of number of review and exclude author.
+- Fix calculation of number of reviews and exclude author.
 - Fix calculation of number of approvals
