@@ -10,6 +10,14 @@ readme = "README.md"
 edition = "2021"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 
+[lints.clippy]
+pedantic = "allow"
+nursery = "allow"
+
+[lints.rust]
+warnings = "deny"
+
+
 [lib]
 name = "ateam"
 path = "src/lib.rs"

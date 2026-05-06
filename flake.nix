@@ -38,6 +38,7 @@
               clippy
               rustfmt
               rust-analyzer
+              pi-coding-agent
             ] ++ ateam.buildInputs;
         };
       });
