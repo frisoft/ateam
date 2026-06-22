@@ -51,7 +51,7 @@ envy = "0.4"
 env_logger = "0.11"
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
 regex = "1"
-itertools = "0.14"
+itertools = "0.15"
 clap = { version = "4", features = ["derive"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 futures = "0.3"
