@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.15
+
+- Upgrade crates.
+- Update itertools from 0.14 to 0.15.
+
 ## v1.0.14
 
 - Upgrade crates and system dependencies.
