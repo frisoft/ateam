@@ -11,8 +11,9 @@ This skill creates a git tag to trigger the release workflow.
 
 Before using this skill, you must:
 1. Bump the version in `Cargo.toml`
-2. Update `CHANGELOG.md` with the new version and release notes
-3. Commit and push those changes to the main branch
+2. Build the project to get the version to `Cargo.lock`
+3. Update `CHANGELOG.md` with the new version and release notes
+4. Commit and push those changes to the main branch
 
 ## When to use
 
@@ -22,20 +23,26 @@ Use this skill when you want to release a new version to GitHub and crates.io.
 
 When this skill is invoked, perform the following steps:
 
-### Step 1: Get the version
+### Step 1: Verify that everything is committed and pushed
+Verity that you are in the main branch and that every change is pushed to Github.
+
+### Step 2: Get the version
 Run `grep -m1 '^version' Cargo.toml` to get the current version from Cargo.toml.
 
-### Step 2: Create the version tag
+### Step 3: Verify the cersion in Cargo.lock
+Verify that the same version is in Cargo.lock 
+
+### Step 4: Create the version tag
 Create a git tag with the version from Step 1:
 - Format: `v<version>` (e.g., `v1.0.14`)
 - Run `git tag v<version>`
 
-### Step 3: Push the tag to remote
+### Step 5: Push the tag to remote
 Push the tag to the remote repository:
 - Run `git push origin v<version>`
 - This triggers the release workflow in `.github/workflows/release.yml`
 
-### Step 4: Publish to crates.io
+### Step 6: Publish to crates.io
 Publish the package to crates.io:
 - Run `cargo publish`
 
