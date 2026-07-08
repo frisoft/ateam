@@ -1,8 +1,11 @@
 { lib, rustPlatform, pkg-config, darwin }:
 
+let
+  cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+in
 rustPlatform.buildRustPackage rec {
   pname = "ateam";
-  version = "1.0.13";
+  version = cargoToml.package.version;
 
   src = ./.;
 
