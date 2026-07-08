@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.16
+
+- Fix default.nix to read version dynamically from Cargo.toml.
+- Upgrade crates.
+
 ## v1.0.15
 
 - Upgrade crates.
