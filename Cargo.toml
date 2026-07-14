@@ -7,7 +7,7 @@ description = "The tool that helps optimize the code review process."
 documentation = "https://github.com/frisoft/ateam"
 repository = "https://github.com/frisoft/ateam"
 readme = "README.md"
-edition = "2021"
+edition = "2024"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 
 [lints.clippy]

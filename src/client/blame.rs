@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use futures::stream::{FuturesUnordered, StreamExt};
 use graphql_client::{GraphQLQuery, Response};
 

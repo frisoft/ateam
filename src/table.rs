@@ -2,7 +2,7 @@ use super::types::{Files, Review, ScoredPr, TestsState};
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ColumnConstraint, ContentArrangement, Table};
-use terminal_size::{terminal_size, Height, Width};
+use terminal_size::{Height, Width, terminal_size};
 
 #[cfg(test)]
 use super::types::{Labels, Pr, ReviewState, Score};
@@ -79,11 +79,7 @@ fn pr_row(spr: &ScoredPr, debug: bool) -> Vec<String> {
 const YES: &str = "yes";
 const NO: &str = "no";
 fn show_bool(value: bool) -> &'static str {
-    if value {
-        YES
-    } else {
-        NO
-    }
+    if value { YES } else { NO }
 }
 
 fn tests_result_label(tests_result: &TestsState) -> &'static str {
