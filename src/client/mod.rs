@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use super::cli::PrArgs;
 use super::types::{Files, Label, Labels, Pr, ReviewRequested, Score, ScoredPr, TestsState};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use chrono::prelude::{DateTime as DT, Utc};
 use graphql_client::{GraphQLQuery, QueryBody, Response};
 use itertools::Itertools;
@@ -201,11 +201,7 @@ fn github_query(username: &str, options: &PrArgs) -> String {
 }
 
 fn query_drafts(include_drafts: bool) -> &'static str {
-    if include_drafts {
-        ""
-    } else {
-        "draft:false "
-    }
+    if include_drafts { "" } else { "draft:false " }
 }
 
 fn query_mine(username: &str, only_mine: bool) -> String {

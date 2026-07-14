@@ -7,7 +7,7 @@ description = "The tool that helps optimize the code review process."
 documentation = "https://github.com/frisoft/ateam"
 repository = "https://github.com/frisoft/ateam"
 readme = "README.md"
-edition = "2021"
+edition = "2024"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 
 [lints.clippy]
@@ -55,4 +55,7 @@ itertools = "0.15"
 clap = { version = "4", features = ["derive"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 futures = "0.3"
+
+[dev-dependencies]
+temp-env = "0.3"
 
