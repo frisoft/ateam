@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.17
+
+- Upgrade crates. Update comfy-table from 7 to 8.
+- Fix the `--exclude-tests-success` help text.
+- Fix clippy warnings on current stable.
+- Don't truncate tables when no real terminal is available (fixes `nix build`).
+- Update cargo-dist to 0.33.1 and GitHub Actions.
+- Update nixpkgs.
+- Update the README.
+
 ## v1.0.16
 
 - Fix default.nix to read version dynamically from Cargo.toml.

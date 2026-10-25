@@ -22,7 +22,7 @@ fn short_prs(sprs: &[ScoredPr], limit: usize, debug: bool) -> String {
 }
 
 fn pr(spr: &ScoredPr, _debug: bool) -> String {
-    format!("{}", &spr.pr)
+    format!("{}", spr.pr)
 }
 
 pub fn reviews(reviews: &[Review], json: bool) -> String {

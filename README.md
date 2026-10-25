@@ -31,7 +31,24 @@ You need to set the token as env variable in your shell. You can add it to your 
 export GITHUB_API_TOKEN=YOUR_TOKEN
 ```
 
-ATeam gives you two sub-commands: `pr` and `todo`.
+ATeam gives you two sub-commands: `pr` and `followup`. A third one, `todo`, is planned but not implemented yet.
+
+## Usage
+
+```
+❯ ateam --help
+
+Usage: ateam <COMMAND>
+
+Commands:
+  pr        It shows which pull requests should be reviewed next
+  followup  It gives you some information about the reviews you already submitted and need your attention
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
 
 ## ateam pr
 
@@ -51,7 +68,7 @@ The previous list also includes your pull requests and all the ones you already 
 
 The pull requests are in the order they are supposed to be reviewed. The first one is probably the one you should review first.
 
-You can also search for specific pull requests. You can use the `--query` option for this. It allows you to use any condition you can use int GitHub search. The most common search is by text:
+You can also search for specific pull requests. You can use the `--query` option for this. It allows you to use any condition you can use in GitHub search. The most common search is by text:
 
 ```
 ❯ ateam pr --org OrgName --query 'urgent'
@@ -75,13 +92,15 @@ To see all the possible options, you can use `--help`:
 ```
 ❯ ateam pr --help
 
+It shows which pull requests should be reviewed next
+
 Usage: ateam pr [OPTIONS]
 
 Options:
   -r, --repo <repository>
-          Repositiy. Can be used multiple times to select more than one
+          Repository. Can be used multiple times to select more than one
       --org <organization>
-          Selest all the repositoris of the organization
+          Select all the repositories of the organization
   -q, --query <QUERY>
           GitHub query. Can be used multiple times
   -n, --num <NUM>
@@ -103,7 +122,7 @@ Options:
       --include-mine
           Include my pull requests
       --only-mine
-          select only my pull requests (enables --include-reviewed-by-me automatically)
+          Select only my pull requests (enables --include-reviewed-by-me automatically)
       --requested
           Select pull requests I have been requested to review, explicitly or as a code owner
       --include-drafts
@@ -115,21 +134,23 @@ Options:
       --exclude-tests-none
           Exclude pull requests without tests
       --exclude-tests-success
-          Exclude pull requests with tests successful
+          Exclude pull requests with successful tests
       --tests-regex <TESTS_REGEX>
           Select tests via regexp. The others are ignored
       --required-approvals <REQUIRED_APPROVALS>
           Number of required approvals [default: 2]
       --blame
-          Look if I changed the same files in the past (SLOW)
+          Look if I changed the same files in the past (slower)
       --user <USER>
           Query for another user
       --batch-size <BATCH_SIZE>
-          Mumber of pull requests requested per batch [default: 30]
+          Number of pull requests requested per batch [default: 30]
   -d, --debug
           Add debug information
   -h, --help
-          Print help information
+          Print help
+  -V, --version
+          Print version
 ```
 
 ### How does it work?
@@ -189,9 +210,9 @@ Deleted lines need to be reviewed as well, but it is usually a quicker job, so t
 `based_on_main_branch` is 1 if the pull request is based on the main branch. It is 0 if based on another pull request.
 It is best reviewing first pull request based on the main branch.
 
-`blame` is 1 if you changed in the past one of the first 5 files changed by the pull requiest.
+`blame` is 1 if you changed in the past one of the first 5 files changed by the pull request.
 
-`requested` is 1 if somebody requested your review explicity, not because you are a code owner.
+`requested` is 1 if somebody requested your review explicitly, not because you are a code owner.
 
 `codeowner` is 1 if you are one of the [code owners](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/about-code-owners) for this pull request.
 
@@ -207,7 +228,7 @@ The list of reviews includes:
 
 ## ateam todo
 
-NOT AVAILABLE YET
+Planned, not implemented yet.
 
 Your pull requests:
 
@@ -222,4 +243,4 @@ Use the Nix to setup the development environment:
 nix develop
 ```
 
-Ufficial GitHub GraphQL schema: https://docs.github.com/en/graphql/overview/public-schema
+Official GitHub GraphQL schema: https://docs.github.com/en/graphql/overview/public-schema

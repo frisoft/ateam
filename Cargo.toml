@@ -1,6 +1,6 @@
 [package]
 name = "ateam"
-version = "1.0.16"
+version = "1.0.17"
 authors = ["Andrea Frigido"]
 license = "MIT"
 description = "The tool that helps optimize the code review process."
@@ -8,6 +8,7 @@ documentation = "https://github.com/frisoft/ateam"
 repository = "https://github.com/frisoft/ateam"
 readme = "README.md"
 edition = "2024"
+rust-version = "1.88"
 keywords = ["cli", "github", "code-review", "pull-request", "command-line"]
 
 [lints.clippy]
@@ -45,7 +46,7 @@ serde = "1"
 serde_json = "1"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 terminal_size = "0.4"
-comfy-table = "7"
+comfy-table = "8"
 dotenvy = "0.15"
 envy = "0.4"
 env_logger = "0.11"
