@@ -20,7 +20,7 @@ Use this skill before pushing commits to verify the code passes all CI checks lo
 When this skill is invoked, perform the following steps:
 
 ### Step 1: Read the CI workflow
-Read `.github/workflows/ci.yaml` to identify the checks to run.
+Read `.github/workflows/ci.yml` to identify the checks to run.
 
 ### Step 2: Execute the CI checks
 Run exactly the same commands defined in the workflow file.

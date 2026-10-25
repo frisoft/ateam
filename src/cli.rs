@@ -19,7 +19,7 @@ pub enum Command {
 #[derive(Args, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct PrArgs {
-    /// Repositiy. Can be used multiple times to select more than one
+    /// Repository. Can be used multiple times to select more than one
     #[arg(long, short, name = "repository")]
     pub repo: Vec<String>,
     /// Select all the repositories of the organization
@@ -55,7 +55,7 @@ pub struct PrArgs {
     /// Include my pull requests
     #[arg(long)]
     pub include_mine: bool,
-    /// select only my pull requests (enables --include-reviewed-by-me automatically)
+    /// Select only my pull requests (enables --include-reviewed-by-me automatically)
     #[arg(long)]
     pub only_mine: bool,
     /// Select pull requests I have been requested to review, explicitly or as a code owner
@@ -73,7 +73,7 @@ pub struct PrArgs {
     /// Exclude pull requests without tests
     #[arg(long)]
     pub exclude_tests_none: bool,
-    /// Exclude pull requests with tests pending
+    /// Exclude pull requests with successful tests
     #[arg(long)]
     pub exclude_tests_success: bool,
     /// Select tests via regexp. The others are ignored
@@ -88,7 +88,7 @@ pub struct PrArgs {
     /// Query for another user
     #[arg(long)]
     pub user: Option<String>,
-    /// Mumber of pull requests requested per batch
+    /// Number of pull requests requested per batch
     #[arg(long, default_value = "30")]
     pub batch_size: u8,
     /// Add debug information

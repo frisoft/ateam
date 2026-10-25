@@ -1,5 +1,4 @@
 use super::types::{Files, Review, ScoredPr, TestsState};
-use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ColumnConstraint, ContentArrangement, Table};
 use terminal_size::{Height, Width, terminal_size};
@@ -132,12 +131,20 @@ fn show_duration(minutes: Option<i64>) -> String {
 fn build_table() -> Table {
     let mut table = Table::new();
     table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic);
+        .load_style(UTF8_FULL.with_rounded_corners())
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_truncation_indicator("...");
 
-    if let Some((Width(w), Height(_h))) = terminal_size() {
-        table.set_width(w);
+    match terminal_size() {
+        // Use the detected terminal size, ignoring degenerate widths.
+        Some((Width(w), Height(_h))) if w > 0 => {
+            table.set_width(w);
+        }
+        // Without a real terminal, don't let comfy-table detect the size on its
+        // own: it can report a 0-width tty and truncate the whole content.
+        _ => {
+            table.force_no_tty();
+        }
     }
 
     table

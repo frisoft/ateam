@@ -196,7 +196,7 @@ fn github_query(username: &str, options: &PrArgs) -> String {
         query_labels(&options.label, &options.exclude_label),
         query_repos(&options.repo),
         query_org(options.org.as_ref()),
-        &options.query.join(" ")
+        options.query.join(" ")
     )
 }
 
